@@ -1,0 +1,5 @@
+hyper:
+    lr: 1e-5
+    optim: 'adam'
+
+note: 'Using model for testing.'
