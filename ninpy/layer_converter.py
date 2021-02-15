@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 23:34:30 2021
-
 @author: Ninnart Fuengfusin
 """
-
+import logging
 
 class LayerConverter(object):
     """Collection of converter for layer to another type of layer.
-    Modified from: From: https://www.kaggle.com/c/aptos2019-blindness-detection/discussion/104686
+    Modified from: https://www.kaggle.com/c/aptos2019-blindness-detection/discussion/104686
     """
     @staticmethod
     def convert_bn_layers(model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None):
@@ -36,9 +34,9 @@ class LayerConverter(object):
         """
         Example:
         ```
-        from torchvision.models import vgg16
-        m = vgg16(pretrained=False)
-        LayerConverter.convert_conv_layers(m, nn.Conv2d, nn.Conv1d)
+        >>> from torchvision.models import vgg16
+        >>> m = vgg16(pretrained=False)
+        >>> LayerConverter.convert_conv_layers(m, nn.Conv2d, nn.Conv1d)
         ```
         """
         for name, module in reversed(model._modules.items()):
@@ -67,9 +65,9 @@ class LayerConverter(object):
         """
         Example:
         ```
-        from torchvision.models import vgg16
-        m = vgg16(pretrained=False)
-        LayerConverter.convert_conv_layers(m, nn.ReLU, nn.ReLU6)
+        >>> from torchvision.models import vgg16
+        >>> m = vgg16(pretrained=False)
+        >>> LayerConverter.convert_conv_layers(m, nn.ReLU, nn.ReLU6)
         ```
         """
         from torch.nn.modules.module import ModuleAttributeError
@@ -87,3 +85,20 @@ class LayerConverter(object):
                     new_layer = new_layer_type()
                 model._modules[name] = new_layer
         return model
+
+
+def convert_module2module(
+        model, module_a, module_b,
+        verbose: bool = True) -> None:
+    """From: https://discuss.pytorch.org/t/how-to-replace-all-relu-activations-in-a-pretrained-network/31591/5
+    Example:
+    >>> convert_module2module(model, HardSwish, nn.Hardswish())
+    """
+    assert isinstance(verbose, bool)
+    for child_name, child in model.named_children():
+        if isinstance(child, module_a):
+            setattr(model, child_name, module_b)
+            if verbose:
+                logging.info(f'Replace {module_a} to {module_b}')
+        else:
+            convert_module2module(child, module_a, module_b)

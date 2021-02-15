@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan  7 14:50:58 2021
 @author: Ninnart Fuengfusin
 """
-from multiprocessing import cpu_count
 import os
+from multiprocessing import cpu_count
+
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
@@ -48,8 +48,7 @@ def get_cifar100_transforms():
     return transform_train, transform_test
 
 
-
-def load_small_dataset(
+def load_toy_dataset(
         num_train_batch: int,
         num_test_batch: int,
         num_workers: int = NUM_WORKERS,
@@ -66,7 +65,6 @@ def load_small_dataset(
     """
     assert isinstance(num_train_batch, int)
     assert isinstance(num_test_batch, int)
-    assert isinstance(num_extra_batch, int)
     assert isinstance(num_workers, int)
     assert isinstance(dataset_name, str)
     assert isinstance(data_path, str)
@@ -81,7 +79,7 @@ def load_small_dataset(
         test_transforms = transforms.Compose(
             [transforms.ToTensor()])
 
-    dataset = dataset_name.lower()
+    dataset_name = dataset_name.lower()
     if dataset_name == 'mnist':
         train_set = torchvision.datasets.MNIST(
             root=data_path, train=True,

@@ -1,103 +1,65 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Common functions created with using only standard libraries.
+@author: Ninnart Fuengfusin
 """
-Created on Mon Jan  4 23:32:45 2021
-
-@author: ninnart
-"""
-import torch
-import numpy as np
+import time
 import logging
+import argparse
 
 
-def save_model(
-    save_dir: str, model, optimizer,
-    metric: float = None, epoch: int = None,
-    verbose: bool = True) -> None:
-
-    if model is not None:
-        model = model.state_dict()
-    if optimizer is not None:
-        optimizer = optimizer.state_dict()
-
-    torch.save({
-        'model_state_dict': model,
-        'optimizer_state_dict': optimizer,
-        'metric': metric,
-        'epoch': epoch
-        }, save_dir)
-
-    if verbose:
-        logging.info(f'Save model@ {save_dir} with {epoch} epoch.')
-
-
-def load_model(save_dir: str, model, optimizer, verbose: bool = False):
-    ckpt = torch.load(save_dir)
-    model_state_dict = ckpt['model_state_dict']
-    optimizer_state_dict = ckpt['optimizer_state_dict']
-    metric = ckpt['metric']
-    epoch = ckpt['epoch']
-    model = model.load_state_dict(model_state_dict)
-    optimizer = optimizer.load_state_dict(optimizer_state_dict)
-
-    if verbose:
-        logging.info(f'Load a model with score {metric}@ {epoch} epoch')
-    return model, optimizer
-
-
-def add_weight_decay(model, weight_decay, skip_list=()) -> None:
-    """From: https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
-    https://www.dlology.com/blog/bag-of-tricks-for-image-classification-with-convolutional-neural-networks-in-keras/
-    Ex:
-        
+def str2bool(v: str) -> bool:
+    """From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    Put str2bool into type of argparse.
     """
-    assert isinstance(weight_decay, float)
-    decay, no_decay = [], []
-    for name, param in model.named_parameters():
-        if not param.requires_grad: 
-            continue # frozen weights		            
-        if len(param.shape) == 1 or name.endswith(".bias") or name in skip_list: 
-            no_decay.append(param)
-        else: 
-            decay.append(param)
-    return [{'params': no_decay, 'weight_decay': 0.}, {'params': decay, 'weight_decay': weight_decay}]
+    if isinstance(v, bool):
+        return v
+
+    lower = v.lower()
+    if lower in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif lower in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError(
+            f'Boolean value is expected. Your input: {v}')
 
 
-def make_onehot(input, num_classes: int):
-    """Convert class index tensor to one hot encoding tensor.
-    Args:
-         input: A tensor of shape [N, 1, *]
-         num_classes: An int of number of class
-    Returns:
-        A tensor of shape [N, num_classes, *]
+def timewrap(func):
+    """Wrapper of function to printing out the running of the wrapped function.
     """
-    assert isinstance(num_classes, int)
-    shape = np.array(input.shape)
-    shape[1] = num_classes
-    shape = tuple(shape)
-    result = torch.zeros(shape).to(input.device)
-    result = result.scatter_(1, input, 1)
-    return result
+    def wrapped(*args, **kwargs):
+        t1 = time.time()
+        func = func(*args, **kwargs)
+        t2 = time.time() - t1
+        logging.info(
+            f'Wrapper of {func.__name__}: Run with timer: \
+            {time.strftime("%H:%M:%S", time.gmtime(t2))}')
+        return func
+    return wrapped
 
 
-class RunningAverage(object):
-    """From: https://github.com/cs230-stanford/cs230-code-examples
-    A simple class that maintains the running average of a quantity    
-    Example:
-    ```
-    loss_avg = RunningAverage()
-    loss_avg.update(2)
-    loss_avg.update(4)
-    loss_avg() = 3
-    ```
+def multilv_getattr(obj, multi_lv: str):
+    """Example:
+    >>> from fastseg import MobileV3Large
+    >>> model = MobileV3Large.from_pretrained()
+    >>> multilv_getattr(model, 'trunk.early')
     """
-    def __init__(self):
-        self.steps = 0
-        self.total = 0
-    
-    def update(self, val):
-        self.total += val
-        self.steps += 1
-    
-    def __call__(self):
-        return self.total/float(self.steps)
+    assert isinstance(multi_lv, str)
+    lvs = multi_lv.split('.')
+    for l in lvs:
+        obj = getattr(obj, l)
+    return obj
+
+
+def multilv_setattr(obj, multi_lv: str, set_with: object):
+    """Example:
+    >>> from fastseg import MobileV3Large
+    >>> model = MobileV3Large.from_pretrained()
+    >>> multilv_setattr(model, 'conv_up3.conv', nn.Conv2d(5, 5, 5))
+    """
+    assert isinstance(multi_lv, str)
+    lvs = multi_lv.split('.')
+    for l in lvs[:-1]:
+        obj = getattr(obj, l)
+    obj = setattr(obj, lvs[-1], set_with)

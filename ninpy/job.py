@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 23:49:50 2021
-
-@author: ninnart
+@author: Ninnart Fuengfusin
 """
 import time
 import sys
 import os
 import logging
 from subprocess import check_call
-from config import dump_yaml, load_yaml
+from .config import dump_yaml, load_yaml, dump_yaml
 
 
 def launch_job(
@@ -18,13 +16,16 @@ def launch_job(
         script_name: str,
         hyper_params: dict,
         exp_pth: str,
-        verbose: bool = False) -> None:
+        verbose: bool = True) -> None:
     r"""Modified from: https://github.com/cs230-stanford/cs230-code-examples
-    Execute Python scripts on demand. Designed to use with hyper parameter tuner
-    such as hyperopt and optuna.
+    Execute Python scripts on demand.
+    Designed to use with hyper parameter tuner such as hyperopt and optuna.
+    Required scripts with with `yaml` and `exp_pth` option.
     """
     # Launch training with this config
     assert isinstance(hyper_params, dict)
+    assert isinstance(exp_pth, str)
+
     PYTHON = sys.executable
     # For saving yaml.
     hyper_yaml = f'{job_name}.yaml'
@@ -32,13 +33,23 @@ def launch_job(
         os.remove(hyper_yaml)
     dump_yaml(hyper_params, hyper_yaml)
     cmd = f'{PYTHON} {script_name} --yaml={hyper_yaml} --exp_pth={exp_pth}'
+
     if verbose:
-        logging.info(cmd)
+        logging.info(f'Using command: {cmd}')
+    # Run command at shell.
     check_call(cmd, shell=True)
+    # Remove yaml file after job done.
     os.remove(hyper_yaml)
 
 
 if __name__ == '__main__':
-    hyper_params = load_yaml('test_net.yaml')
-    hyper_params['epochs'] = 5
+    hyper_params = {'epochs': 1}
+    dump_yaml('test.yaml')
+    assert hyper_params['epochs'] == 1
+
+    hyper_params = load_yaml('test.yaml')
+    hyper_params.epochs = 5
+    assert hyper_params.epochs  == 5
+
     launch_job('hparams', 'test_net.py', hyper_params)
+    os.remove('test.yaml')

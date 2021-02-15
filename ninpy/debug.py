@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 23:26:57 2021
-
-@author: ninnart
+@author: Ninnart Fuengfusin
 """
 import urllib
 import torch
@@ -35,11 +33,3 @@ def get_imagenet_img() -> torch.Tensor:
         ])
     input_tensor = preprocess(input_image).unsqueeze(0)
     return input_tensor
-
-if __name__ == '__main__':
-    from torchvision.models import resnet18
-
-    img = get_imagenet_img()
-    model = resnet18(pretrained=False)
-    pred = model(img)
-    print(pred)

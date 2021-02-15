@@ -2,6 +2,6 @@
 My collection of reuse-able Python scripts.
 
 ## To install
-```
-python setup.py install
+```bash
+python setup.py develop
 ```

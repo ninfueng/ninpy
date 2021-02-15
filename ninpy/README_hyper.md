@@ -1,6 +1,6 @@
-# Pipeline of experimental  setting.
+# Pipeline of Experimental setting scripts.
 
-Using:
+Scripts:
 - config.py
 - experiment.py
 - log.py

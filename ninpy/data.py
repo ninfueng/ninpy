@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jan  7 14:18:09 2021
-
-@author: ninnart
+"""data.py
+A collection of data structure functions.
+@author: Ninnart Fuengfusin
 """
 import sys
+import logging
 from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-import logging
 
 
 class AttributeDict(dict):
     """From: https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
     Example:
     ```
-    a = AttributeDict({'d': 2})
-    a.d
-    > 2
-    a.test = 5
-    a
-    > {'d': 2, 'test': 5}
+    >>> a = AttributeDict({'d': 2})
+    >>> a.d
+    2
+    >>> a.test = 5
+    >>>  a
+    {'d': 2, 'test': 5}
     ```
     """
-    __slots__ = () 
+    __slots__ = ()
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
@@ -34,15 +34,15 @@ class AttributeOrderedDict(OrderedDict):
     Same case as `AttributeDict`, however with support from OrderedDict instead.
     Example:
     ```
-    a = AttributeOrderedDict({'d': 2})
-    a.d
-    > 2
-    a.test = 5
+    >>> a = AttributeOrderedDict({'d': 2})
+    >>> a.d
+    2
+    >>> a.test = 5
     a
-    > {'d': 2, 'test': 5}
+    >>> {'d': 2, 'test': 5}
     ```
     """
-    __slots__ = () 
+    __slots__ = ()
     __getattr__ = OrderedDict.__getitem__
     __setattr__ = OrderedDict.__setitem__
 
@@ -52,16 +52,16 @@ class AttributeOrderedDictList(AttributeOrderedDict):
     With additional methods to support.
     Example:
     ```
-    dictlist = AttributeOrderedDictList('book0', 'book1')    
-    dictlist.book0.append(5)
-    dictlist.book0.append(10)
-    dictlist.to_csv('book.csv', 0)
+    >>> dictlist = AttributeOrderedDictList('book0', 'book1')
+    >>> dictlist.book0.append(5)
+    >>> dictlist.book0.append(10)
+    >>> dictlist.to_csv('book.csv', 0)
     ```
     """
     def __init__(self, *args):
         for arg in args:
             self.update({arg: []})
-            
+
     def fill_dictlist_equal_len(self, fill_var: int = 0) -> dict:
         """Make all lists in dict have the same len.
         """
@@ -78,27 +78,25 @@ class AttributeOrderedDictList(AttributeOrderedDict):
                 _ = [self[k].append(fill_var) for i in range(diff)]
 
     def to_df(self, fill_var: float = np.nan) -> pd.DataFrame:
-        """
+        """Convert to DataFrame required to filling all missing values
+        in case the lengths of list are not equal.
         """
         self.fill_dictlist_equal_len(fill_var=fill_var)
         df = pd.DataFrame(self)
         return df
-    
-    def to_csv(self, file_name: str, fill_var: float = np.nan) -> None:
+
+    def to_csv(
+        self, file_name: str,
+        fill_var: float = np.nan,
+        verbose: str = True)-> None:
         """Saving to csv.
         """
         df = self.to_df(fill_var=fill_var)
         df.to_csv(file_name, index=None)
-        logging.info(f'Save csv@{file_name}.')
+        if verbose:
+            logging.info(f'Save csv@{file_name}.')
 
     def append_kwargs(self, **kwargs) -> None:
         """Append multiple lists in dict at the same time using kwargs.
         """
         _ = [self[key].append(kwargs[key]) for key in kwargs.keys()]
-
-
-if __name__ == '__main__':
-    dictlist = AttributeOrderedDictList('book0', 'book1')    
-    dictlist.book0.append(5)
-    dictlist.book0.append(10)
-    dictlist.to_csv('book.csv', 0)
