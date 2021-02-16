@@ -12,8 +12,23 @@ import torchvision.transforms as transforms
 NUM_WORKERS = cpu_count()
 
 
+def get_lenet5_transforms():
+    r"""LeNet5 assumes 32x32 size of image,
+    therefore need to resize for 28x28 size of image.
+    """
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.ToTensor(),
+    ])
+    transform_test = transforms.Compose([
+        transforms.CenterCrop(32),
+        transforms.ToTensor(),
+    ])
+    return transform_train, transform_test
+
+
 def get_cifar10_transforms():
-    """Refer: https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
+    r"""Refer: https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
     """
     CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
     CIFAR10_STD = (0.2023, 0.1994, 0.2010)
@@ -31,7 +46,7 @@ def get_cifar10_transforms():
 
 
 def get_cifar100_transforms():
-    """Refer: https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
+    r"""Refer: https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
     """
     CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
     CIFAR100_STD = (0.2675, 0.2565, 0.2761)

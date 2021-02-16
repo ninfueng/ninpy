@@ -12,7 +12,7 @@ def set_logger(
     log_path: str,
     to_console: bool = True,
     rm_exist: bool = False) -> None:
-    """From: https://github.com/cs230-stanford/cs230-code-examples
+    r"""From: https://github.com/cs230-stanford/cs230-code-examples
     Set the logger to log info in terminal and file `log_path`.
     In general, it is useful to have a logger so that every output to the terminal is saved
     in a permanent file. Here we save it to `model_dir/train.log`.
