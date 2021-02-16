@@ -5,7 +5,6 @@ Created on Mon Jan  4 20:24:28 2021
 @author: Ninnart Fuengfusin
 """
 import yaml
-from collections import OrderedDict
 from data import AttributeOrderedDict
 
 
@@ -42,12 +41,12 @@ def dump_yaml(input: dict, save_loc: str) -> None:
 
 
 def dict2str(input: dict) -> str:
-    """Given a dict recursively includes all parameters into a string.
+    r"""Given a dict recursively includes all parameters into a string.
     `::` subdict, `:` dict, and - next var.
     Example:
     ```
-    v = dict2str({1:2, 3:4, 5:{6:7}, 8:{9:{10:11}}})
-    > '1:2-3:4-5::6:7-8::9::10:11-'
+    >>> v = dict2str({1:2, 3:4, 5:{6:7}, 8:{9:{10:11}}})
+    '1:2-3:4-5::6:7-8::9::10:11-'
     ```
     Args:
         input (dict): dict to reduce to a string.
@@ -65,7 +64,9 @@ def dict2str(input: dict) -> str:
 
 
 def args2str(args) -> str:
-    """Generate a string from argparse parser.
+    r"""Generate a string from argparse parser.
+    If argparse records hyper-parameters, then this compresses
+    all hyper-parameters to a string.
     """
     #args = parser.parse_args()
     args_dict = vars(args)
@@ -74,12 +75,14 @@ def args2str(args) -> str:
 
 
 def args2yaml(args, yaml_name: str) -> None:
+    r"""Convert argparse to a yaml file.
+    """
     args = vars(args)
     dump_yaml(args, yaml_name)
 
 
 if __name__ == '__main__':
-    import argparse
+    import os, argparse
 
     test_dict = {1:2, 3:4, 5:{6:7}, 8:{9:{10:11}}}
     LOAD_CONFIG = 'test_dumped.yaml'
@@ -96,4 +99,5 @@ if __name__ == '__main__':
 
     args_str = args2str(args)
     print(args_str)
-    #assert args_str ==''
+
+    os.remove(LOAD_CONFIG)
