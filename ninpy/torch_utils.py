@@ -7,12 +7,14 @@ import os
 import random
 import logging
 
-import torch
 import numpy as np
+import torch
+import torch.nn as nn
+from common import multilv_getattr
 
 
-def seed_torch(seed: int = 2020, verbose: bool = True) -> None:
-    r"""Seed random seed to all possible.
+def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
+    r"""Seed the random seed to all possible modules.
     From: https://github.com/pytorch/pytorch/issues/11278
     From: https://pytorch.org/docs/stable/notes/randomness.html
     From: https://github.com/NVIDIA/apex/tree/master/examples/imagenet
@@ -48,8 +50,7 @@ def save_model(
 
     if verbose:
         logging.info(
-            f'Save model@ {save_dir}'
-            f'with {epoch} epoch.')
+            f'Save model@ {save_dir} with {epoch} epoch.')
 
 
 def load_model(save_dir: str, model, optim = None, verbose: bool = True):
@@ -170,3 +171,76 @@ def normal_init(m):
     elif classname.find('BatchNorm') != -1:
         torch.nn.init.normal_(m.weight, 1.0, 0.02)
         torch.nn.init.zeros_(m.bias)
+
+
+def get_num_weight_from_name(
+        model: nn.Module, name: str, verbose: bool = True) -> list:
+    r"""Get a number of weight from a name of module.
+    >>> model = resnet18(pretrained=False)
+    >>> num_weight = get_num_weight_from_name(model, 'fc')
+    """
+    assert isinstance(name, str)
+    module = multilv_getattr(model, name)
+    num_weights = module.weight.numel()
+    if verbose:
+        logging.info(
+            f'Module: {name} contains {num_weights} parameters.')
+    return num_weights
+
+
+class EarlyStoppingException(Exception):
+    """Exception for catching early stopping. For exiting out of loop."""
+    pass
+
+
+class CheckPointer(object):
+    """TODO: Adding with optimizer, model save, and unittest.
+    """
+    def __init__(self, task: str = 'max', patience: int = 10, verbose: bool = True) -> None:
+        assert isinstance(verbose, bool)
+        if task == 'max':
+            self.var = np.finfo(float).min
+        elif task.lower() == 'min':
+            self.var = np.finfo(float).max
+        else:
+            raise NotImplementedError(
+                f'var can be only `max` or `min`. Your {verbose}')
+        self.task = task.lower()
+        self.verbose = verbose
+        self.patience = patience
+        self.patience_counter = 0
+
+    def update_model(self, model: nn.Module, score: float) -> None:
+        r"""Save model if score is better than var.
+        Raise:
+            EarlyStoppingException: if `score` is not better than `var` for `patience` times.
+        """
+        if self.task == 'max':
+            if score > self.var:
+                # TODO: model saves
+                model.save_state_dict()
+                if self.verbose:
+                    logging.info(f'Save model@{score}.')
+                self.patience_counter = 0
+            else:
+                self.patience_counter += 1
+
+        elif self.task == 'min':
+            if score < self.var:
+                # TODO: model save
+                model.save_state_dict()
+                if self.verbose:
+                    logging.info('Save model@{score}.')
+                self.patience_counter = 0
+            else:
+                self.patience_counter += 1
+        
+        if self.patience == self.patience_counter:
+            raise EarlyStoppingException(
+                f'Exiting: patience_counter == {self.patience}.')
+        
+        def __str__(self) -> str:
+            # TODO: print and testing for which one is better str or repr.
+            return (
+                f'Task: {self.task} \n Best value: {self.var}\n'
+                f'Counter: {self.patience_counter}\n')

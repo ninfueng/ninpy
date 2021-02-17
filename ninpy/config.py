@@ -20,6 +20,7 @@ def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
         data = yaml.load(f, Loader=yaml.FullLoader)
     if with_attribute:
         # TODO: recursive find dict and convert it into Attribute type.
+        # Not work with dict in dict.
         data = AttributeOrderedDict(data)
     return data
 

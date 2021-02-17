@@ -17,10 +17,15 @@ def launch_job(
         hyper_params: dict,
         exp_pth: str,
         verbose: bool = True) -> None:
+
     r"""Modified from: https://github.com/cs230-stanford/cs230-code-examples
     Execute Python scripts on demand.
     Designed to use with hyper parameter tuner such as hyperopt and optuna.
     Required scripts with with `yaml` and `exp_pth` option.
+    Example:
+    ```
+    >>> launch_job('hparams', 'test_net.py', {'epochs': 1})
+    ```
     """
     # Launch training with this config
     assert isinstance(hyper_params, dict)
@@ -35,7 +40,7 @@ def launch_job(
     cmd = f'{PYTHON} {script_name} --yaml={hyper_yaml} --exp_pth={exp_pth}'
 
     if verbose:
-        logging.info(f'Using command: {cmd}')
+        logging.info(f'Using launch job with: {cmd}')
     # Run command at shell.
     check_call(cmd, shell=True)
     # Remove yaml file after job done.

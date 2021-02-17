@@ -5,6 +5,41 @@ import numpy as np
 import torch
 
 
+def measure_sparse(*ws) -> float:
+    """Measure the sparsity of input tensors or *tensors.
+    TODO: unittest this function.
+    Example:
+    ```
+    >>> measure_sparse()
+    ```
+    """
+    if not ws:
+        # Detecting in case, empty tuple of ws (max pooling or others).
+        # If able to detect assign the sparsity as zero.
+        sparse = torch.tensor(0.0)
+    else:
+        # In case, not empty tuple.
+        total_sparity = 0
+        num_params = 0
+        for w in ws:
+            if w is None:
+                # In case of w is None.
+                continue
+            w = w.data
+            device = w.device
+            num_params += w.numel()
+            total_sparity += torch.where(
+                w == 0.0, 
+                torch.tensor(1.0).to(device),
+                torch.tensor(0.0).to(device)).sum()
+        if num_params == 0:
+            # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
+            sparse = torch.tensor(0.0)
+        else:
+            sparse = total_sparity/num_params
+    return sparse.item()
+
+
 def numpy2cpp(
         array: np.ndarray, type_var: str, name_var: str,
         name_file: str, mode: str, header_guard: bool = True,

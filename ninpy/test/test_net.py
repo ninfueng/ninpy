@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan  5 13:26:28 2021
-
-@author: ninnart
+@author: Ninnart Fuengfusin
 """
 import os
 import argparse
@@ -19,10 +17,10 @@ import logging
 from prefetch_generator import BackgroundGenerator
 from torch.utils.tensorboard import SummaryWriter
 
-from log import set_logger
-from experiment import set_experiment
-from config import dump_yaml, load_yaml, dict2str
-from data import AttributeOrderedDict
+from ninpy.log import set_logger
+from ninpy.experiment import set_experiment
+from ninpy.config import dump_yaml, load_yaml, dict2str
+from ninpy.data import AttributeOrderedDict
 
 
 class Net(nn.Module):

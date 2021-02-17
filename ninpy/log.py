@@ -12,6 +12,7 @@ def set_logger(
     log_path: str,
     to_console: bool = True,
     rm_exist: bool = False) -> None:
+
     r"""From: https://github.com/cs230-stanford/cs230-code-examples
     Set the logger to log info in terminal and file `log_path`.
     In general, it is useful to have a logger so that every output to the terminal is saved
@@ -41,14 +42,18 @@ def set_logger(
     if not logger.handlers:
         # Logging to a file
         file_handler = logging.FileHandler(log_path)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s:%(filename)s: %(message)s'))
+        file_handler.setFormatter(
+            logging.Formatter(
+                '%(asctime)s:%(filename)s: %(message)s'))
         logger.addHandler(file_handler)
 
         if to_console:
             # Display the log to console
             # This allows tqdm only to process in console.
             stream_handler = logging.StreamHandler()
-            stream_handler.setFormatter(logging.Formatter('%(asctime)s:%(filename)s: %(message)s'))
+            stream_handler.setFormatter(
+                logging.Formatter(
+                    '%(asctime)s:%(filename)s: %(message)s'))
             logger.addHandler(stream_handler)
 
 
