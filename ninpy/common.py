@@ -9,8 +9,8 @@ import argparse
 
 
 def str2bool(v: str) -> bool:
-    """From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-    Put str2bool into type of argparse.
+    r"""From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    Put str2bool as a type of argparse to able to receive true or false as input.
     """
     if isinstance(v, bool):
         return v
@@ -26,7 +26,7 @@ def str2bool(v: str) -> bool:
 
 
 def timewrap(func):
-    """Wrapper of function to printing out the running of the wrapped function.
+    r"""Wrapper of function to printing out the running of the wrapped function.
     """
     def wrapped(*args, **kwargs):
         t1 = time.time()
@@ -40,7 +40,8 @@ def timewrap(func):
 
 
 def multilv_getattr(obj, multi_lv: str):
-    """Example:
+    r"""Get multi-levels attribute.
+    Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
     >>> multilv_getattr(model, 'trunk.early')
@@ -53,7 +54,8 @@ def multilv_getattr(obj, multi_lv: str):
 
 
 def multilv_setattr(obj, multi_lv: str, set_with: object):
-    """Example:
+    r"""Set multi-levels attribute.
+    Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
     >>> multilv_setattr(model, 'conv_up3.conv', nn.Conv2d(5, 5, 5))
@@ -63,3 +65,27 @@ def multilv_setattr(obj, multi_lv: str, set_with: object):
     for l in lvs[:-1]:
         obj = getattr(obj, l)
     obj = setattr(obj, lvs[-1], set_with)
+
+
+class RunningAverage(object):
+    r"""From: https://github.com/cs230-stanford/cs230-code-examples
+    A simple class that maintains the running average of a quantity
+    Example:
+    ```
+    >>> loss_avg = RunningAverage()
+    >>> loss_avg.update(loss, batch_size)
+    >>> loss_avg()
+    ```
+    """
+    def __init__(self):
+        self.numel = 0
+        self.total = 0
+        self.steps = 0
+
+    def update(self, val: int, numel: int):
+        self.total += val
+        self.numel += numel
+        self.steps += 1
+
+    def __call__(self):
+        return self.total/self.numel

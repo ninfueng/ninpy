@@ -6,11 +6,11 @@ import torch
 
 
 def measure_sparse(*ws) -> float:
-    """Measure the sparsity of input tensors or *tensors.
+    """Measure the sparsity of input tensors.
     TODO: unittest this function.
     Example:
     ```
-    >>> measure_sparse()
+    >>> measure_sparse(torch.zeros(10, 10), torch.ones(10,10))
     ```
     """
     if not ws:
@@ -19,16 +19,18 @@ def measure_sparse(*ws) -> float:
         sparse = torch.tensor(0.0)
     else:
         # In case, not empty tuple.
-        total_sparity = 0
+        total_sparsity = 0
         num_params = 0
         for w in ws:
             if w is None:
                 # In case of w is None.
                 continue
+
             w = w.data
             device = w.device
             num_params += w.numel()
-            total_sparity += torch.where(
+
+            total_sparsity += torch.where(
                 w == 0.0, 
                 torch.tensor(1.0).to(device),
                 torch.tensor(0.0).to(device)).sum()
@@ -36,7 +38,7 @@ def measure_sparse(*ws) -> float:
             # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
             sparse = torch.tensor(0.0)
         else:
-            sparse = total_sparity/num_params
+            sparse = total_sparsity/num_params
     return sparse.item()
 
 

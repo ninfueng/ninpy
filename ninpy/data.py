@@ -48,7 +48,7 @@ class AttributeOrderedDict(OrderedDict):
 
 
 class AttributeOrderedDictList(AttributeOrderedDict):
-    """defaultdict with list might in sameway as this.
+    """AttributeOrderedDict with supporting the lists.
     With additional methods to support.
     Example:
     ```
@@ -58,7 +58,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
     >>> dictlist.to_csv('book.csv', 0)
     ```
     """
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         for arg in args:
             self.update({arg: []})
 
@@ -86,11 +86,14 @@ class AttributeOrderedDictList(AttributeOrderedDict):
         return df
 
     def to_csv(
-        self, file_name: str,
+        self, 
+        file_name: str,
         fill_var: float = np.nan,
         verbose: str = True)-> None:
-        """Saving to csv.
+        """Saving the dictlist to csv.
         """
+        assert isinstance(file_name, str)
+
         df = self.to_df(fill_var=fill_var)
         df.to_csv(file_name, index=None)
         if verbose:

@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import torch
 import torch.nn as nn
-from common import multilv_getattr
+from .common import multilv_getattr
 
 
 def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
@@ -53,22 +53,28 @@ def save_model(
             f'Save model@ {save_dir} with {epoch} epoch.')
 
 
-def load_model(save_dir: str, model, optim = None, verbose: bool = True):
+def load_model(
+    save_dir: str, model: nn.Module,
+    optim = None, verbose: bool = True):
+    r"""Load model from `save_dir` and extract compressed information.
+    """
+    assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
     model_state_dict = ckpt['model_state_dict']
     optimizer_state_dict = ckpt['optimizer_state_dict']
-    metric = ckpt['metric']
-    epoch = ckpt['epoch']
+    metric, epoch = ckpt['metric'], ckpt['epoch']
     model = model.load_state_dict(model_state_dict)
+
     if optim is not None:
         optim = optim.load_state_dict(optimizer_state_dict)
+
     if verbose:
         logging.info(f'Load a model with score {metric}@ {epoch} epoch')
     return model, optim
 
 
 def add_weight_decay(model, weight_decay, skip_list=()) -> None:
-    """From: https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
+    r"""From: https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
     https://www.dlology.com/blog/bag-of-tricks-for-image-classification-with-convolutional-neural-networks-in-keras/
     Example:
     >>> add_weight_decay(model, 4e-5, (''))
@@ -88,8 +94,29 @@ def add_weight_decay(model, weight_decay, skip_list=()) -> None:
         {'params': decay, 'weight_decay': weight_decay}]
 
 
+def set_warmup_lr(
+    init_lr: float, warmup_epochs: int, train_loader,
+    optimizer, batch_idx: int, epoch_idx: int, verbose: bool = True) -> None:
+    r"""Calculate and set the warmup learning rate.
+    >>> for w in range(warmup_epochs):
+    >>>     for idx, (data, target) in enumerate(train_loader):
+    >>>         set_warmup_lr(
+                    initial_lr, warmup_epochs, train_loader,
+                    optimizer, idx, w, False)
+    """
+    assert isinstance(warmup_epochs, int)
+
+    total = warmup_epochs*(len(train_loader))
+    iteration = (batch_idx + 1) + (epoch_idx*len(train_loader))
+    lr = init_lr*(iteration/total)
+    optimizer.param_groups[0]['lr'] = lr
+
+    if verbose:
+        logging.info(f'Learning rate: {lr}, Step: {iteration}/{total}')
+
+
 def make_onehot(input, num_classes: int):
-    """Convert class index tensor to one hot encoding tensor.
+    r"""Convert class index tensor to one hot encoding tensor.
     Args:
         input: A tensor of shape [N, 1, *]
         num_classes: An int of number of class
@@ -105,33 +132,8 @@ def make_onehot(input, num_classes: int):
     return result
 
 
-class RunningAverage(object):
-    """From: https://github.com/cs230-stanford/cs230-code-examples
-    A simple class that maintains the running average of a quantity
-    Example:
-    ```
-    >>> loss_avg = RunningAverage()
-    >>> loss_avg.update(2)
-    >>> loss_avg.update(4)
-    >>> loss_avg() = 3
-    ```
-    """
-    def __init__(self):
-        self.numel = 0
-        self.total = 0
-        self.steps = 0
-
-    def update(self, val: int, numel: int):
-        self.total += val
-        self.numel += numel
-        self.steps += 1
-
-    def __call__(self):
-        return self.total/self.numel
-
-
 def set_batchnorm_eval(m) -> None:
-    """From: https://discuss.pytorch.org/t/cannot-freeze-batch-normalization-parameters/38696
+    r"""From: https://discuss.pytorch.org/t/cannot-freeze-batch-normalization-parameters/38696
     Ex:
     >>> model.apply(set_batchnorm_eval)
     """
@@ -234,11 +236,11 @@ class CheckPointer(object):
                 self.patience_counter = 0
             else:
                 self.patience_counter += 1
-        
+
         if self.patience == self.patience_counter:
             raise EarlyStoppingException(
                 f'Exiting: patience_counter == {self.patience}.')
-        
+
         def __str__(self) -> str:
             # TODO: print and testing for which one is better str or repr.
             return (

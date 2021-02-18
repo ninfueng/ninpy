@@ -12,21 +12,6 @@ import torchvision.transforms as transforms
 NUM_WORKERS = cpu_count()
 
 
-def get_lenet5_transforms():
-    r"""LeNet5 assumes 32x32 size of image,
-    therefore need to resize for 28x28 size of image.
-    """
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.ToTensor(),
-    ])
-    transform_test = transforms.Compose([
-        transforms.CenterCrop(32),
-        transforms.ToTensor(),
-    ])
-    return transform_train, transform_test
-
-
 def get_cifar10_transforms():
     r"""Refer: https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
     """
