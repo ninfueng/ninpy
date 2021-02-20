@@ -4,8 +4,9 @@
 Created on Mon Jan  4 20:24:28 2021
 @author: Ninnart Fuengfusin
 """
+import time
 import yaml
-from data import AttributeOrderedDict
+from .data import AttributeOrderedDict
 
 
 def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
@@ -80,6 +81,16 @@ def args2yaml(args, yaml_name: str) -> None:
     """
     args = vars(args)
     dump_yaml(args, yaml_name)
+
+
+def name_experiment(hparams: dict) -> str:
+    exp_pth = dict2str(hparams)
+    datetime = time.strftime("%Y:%m:%d-%H:%M:%S")
+    exp_pth = f'{datetime}-{exp_pth}'
+
+    if len(exp_pth) > 255:
+        exp_pth = exp_pth[0: 254]
+    return exp_pth
 
 
 if __name__ == '__main__':

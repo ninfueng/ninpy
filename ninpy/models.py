@@ -5,13 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-cfg = {
-    'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
-}
-
 
 class BasicBlock(nn.Module):
     """From: https://github.com/kuangliu/pytorch-cifar/blob/master/models/vgg.py
@@ -81,6 +74,14 @@ class Bottleneck(nn.Module):
         out += self.shortcut(x)
         out = F.relu(out)
         return out
+
+
+cfg = {
+    'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+    'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+}
 
 
 class VGG(nn.Module):
@@ -176,7 +177,7 @@ def ResNet152():
 
 
 class LeNet5(nn.Module):
-    """
+    r"""LeNet5 setting for toy dataset.
     """
     def __init__(self, in_chl: int = 1):
         assert isinstance(in_chl, int)
@@ -219,6 +220,47 @@ class LeNet5(nn.Module):
         o = self.features(input)
         o = self.classifier(o)
         return o
+
+
+class MLP(nn.Module):
+    def __init__(
+        self,
+        in_chl: int = 1,
+        num_neurons: int = 800,
+        num_hiddens: int = 1) -> None:
+        assert isinstance(in_chl, int)
+        assert isinstance(num_neurons, int)
+        assert isinstance(num_hiddens, int)
+        self.num_hiddens = num_hiddens
+        super().__init__()
+
+        self.input_layers = nn.Sequential(
+            *[
+                nn.Flatten(),
+                nn.Linear(784, num_neurons, bias=False),
+                nn.BatchNorm1d(num_neurons),
+                nn.ReLU(),
+            ])
+        self.hidden_layers = self._make_layers(
+            num_neurons, num_neurons)
+        self.out_layers = nn.Sequential(
+            *[nn.Linear(num_neurons, 10)]
+            )
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        o = self.input_layers(input)
+        o = self.hidden_layers(o)
+        o = self.out_layers(o)
+        return o
+
+    def _make_layers(self, in_features: int, out_features: int) -> nn.Module:
+        layers = []
+        for _ in range(self.num_hiddens):
+            layers += [
+                    nn.Linear(in_features, out_features, bias=False),
+                    nn.BatchNorm1d(out_features),
+                    nn.ReLU()]
+        return nn.Sequential(*layers)
 
 
 if __name__ == '__main__':

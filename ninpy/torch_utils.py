@@ -6,10 +6,12 @@
 import os
 import random
 import logging
+from typing import List
 
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.nn.modules.batchnorm import _BatchNorm
 from .common import multilv_getattr
 
 
@@ -73,24 +75,52 @@ def load_model(
     return model, optim
 
 
-def add_weight_decay(model, weight_decay, skip_list=()) -> None:
-    r"""From: https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
-    https://www.dlology.com/blog/bag-of-tricks-for-image-classification-with-convolutional-neural-networks-in-keras/
+def get_bn_names(module) -> List[str]:
+    r"""Designed for using with `add_weight_decay` as `skip_list`.
+    """
+    name_bn_modules = []
+    for n, m in module.named_modules():
+        if isinstance(m, _BatchNorm):
+            name_bn_modules.append(n + '.bias')
+            name_bn_modules.append(n + '.weight')
+    return name_bn_modules
+
+
+def add_weight_decay(
+    model: nn.Module,
+    weight_decay: float,
+    skip_list = (),
+    verbose: bool = True) -> None:
+    r"""Adding weight decay by avoiding batch norm and all bias.
+    From:
+        https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
+        https://www.dlology.com/blog/bag-of-tricks-for-image-classification-with-convolutional-neural-networks-in-keras/
+        https://github.com/pytorch/pytorch/issues/1402
     Example:
     >>> add_weight_decay(model, 4e-5, (''))
     """
     assert isinstance(weight_decay, float)
+
     decay, no_decay = [], []
     for name, param in model.named_parameters():
         if not param.requires_grad:
             # Skip frozen weights.
             continue
-        if len(param.shape) == 1 or name.endswith('.bias') or name in skip_list:
+        if(
+            len(param.shape) == 1 or
+            name.endswith('.bias') or
+            name in skip_list):
+
             no_decay.append(param)
+            if verbose:
+                logging.info(
+                    f'Skipping the weight decay on: {name}.')
         else:
             decay.append(param)
+
+    assert len(list(model.parameters())) == len(decay) + len(no_decay)
     return [
-        {'params': no_decay, 'weight_decay': 0.},
+        {'params': no_decay, 'weight_decay': 0.0},
         {'params': decay, 'weight_decay': weight_decay}]
 
 
@@ -105,7 +135,6 @@ def set_warmup_lr(
                     optimizer, idx, w, False)
     """
     assert isinstance(warmup_epochs, int)
-
     total = warmup_epochs*(len(train_loader))
     iteration = (batch_idx + 1) + (epoch_idx*len(train_loader))
     lr = init_lr*(iteration/total)
@@ -143,7 +172,7 @@ def set_batchnorm_eval(m) -> None:
 
 
 def freeze_batchnorm(m) -> None:
-    """
+    r"""
     Ex:
     >>> model.apply(freeze_batchnorm)
     """
@@ -164,7 +193,7 @@ def freeze_param_given_name(
 
 
 def normal_init(m):
-    """From: https://github.com/pytorch/examples/blob/master/dcgan/main.py
+    r"""From: https://github.com/pytorch/examples/blob/master/dcgan/main.py
     >>> model.apply(normal_init)
     """
     classname = m.__class__.__name__
@@ -191,12 +220,12 @@ def get_num_weight_from_name(
 
 
 class EarlyStoppingException(Exception):
-    """Exception for catching early stopping. For exiting out of loop."""
+    r"""Exception for catching early stopping. For exiting out of loop."""
     pass
 
 
 class CheckPointer(object):
-    """TODO: Adding with optimizer, model save, and unittest.
+    r"""TODO: Adding with optimizer, model save, and unittest.
     """
     def __init__(self, task: str = 'max', patience: int = 10, verbose: bool = True) -> None:
         assert isinstance(verbose, bool)
