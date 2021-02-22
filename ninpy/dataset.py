@@ -9,7 +9,8 @@ from multiprocessing import cpu_count
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
-NUM_WORKERS = cpu_count()
+import torchvision.datasets as datasets
+from torch.utils.data.distributed import DistributedSampler
 
 
 def get_cifar10_transforms():
@@ -51,7 +52,7 @@ def get_cifar100_transforms():
 def load_toy_dataset(
         num_train_batch: int,
         num_test_batch: int,
-        num_workers: int = NUM_WORKERS,
+        num_workers: int = cpu_count(),
         dataset_name: str = 'mnist',
         data_path: str = './dataset',
         train_transforms: transforms.Compose = None,
@@ -183,3 +184,121 @@ def load_toy_dataset(
             'dataset must be in [mnist, fmnist, kmnist, '
             f'emnist, cifar10, cifar100, svhn] only, your input: {dataset}')
     return train_loader, test_loader
+
+
+def get_imagenet_loaders(
+    root: str,
+    batch_size: int,
+    num_workers: int = cpu_count(),
+    distributed: bool = False,
+    train_transforms = None,
+    val_transforms = None):
+    r"""Get ImageNet loaders.
+    """
+    assert isinstance(root, str)
+    assert isinstance(batch_size, str)
+    assert isinstance(num_workers, str)
+    assert isinstance(distributed, bool)
+
+    traindir = os.path.join(root, 'train')
+    valdir = os.path.join(root, 'val')
+
+    IMAGENET_MEAN = [0.485, 0.456, 0.406]
+    IMAGENET_STD = [0.229, 0.224, 0.225]
+    normalize = transforms.Normalize(
+        mean=IMAGENET_MEAN,
+        std=IMAGENET_STD)
+
+    if train_transforms is None:
+        train_transforms = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+    if val_transforms is None:
+        val_transforms = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+    train_dataset = datasets.ImageFolder(
+        traindir, train_transforms)
+    val_dataset = datasets.ImageFolder(
+        valdir, val_transforms)
+    if distributed:
+        train_sampler = DistributedSampler(
+            train_dataset)
+    else:
+        train_sampler = None
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=num_workers,
+        pin_memory=True,
+        sampler=train_sampler)
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True)
+    return train_loader, val_loader
+
+
+def get_voc2012_loader(
+    root: str,
+    batch_size: int,
+    num_workers: int = cpu_count(),
+    distributed: bool = False,
+    train_transforms = None,
+    val_transforms = None):
+    r"""Refer: https://albumentations.ai/docs/autoalbument/examples/pascal_voc/
+    """
+    assert isinstance(root, str)
+    assert isinstance(batch_size, str)
+    assert isinstance(num_workers, str)
+    assert isinstance(distributed, bool)
+
+    train_dataset = datasets.VOCSegmentation(
+        root=root,
+        year='2012',
+        image_set='train',
+        download=True,
+        transform=train_transforms,
+    )
+    val_dataset = datasets.VOCSegmentation(
+        root=root,
+        year='2012',
+        image_set='val',
+        download=True,
+        transform=val_transforms,
+    )
+
+    if distributed:
+        train_sampler = DistributedSampler(
+            train_dataset)
+    else:
+        train_sampler = None
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=num_workers,
+        pin_memory=True,
+        sampler=train_sampler)
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True)
+
+    return train_loader, val_loader

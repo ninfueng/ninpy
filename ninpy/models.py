@@ -6,6 +6,93 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class MLP(nn.Module):
+    def __init__(
+        self,
+        in_chl: int = 1,
+        num_neurons: int = 800,
+        num_hiddens: int = 1) -> None:
+        assert isinstance(in_chl, int)
+        assert isinstance(num_neurons, int)
+        assert isinstance(num_hiddens, int)
+
+        super().__init__()
+        self.num_hiddens = num_hiddens
+        self.input_layers = nn.Sequential(
+            *[
+                nn.Flatten(),
+                nn.Linear(784, num_neurons, bias=False),
+                nn.BatchNorm1d(num_neurons),
+                nn.ReLU(),
+            ])
+        self.hidden_layers = self._make_layers(
+            num_neurons, num_neurons)
+        self.out_layers = nn.Sequential(
+            *[nn.Linear(num_neurons, 10)]
+            )
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        o = self.input_layers(input)
+        o = self.hidden_layers(o)
+        o = self.out_layers(o)
+        return o
+
+    def _make_layers(self, in_features: int, out_features: int) -> nn.Module:
+        layers = []
+        for _ in range(self.num_hiddens):
+            layers += [
+                    nn.Linear(in_features, out_features, bias=False),
+                    nn.BatchNorm1d(out_features),
+                    nn.ReLU()]
+        return nn.Sequential(*layers)
+
+
+class LeNet5(nn.Module):
+    r"""LeNet5 setting for toy dataset.
+    """
+    def __init__(self, in_chl: int = 1):
+        assert isinstance(in_chl, int)
+        super().__init__()
+        if in_chl == 1:
+            logging.info(
+                f'Expected MNIST like dataset from in_chl={in_chl}.')
+        else:
+            logging.info(
+                f'Expected CIFAR-10 like dataset from in_chl={in_chl}.')
+
+        self.features = nn.Sequential(
+            *[
+                nn.Conv2d(1, 6, 5),
+                nn.BatchNorm2d(6),
+                nn.MaxPool2d((2, 2), stride=2),
+                nn.ReLU(),
+
+                nn.Conv2d(6, 16, 5),
+                nn.BatchNorm2d(16),
+                nn.MaxPool2d((2, 2), stride=2),
+                nn.ReLU(),
+            ])
+
+        self.classifier = nn.Sequential(
+            *[
+                nn.Flatten(),
+                nn.Linear(256, 120),
+                nn.BatchNorm1d(120),
+                nn.ReLU(),
+
+                nn.Linear(120, 84),
+                nn.BatchNorm1d(84),
+                nn.ReLU(),
+
+                nn.Linear(84, 10),
+            ])
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        o = self.features(input)
+        o = self.classifier(o)
+        return o
+
+
 class BasicBlock(nn.Module):
     """From: https://github.com/kuangliu/pytorch-cifar/blob/master/models/vgg.py
     MIT License.
@@ -75,14 +162,12 @@ class Bottleneck(nn.Module):
         out = F.relu(out)
         return out
 
-
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
-
 
 class VGG(nn.Module):
     """From: https://github.com/kuangliu/pytorch-cifar/blob/master/models/vgg.py
@@ -112,7 +197,8 @@ class VGG(nn.Module):
                         in_channels, x, kernel_size=3,
                         padding=1, bias=False),
                     nn.BatchNorm2d(x),
-                    nn.ReLU(inplace=True)]
+                    nn.ReLU(inplace=True)
+                    ]
                 in_channels = x
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
@@ -174,93 +260,6 @@ def ResNet101():
 
 def ResNet152():
     return ResNet(Bottleneck, [3, 8, 36, 3])
-
-
-class LeNet5(nn.Module):
-    r"""LeNet5 setting for toy dataset.
-    """
-    def __init__(self, in_chl: int = 1):
-        assert isinstance(in_chl, int)
-        super().__init__()
-        if in_chl == 1:
-            logging.info(
-                f'Expected MNIST like dataset from in_chl={in_chl}.')
-        else:
-            logging.info(
-                f'Expected CIFAR-10 like dataset from in_chl={in_chl}.')
-
-        self.features = nn.Sequential(
-            *[
-                nn.Conv2d(1, 6, 5),
-                nn.BatchNorm2d(6),
-                nn.MaxPool2d((2, 2), stride=2),
-                nn.ReLU(),
-
-                nn.Conv2d(6, 16, 5),
-                nn.BatchNorm2d(16),
-                nn.MaxPool2d((2, 2), stride=2),
-                nn.ReLU(),
-            ])
-
-        self.classifier = nn.Sequential(
-            *[
-                nn.Flatten(),
-                nn.Linear(256, 120),
-                nn.BatchNorm1d(120),
-                nn.ReLU(),
-
-                nn.Linear(120, 84),
-                nn.BatchNorm1d(84),
-                nn.ReLU(),
-
-                nn.Linear(84, 10),
-            ])
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        o = self.features(input)
-        o = self.classifier(o)
-        return o
-
-
-class MLP(nn.Module):
-    def __init__(
-        self,
-        in_chl: int = 1,
-        num_neurons: int = 800,
-        num_hiddens: int = 1) -> None:
-        assert isinstance(in_chl, int)
-        assert isinstance(num_neurons, int)
-        assert isinstance(num_hiddens, int)
-        self.num_hiddens = num_hiddens
-        super().__init__()
-
-        self.input_layers = nn.Sequential(
-            *[
-                nn.Flatten(),
-                nn.Linear(784, num_neurons, bias=False),
-                nn.BatchNorm1d(num_neurons),
-                nn.ReLU(),
-            ])
-        self.hidden_layers = self._make_layers(
-            num_neurons, num_neurons)
-        self.out_layers = nn.Sequential(
-            *[nn.Linear(num_neurons, 10)]
-            )
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        o = self.input_layers(input)
-        o = self.hidden_layers(o)
-        o = self.out_layers(o)
-        return o
-
-    def _make_layers(self, in_features: int, out_features: int) -> nn.Module:
-        layers = []
-        for _ in range(self.num_hiddens):
-            layers += [
-                    nn.Linear(in_features, out_features, bias=False),
-                    nn.BatchNorm1d(out_features),
-                    nn.ReLU()]
-        return nn.Sequential(*layers)
 
 
 if __name__ == '__main__':
