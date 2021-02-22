@@ -302,3 +302,8 @@ def get_voc2012_loader(
         pin_memory=True)
 
     return train_loader, val_loader
+
+
+if __name__ == '__main__':
+    get_voc2012_loader(
+        '/home/datasets/VOC', 128, 8, False)
