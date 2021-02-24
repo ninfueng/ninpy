@@ -14,6 +14,26 @@ import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
 from .common import multilv_getattr
 
+def topk_accuracy(
+        pred: torch.Tensor,
+        target: torch.Tensor,
+        k: int = 1
+        ) -> torch.Tensor:
+    r"""Get top-k corrected predictions and batch size.
+    >>> topk_accuracy(
+        torch.ones(batch_size, num_classes),
+        torch.ones(batch_size))
+    """
+    assert isinstance(k, int)
+    assert k >= 1
+    pred, target = pred.detach().data, target.detach().data
+    batch_size = target.shape[0]
+    _, pred = pred.topk(k, dim=-1)
+    # Make targets shape same as the topk pred.
+    target = target.expand_as(pred.T)
+    correct = target.T.eq(pred)
+    return correct.numpy().sum(), batch_size
+
 
 def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
     r"""Seed the random seed to all possible modules.
@@ -275,3 +295,7 @@ class CheckPointer(object):
             return (
                 f'Task: {self.task} \n Best value: {self.var}\n'
                 f'Counter: {self.patience_counter}\n')
+
+
+if __name__ == '__main__':
+    pass
