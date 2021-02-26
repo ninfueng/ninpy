@@ -8,7 +8,7 @@ import sys
 import os
 import logging
 from subprocess import check_call
-from .config import dump_yaml, load_yaml, dump_yaml
+from .yaml2 import dump_yaml, load_yaml, dump_yaml
 
 
 def launch_job(

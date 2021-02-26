@@ -55,14 +55,16 @@ class LeNet5(nn.Module):
         super().__init__()
         if in_chl == 1:
             logging.info(
-                f'Expected MNIST like dataset from in_chl={in_chl}.')
+                'Expected MNIST like dataset'
+                f'from in_chl={in_chl}.')
         else:
             logging.info(
-                f'Expected CIFAR-10 like dataset from in_chl={in_chl}.')
+                'Expected CIFAR-10 like dataset'
+                f'from in_chl={in_chl}.')
 
         self.features = nn.Sequential(
             *[
-                nn.Conv2d(1, 6, 5),
+                nn.Conv2d(in_chl, 6, 5),
                 nn.BatchNorm2d(6),
                 nn.MaxPool2d((2, 2), stride=2),
                 nn.ReLU(),

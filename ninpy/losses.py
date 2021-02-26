@@ -30,7 +30,8 @@ def cal_cls_weights(loader, num_classes: int):
 
 class LabelSmoothingLoss(nn.Module):
     r"""Label Smoothing loss. Cross entropy loss.
-    From: https://github.com/pytorch/pytorch/issues/7455#issuecomment-513062631
+    From:
+        https://github.com/pytorch/pytorch/issues/7455#issuecomment-513062631
     """
     def __init__(self, classes, smoothing: float = 0.0, dim=-1):
         super().__init__()
