@@ -9,10 +9,31 @@ import logging
 from typing import List
 
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from torchvision import transforms
 from torch.nn.modules.batchnorm import _BatchNorm
+from torch.utils.tensorboard import SummaryWriter
+
 from .common import multilv_getattr
+
+
+def torch2numpy(x: torch.Tensor) -> np.ndarray:
+    """Converting torch format tensor to numpy, tensorflow format.
+    TODO: checking in case of 2D language model?
+    """
+    assert isinstance(x, torch.Tensor)
+
+    x = x.detach().cpu().numpy()
+    if len(x.shape) == 4:
+        x = np.transpose(x, (2, 3, 1, 0))
+    elif len(x.shape) == 3:
+        x = np.transpose(x, (1, 2, 0))
+    elif len(x.shape) == 2:
+        x = np.transpose(x, (1, 0))
+    return x
+
 
 def topk_accuracy(
         pred: torch.Tensor,
@@ -26,6 +47,7 @@ def topk_accuracy(
     """
     assert isinstance(k, int)
     assert k >= 1
+
     pred, target = pred.detach().data, target.detach().data
     batch_size = target.shape[0]
     _, pred = pred.topk(k, dim=-1)
@@ -43,6 +65,7 @@ def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
     >>> seed_torch(2021)
     """
     assert isinstance(seed, int)
+
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
@@ -51,6 +74,24 @@ def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
     torch.backends.cudnn.deterministic = True
     if verbose:
         logging.info(f'Plant a random seed: {seed}.')
+
+
+def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
+    r"""Show an image from torch format.
+    From: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
+    >>> show_img_torch(torch.zeros(3, 224, 224), False)
+    """
+    assert isinstance(denormalize, bool)
+    assert len(x.shape) == 3
+    if denormalize:
+        inv_normalize = transforms.Normalize(
+            mean=[-0.485/0.229, -0.456/0.224, -0.406/0.255],
+            std=[1/0.229, 1/0.224, 1/0.255]
+        )
+        x = inv_normalize(x)
+    x = x.transpose(0, 2).detach().cpu().numpy()
+    plt.imshow(x)
+    plt.show()
 
 
 def save_model(
@@ -93,17 +134,6 @@ def load_model(
     if verbose:
         logging.info(f'Load a model with score {metric}@ {epoch} epoch')
     return model, optim
-
-
-def get_bn_names(module) -> List[str]:
-    r"""Designed for using with `add_weight_decay` as `skip_list`.
-    """
-    name_bn_modules = []
-    for n, m in module.named_modules():
-        if isinstance(m, _BatchNorm):
-            name_bn_modules.append(n + '.bias')
-            name_bn_modules.append(n + '.weight')
-    return name_bn_modules
 
 
 def add_weight_decay(
@@ -181,6 +211,17 @@ def make_onehot(input, num_classes: int):
     return result
 
 
+def get_bn_names(module: nn.Module) -> List[str]:
+    r"""Designed for using with `add_weight_decay` as `skip_list`.
+    """
+    name_bn_modules = []
+    for n, m in module.named_modules():
+        if isinstance(m, _BatchNorm):
+            name_bn_modules.append(n + '.bias')
+            name_bn_modules.append(n + '.weight')
+    return name_bn_modules
+
+
 def set_batchnorm_eval(m) -> None:
     r"""From: https://discuss.pytorch.org/t/cannot-freeze-batch-normalization-parameters/38696
     Ex:
@@ -207,6 +248,7 @@ def freeze_param_given_name(
     for name, param in m.named_parameters():
         if name in freeze_names:
             param.requires_grad = False
+
             if verbose:
                 logging.info(
                     f'Layer: {name} was freeze.')
@@ -297,5 +339,29 @@ class CheckPointer(object):
                 f'Counter: {self.patience_counter}\n')
 
 
-if __name__ == '__main__':
-    pass
+class SummaryWriterDictList(SummaryWriter):
+    r"""SummaryWriter with support the adding multiple scalers to dictlist.
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    def add_scalar_from_dict(
+        self, counter: int = None, kwargs=None) -> None:
+        """Broadcast add_scalar to all elements in dict.
+        """
+        for key in kwargs.keys():
+            if counter is not None:
+                self.add_scalar(str(key), kwargs[key], counter)
+            else:
+                self.add_scalar(str(key), kwargs[key])
+
+    def add_scalar_from_kwargs(
+        self, counter: int = None, **kwargs) -> None:
+        """Broadcast add_scalar to all elements in dict.
+        """
+        for key in kwargs.keys():
+            if counter is not None:
+                self.add_scalar(str(key), kwargs[key], counter)
+            else:
+                self.add_scalar(str(key), kwargs[key])
+

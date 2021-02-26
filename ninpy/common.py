@@ -7,10 +7,6 @@ import time
 import logging
 import argparse
 
-import torch
-from torchvision import transforms
-import matplotlib.pyplot as plt
-
 
 def str2bool(v: str) -> bool:
     r"""From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -93,20 +89,3 @@ class RunningAverage(object):
 
     def __call__(self):
         return self.total/self.numel
-
-
-def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
-    r"""Show an image from torch format.
-    """
-    assert isinstance(denormalize, bool)
-    assert len(x.shape) == 3
-    if denormalize:
-        # From: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
-        inv_normalize = transforms.Normalize(
-            mean=[-0.485/0.229, -0.456/0.224, -0.406/0.255],
-            std=[1/0.229, 1/0.224, 1/0.255]
-        )
-        x = inv_normalize(x)
-    x = x.transpose(0, 2).detach().cpu().numpy()
-    plt.imshow(x)
-    plt.show()
