@@ -4,8 +4,11 @@
 Created on Mon Jan  4 20:24:28 2021
 @author: Ninnart Fuengfusin
 """
+import sys
 import time
+
 import yaml
+
 from .data import AttributeOrderedDict
 
 
@@ -87,7 +90,11 @@ def name_experiment(hparams: dict) -> str:
     exp_pth = dict2str(hparams)
     datetime = time.strftime("%Y:%m:%d-%H:%M:%S")
     exp_pth = f'{datetime}-{exp_pth}'
-
+    if sys.platform == 'win32':
+        # Detect OSError: [WinError 123] The filename,
+        # directory name, or volume label syntax is incorrect:
+        exp_pth = exp_pth.replace('.', '_')
+        exp_pth = exp_pth.replace(':', '_')
     if len(exp_pth) > 255:
         exp_pth = exp_pth[0: 254]
     return exp_pth

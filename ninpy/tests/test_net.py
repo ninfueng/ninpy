@@ -19,7 +19,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from ninpy.log import set_logger
 from ninpy.experiment import set_experiment
-from ninpy.config import dump_yaml, load_yaml, dict2str
+from ninpy.yaml2 import dump_yaml, load_yaml, dict2str
 from ninpy.data import AttributeOrderedDict
 
 

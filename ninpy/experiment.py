@@ -12,6 +12,7 @@ import shutil
 import logging
 from functools import reduce
 import warnings
+import sys
 
 
 def set_experiment(
@@ -19,7 +20,7 @@ def set_experiment(
         match_list = ['*.py', '*.sh', '*.yaml']) -> str:
     r"""Inspired from: https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/darts_utils.py
     Create a folder with the name f'{datetime}-{experiment_path}' format.
-    With scripts folder into it and copy all scripts within `list_types` into this folder. 
+    With scripts folder into it and copy all scripts within `list_types` into this folder.
     MUST NOT PUT WITH LOGGING!!!!!.
     Example:
     >>> set_experiment(experiment_path)
@@ -28,6 +29,11 @@ def set_experiment(
     assert len(match_list) > 0
 
     if not os.path.exists(exp_pth):
+        if sys.platform == 'win32':
+            # Detect OSError: [WinError 123] The filename,
+            # directory name, or volume label syntax is incorrect:
+            exp_pth = exp_pth.replace('.', '_')
+            exp_pth = exp_pth.replace(':', '_')
         os.mkdir(exp_pth)
         # Can have OSError: [Errno 36] File name too long.
         # If so then, bash allows 255 charactors, therefore limit to that amount.

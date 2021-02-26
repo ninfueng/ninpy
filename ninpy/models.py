@@ -59,11 +59,13 @@ class LeNet5(nn.Module):
         if in_chl == 1:
             NUM_FEATURES = 4
             logging.info(
-                f'Expected MNIST like dataset from in_chl={in_chl}.')
+                'Expected MNIST like dataset'
+                f'from in_chl={in_chl}.')
         else:
             NUM_FEATURES = 5
             logging.info(
-                f'Expected CIFAR-10 like dataset from in_chl={in_chl}.')
+                'Expected CIFAR-10 like dataset'
+                f'from in_chl={in_chl}.')
 
         self.features = nn.Sequential(
             *[
