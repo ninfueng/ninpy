@@ -6,44 +6,45 @@
 import os
 import random
 import logging
-from typing import List
+from typing import List, Optional, Tuple, Callable
+import argparse
+
 
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-from torchvision import transforms
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.utils.tensorboard import SummaryWriter
 
 from .common import multilv_getattr
+from .experiment import set_experiment
+from .log import set_logger
+from .yaml2 import load_yaml, name_experiment
+from .data import AttributeOrderedDict
 
 
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
-    """Converting torch format tensor to numpy, tensorflow format.
-    TODO: checking in case of 2D language model?
+    r"""Converting torch format tensor to `numpy` or `tensorflow` format.
     """
     assert isinstance(x, torch.Tensor)
-
     x = x.detach().cpu().numpy()
-    if len(x.shape) == 4:
-        x = np.transpose(x, (2, 3, 1, 0))
+    if len(x.shape) == 2:
+        x = np.transpose(x, (1, 0))
     elif len(x.shape) == 3:
         x = np.transpose(x, (1, 2, 0))
-    elif len(x.shape) == 2:
-        x = np.transpose(x, (1, 0))
+    elif len(x.shape) == 4:
+        x = np.transpose(x, (2, 3, 1, 0))
+    else:
+        raise ValueError(f'Not supporting with shape of {len(x.shape)}')
     return x
 
 
 def topk_accuracy(
         pred: torch.Tensor,
         target: torch.Tensor,
-        k: int = 1
-        ) -> torch.Tensor:
+        k: int = 1) -> torch.Tensor:
     r"""Get top-k corrected predictions and batch size.
-    >>> topk_accuracy(
-        torch.ones(batch_size, num_classes),
-        torch.ones(batch_size))
+    >>> topk_accuracy(torch.ones(batch_size, num_classes), torch.ones(batch_size))
     """
     assert isinstance(k, int)
     assert k >= 1
@@ -51,86 +52,133 @@ def topk_accuracy(
     pred, target = pred.detach().data, target.detach().data
     batch_size = target.shape[0]
     _, pred = pred.topk(k, dim=-1)
+
     # Make targets shape same as the topk pred.
     target = target.expand_as(pred.T)
     correct = target.T.eq(pred)
     return correct.numpy().sum(), batch_size
 
 
-def seed_torch(seed: int = 2021, verbose: bool = True) -> None:
-    r"""Seed the random seed to all possible modules.
+def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) -> None:
+    """Seed the random seed to all possible modules.
     From: https://github.com/pytorch/pytorch/issues/11278
-    From: https://pytorch.org/docs/stable/notes/randomness.html
-    From: https://github.com/NVIDIA/apex/tree/master/examples/imagenet
+        https://pytorch.org/docs/stable/notes/randomness.html
     >>> seed_torch(2021)
     """
     assert isinstance(seed, int)
-
+    assert isinstance(benchmark, bool)
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
+    torch.backends.cudnn.enabled = True
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
+    if benchmark:
+        # There is some optimized algorithm in case fixed size data.
+        torch.backends.cudnn.benchmark = True
+    else:
+        torch.backends.cudnn.deterministic = True
     if verbose:
-        logging.info(f'Plant a random seed: {seed}.')
+        logging.info(f'Plant a random seed: {seed} with benchmark mode: {benchmark}.')
 
 
-def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
-    r"""Show an image from torch format.
-    From: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
-    >>> show_img_torch(torch.zeros(3, 224, 224), False)
+def ninpy_setting(
+    name_parser: str,
+    yaml_file: Optional[str] = None,
+    exp_pth: Optional[str] = None,
+    to_console: bool = False,
+    benchmark: bool = False,
+    verbose: bool = True) -> Tuple[dict, str, Callable]:
+    r"""Basic setting to utilize all features from ninpy.
+    Get args, path to experiment folder, and, SummaryWriter.
     """
-    assert isinstance(denormalize, bool)
-    assert len(x.shape) == 3
-    if denormalize:
-        inv_normalize = transforms.Normalize(
-            mean=[-0.485/0.229, -0.456/0.224, -0.406/0.255],
-            std=[1/0.229, 1/0.224, 1/0.255]
-        )
-        x = inv_normalize(x)
-    x = x.transpose(0, 2).detach().cpu().numpy()
-    plt.imshow(x)
-    plt.show()
+    assert isinstance(name_parser, str)
+
+    parser = argparse.ArgumentParser(description=name_parser)
+    parser.add_argument('--yaml', type=str, default=yaml_file)
+    parser.add_argument('--exp_pth', type=str, default=exp_pth)
+    args = parser.parse_args()
+
+    hparams = AttributeOrderedDict(load_yaml(args.yaml))
+    assert hasattr(hparams, 'seed'), 'yaml file should contain a seed attribute.'
+
+    if args.exp_pth == None:
+        exp_pth = name_experiment(hparams)
+    else:
+        exp_pth = args.exp_pth
+
+    set_experiment(exp_pth)
+    set_logger(os.path.join(exp_pth, 'info.log'), to_console)
+    seed_torch(hparams.seed, benchmark=benchmark)
+    writer = SummaryWriter(exp_pth)
+    if verbose:
+        logging.info(f'Ninpy settings: hparams {hparams}@ {exp_pth}')
+    return hparams, exp_pth, writer
 
 
 def save_model(
-    save_dir: str, model, optimizer,
+    save_dir: str, model, optimizer, amp = None,
     metric: float = None, epoch: int = None,
+    save_epoch: int = None, rm_old: bool = True,
     verbose: bool = True) -> None:
+
+    r"""Save model, optimizer, amp, best_metric, best_epoch into a ckpt.
+    Can automatically remove old save ckpt.
+    """
+    assert isinstance(save_dir, str)
+    assert save_dir.find('.pth') > -1, 'Should contains type as .pth, otherwise not support rm.'
+
+    def _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose):
+        if rm_old:
+            save_pth = os.path.dirname(save_dir)
+            rm_list = [
+                os.path.join(save_pth, i) for i in os.listdir(save_pth)
+                if i.find('.pth') > -1]
+            [os.remove(r) for r in rm_list]
+
+        torch.save({
+            'model_state_dict': model,
+            'optimizer_state_dict': optimizer,
+            'metric': metric,
+            'epoch': epoch,
+            'amp_state_dict': amp}, save_dir)
+
+        if verbose:
+            logging.info(
+                f'Save model@ {save_dir} with {epoch} epoch.')
 
     if model is not None:
         model = model.state_dict()
     if optimizer is not None:
         optimizer = optimizer.state_dict()
+    if amp is not None:
+        amp = amp.state_dict()
 
-    torch.save({
-        'model_state_dict': model,
-        'optimizer_state_dict': optimizer,
-        'metric': metric,
-        'epoch': epoch
-        }, save_dir)
-
-    if verbose:
-        logging.info(
-            f'Save model@ {save_dir} with {epoch} epoch.')
+    if save_epoch is not None:
+        if epoch >= save_epoch:
+            _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose)
+    else:
+        _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose)
 
 
 def load_model(
     save_dir: str, model: nn.Module,
-    optim = None, verbose: bool = True):
+    optim = None, amp = None, verbose: bool = True):
     r"""Load model from `save_dir` and extract compressed information.
     """
     assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
     model_state_dict = ckpt['model_state_dict']
     optimizer_state_dict = ckpt['optimizer_state_dict']
+    amp_state_dict = ckpt['amp_state_dict']
+
     metric, epoch = ckpt['metric'], ckpt['epoch']
-    model = model.load_state_dict(model_state_dict)
+    model.load_state_dict(model_state_dict)
 
     if optim is not None:
         optim = optim.load_state_dict(optimizer_state_dict)
-
+    if amp is not None:
+        amp = amp.load_state_dict(amp_state_dict)
     if verbose:
         logging.info(f'Load a model with score {metric}@ {epoch} epoch')
     return model, optim
@@ -154,17 +202,12 @@ def add_weight_decay(
     decay, no_decay = [], []
     for name, param in model.named_parameters():
         if not param.requires_grad:
-            # Skip frozen weights.
+            # Skip frozen weights or not require grad variables.
             continue
-        if(
-            len(param.shape) == 1 or
-            name.endswith('.bias') or
-            name in skip_list):
-
+        if(len(param.shape) == 1 or name.endswith('.bias') or name in skip_list):
             no_decay.append(param)
             if verbose:
-                logging.info(
-                    f'Skipping the weight decay on: {name}.')
+                logging.info(f'Skipping the weight decay on: {name}.')
         else:
             decay.append(param)
 
@@ -364,4 +407,3 @@ class SummaryWriterDictList(SummaryWriter):
                 self.add_scalar(str(key), kwargs[key], counter)
             else:
                 self.add_scalar(str(key), kwargs[key])
-

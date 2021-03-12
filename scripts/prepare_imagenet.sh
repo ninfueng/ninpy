@@ -1,6 +1,6 @@
-#!/bin/sh
-# From: https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
-# Copy this to imagenet val location.
+#!/bin/bash
+# Refer: https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
+# Copy this to imagenet val location to create folders of images for ImageFolder dataset.
 mkdir -p n01440764	
 mkdir -p n01443537	
 mkdir -p n01484850	

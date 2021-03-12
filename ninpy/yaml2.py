@@ -87,9 +87,15 @@ def args2yaml(args, yaml_name: str) -> None:
 
 
 def name_experiment(hparams: dict) -> str:
+    """Combine all hparams into name and make sure save-able in a folder.
+    """
     exp_pth = dict2str(hparams)
     datetime = time.strftime("%Y:%m:%d-%H:%M:%S")
     exp_pth = f'{datetime}-{exp_pth}'
+    # Protect for an argument with path and /, dash.
+    # FileNotFoundError: [Errno 2] No such file or directory:
+    exp_pth = exp_pth.replace('/', '_')
+
     if sys.platform == 'win32':
         # Detect OSError: [WinError 123] The filename,
         # directory name, or volume label syntax is incorrect:

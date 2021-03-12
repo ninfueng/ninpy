@@ -86,7 +86,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
         return df
 
     def to_csv(
-        self, 
+        self,
         file_name: str,
         fill_var: float = np.nan,
         verbose: str = True)-> None:

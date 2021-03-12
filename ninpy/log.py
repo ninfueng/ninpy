@@ -11,7 +11,7 @@ from pathlib import Path
 def set_logger(
     log_pth: str,
     to_console: bool = True,
-    rm_exist: bool = False,
+    rm_exist: bool = True,
     verbose: bool = True) -> None:
 
     r"""From: https://github.com/cs230-stanford/cs230-code-examples

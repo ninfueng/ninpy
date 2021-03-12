@@ -1,39 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 20:27:19 2021
-
-@author: ninnart
+@author: Ninnart Fuengfusin
 """
 import os
-import time
+import sys
 import glob
 import shutil
-import logging
 from functools import reduce
-import warnings
-import sys
 
 
 def set_experiment(
         exp_pth: str,
-        match_list = ['*.py', '*.sh', '*.yaml']) -> str:
-    r"""Inspired from: https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/darts_utils.py
+        match_list = ['*.py', '*.sh', '*.yaml'],
+        rm_exist: bool = True) -> str:
+    r"""Inspired from:
+        https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/darts_utils.py
     Create a folder with the name f'{datetime}-{experiment_path}' format.
     With scripts folder into it and copy all scripts within `list_types` into this folder.
-    MUST NOT PUT WITH LOGGING!!!!!.
+    MUST NOT APPLY THIS FUNCTION WITH LOGGING!!!!!.
     Example:
     >>> set_experiment(experiment_path)
     """
     assert isinstance(exp_pth, str)
     assert len(match_list) > 0
 
+    if rm_exist and os.path.exists(exp_pth):
+        shutil.rmtree(exp_pth)
     if not os.path.exists(exp_pth):
         if sys.platform == 'win32':
-            # Detect OSError: [WinError 123] The filename,
+            # For OSError: [WinError 123] The filename,
             # directory name, or volume label syntax is incorrect:
             exp_pth = exp_pth.replace('.', '_')
             exp_pth = exp_pth.replace(':', '_')
+
         os.mkdir(exp_pth)
         # Can have OSError: [Errno 36] File name too long.
         # If so then, bash allows 255 charactors, therefore limit to that amount.

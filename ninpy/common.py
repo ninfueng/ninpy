@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Common functions created with using only standard libraries.
+"""Common functions.
 @author: Ninnart Fuengfusin
 """
 import time
@@ -89,3 +89,11 @@ class RunningAverage(object):
 
     def __call__(self):
         return self.total/self.numel
+
+
+def assertall(obj, func, *attrs):
+    r"""Created for `hasattr`, and etc.
+    Not work with func with two arguments upper.
+    """
+    assert callable(func)
+    return all([func(obj, attr) for attr in attrs])

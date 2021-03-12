@@ -1,6 +1,8 @@
 """Quantization tools.
 @author: Ninnart Fuengfusin
 """
+import logging
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,7 +10,7 @@ import torch.nn.functional as F
 
 
 def measure_sparse(*ws) -> float:
-    """Measure the sparsity of input tensors or *tensors.
+    r"""Measure the sparsity of input tensors or *tensors.
     Example:
     >>> measure_sparse(w0, w1)
     """
@@ -17,7 +19,7 @@ def measure_sparse(*ws) -> float:
         sparse = torch.tensor(0.0)
     else:
         # In case, not empty tuple.
-        total_sparity, num_params = 0, 0
+        total_sparsity, num_params = 0, 0
         for w in ws:
             if w is None:
                 # In case of w is None.
@@ -25,15 +27,15 @@ def measure_sparse(*ws) -> float:
             w = w.data
             device = w.device
             num_params += w.numel()
-            total_sparity += torch.where(
+            total_sparsity += torch.where(
                 w == 0.0,
                 torch.tensor(1.0).to(device),
                 torch.tensor(0.0).to(device)).sum()
         if num_params == 0:
-            # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
+            # Protecting in case, all parameters is zeros. 0/0 = ZeroDivisionError.
             sparse = torch.tensor(0.0)
         else:
-            sparse = total_sparity/num_params
+            sparse = total_sparsity/num_params
     return sparse.item()
 
 
@@ -41,8 +43,9 @@ def ternary_threshold(delta: float = 0.7, *ws):
     """Ternary threshold find in ws.
     """
     assert isinstance(delta, float)
-
+    assert 0.0 < delta < 1.0
     num_params, sum_w = 0, 0
+
     if not ws:
         # In case, of all params cannot be found.
         threshold = torch.tensor(np.nan)
@@ -56,7 +59,7 @@ def ternary_threshold(delta: float = 0.7, *ws):
 
 
 class BinConnectQuant(torch.autograd.Function):
-    """ BinaryConnect quantization.
+    r"""BinaryConnect quantization.
     Refer:
         https://pytorch.org/tutorials/beginner/examples_autograd/two_layer_net_custom_function.html
         https://discuss.pytorch.org/t/difference-between-apply-an-call-for-an-autograd-function/13845/3
@@ -87,7 +90,7 @@ class BinConnectQuant(torch.autograd.Function):
 
 
 class TerQuant(torch.autograd.Function):
-    """Ternary Weight quantization function.
+    r"""Ternary Weight quantization function.
     """
     @staticmethod
     def forward(ctx, w, threshold):
@@ -109,7 +112,7 @@ class TerQuant(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_o):
-        """ Back propagation using same as identity function.
+        r"""Back propagation using same as an identity function.
         """
         w, thre, = ctx.saved_tensors
         grad_i = grad_o.clone()
@@ -192,13 +195,6 @@ class TerConv2d(Conv2d):
             x, self.weight_q, self.bias,
             self.stride, self.padding)
         return x
-
-
-# TODO: checking all of these.
-import logging
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 
 class QuantModule(nn.Module):
@@ -591,6 +587,8 @@ class TestNet(nn.Module):
 
 
 if __name__ == '__main__':
+    from functools import reduce
+
     model = TestNet()
     type_ws = 'ftb'
     cvt2quant(model, type_ws)
@@ -612,7 +610,6 @@ if __name__ == '__main__':
     print(len(list_forward))
     print(len(list_shortcut))
 
-    from functools import reduce
     type_modules = ['b' for i in range(18)]
     type_modules = reduce(lambda x, y: x + y, type_modules)
     type_shortcuts = ['t' for i in range(3)]
@@ -621,5 +618,3 @@ if __name__ == '__main__':
 
     model.quantization(type_shortcuts, type_modules)
     print(model)
-
-
