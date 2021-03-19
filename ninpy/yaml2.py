@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 20:24:28 2021
 @author: Ninnart Fuengfusin
 """
 import sys
@@ -10,7 +9,6 @@ import time
 import yaml
 
 from .data import AttributeOrderedDict
-
 
 def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
     """Refer: https://stackabuse.com/reading-and-writing-yaml-to-a-file-in-python/

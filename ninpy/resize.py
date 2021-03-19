@@ -46,12 +46,11 @@ class ImageResizer:
             assert 0 <= idx < len(self.list_imgs)
 
         path = self.list_imgs[idx]
-        img = cv2.imread(example_path, cv2.IMREAD_COLOR)
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         plt.imshow(img)
         plt.title(path)
         plt.show()
-
 
 if __name__ == '__main__':
     img_resize = ImageResizer('./imgs/*.png')

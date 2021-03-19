@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 TODO: changing all loading from PIL and transform to cv2 and albumentation.
+TODO: supporting the parallel computing.
 @author: Ninnart Fuengfusin
 """
-import re
 import os
-import glob
 from multiprocessing import cpu_count
 from typing import Callable, Optional, Tuple, Any
 
@@ -104,6 +103,7 @@ def load_toy_dataset(
         num_workers: int = cpu_count(),
         dataset_name: str = 'mnist',
         data_path: str = './dataset',
+        drop_last: bool = True,
         train_transforms: Optional[Callable] = None,
         test_transforms: Optional[Callable] = None
         ) -> Tuple[Callable, Callable]:
@@ -120,6 +120,7 @@ def load_toy_dataset(
     assert isinstance(num_workers, int)
     assert isinstance(dataset_name, str)
     assert isinstance(data_path, str)
+    assert isinstance(drop_last, bool)
 
     if not os.path.exists(data_path):
         os.makedirs(data_path, exist_ok=True)
@@ -187,10 +188,10 @@ def load_toy_dataset(
 
     train_loader = DataLoader(
         train_set, batch_size=num_train_batch, shuffle=True,
-        num_workers=num_workers, pin_memory=True)
+        num_workers=num_workers, pin_memory=True, drop_last=drop_last)
     test_loader = DataLoader(
         test_set, batch_size=num_test_batch, shuffle=False,
-        num_workers=num_workers, pin_memory=True)
+        num_workers=num_workers, pin_memory=True, drop_last=drop_last)
     return train_loader, test_loader
 
 
