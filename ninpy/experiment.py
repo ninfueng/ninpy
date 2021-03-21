@@ -14,7 +14,8 @@ def set_experiment(
         exp_pth: str,
         match_list = ['*.py', '*.sh', '*.yaml'],
         rm_exist: bool = True) -> str:
-    r"""Inspired from:
+    r"""
+    Modified:
         https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/darts_utils.py
     Create a folder with the name f'{datetime}-{experiment_path}' format.
     With scripts folder into it and copy all scripts within `list_types` into this folder.

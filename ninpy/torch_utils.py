@@ -67,6 +67,8 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
     """
     assert isinstance(seed, int)
     assert isinstance(benchmark, bool)
+    assert isinstance(verbose, bool)
+
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)

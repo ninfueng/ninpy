@@ -56,8 +56,7 @@ def get_mnist_transforms() -> Tuple[Callable]:
     transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(
-                STD_MNIST_MEAN, STD_MNIST_STD)
-        ])
+                STD_MNIST_MEAN, STD_MNIST_STD)])
     return transform
 
 
@@ -70,12 +69,10 @@ def get_cifar10_transforms() -> Tuple[Callable, Callable]:
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD),
-    ])
+        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD)])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD),
-    ])
+        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD)])
     return transform_train, transform_test
 
 
@@ -88,12 +85,10 @@ def get_cifar100_transforms() -> Tuple[Callable, Callable]:
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD),
-    ])
+        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD)])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD),
-    ])
+        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD)])
     return transform_train, transform_test
 
 
@@ -223,16 +218,14 @@ def get_imagenet_loaders(
             transforms.RandomResizedCrop(resize_size),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            normalize,
-        ])
+            normalize])
 
     if val_transforms is None:
         val_transforms = transforms.Compose([
             transforms.Resize(crop_size),
             transforms.CenterCrop(resize_size),
             transforms.ToTensor(),
-            normalize,
-        ])
+            normalize])
 
     train_dataset = ImageFolder(traindir, train_transforms)
     val_dataset = ImageFolder(valdir, val_transforms)
@@ -337,11 +330,8 @@ class VOCSegmentationDataset(Dataset):
                     A.Resize(520, 520),
                     A.RandomCrop(480, 480),
                     A.HorizontalFlip(),
-                    A.Normalize(
-                        mean=STD_IMAGENET_MEAN,
-                        std=STD_IMAGENET_STD),
-                    ToTensorV2()
-                ])
+                    A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+                    ToTensorV2()])
                 transformed = transform(image=image, mask=mask)
                 image = transformed['image']
                 mask = transformed['mask']
@@ -351,11 +341,8 @@ class VOCSegmentationDataset(Dataset):
                     A.Resize(520, 520),
                     A.Crop(480, 480),
                     A.HorizontalFlip(),
-                    A.Normalize(
-                        mean=STD_IMAGENET_MEAN,
-                        std=STD_IMAGENET_STD),
-                    ToTensorV2()
-                ])
+                    A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+                    ToTensorV2()])
                 transformed = transform(image=image, mask=mask)
                 image = transformed['image']
                 return image
@@ -384,17 +371,12 @@ if __name__ == '__main__':
             A.Resize(520, 520),
             A.RandomCrop(480, 480),
             A.HorizontalFlip(),
-            A.Normalize(
-                mean=STD_IMAGENET_MEAN,
-                std=STD_IMAGENET_STD),
-            ToTensorV2(),
-        ])
+            A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+            ToTensorV2()])
+
     root = '~/datasets/VOC'
     root = os.path.expanduser(root)
-    train_dataset = VOCSegmentationDataset(
-        root=root, train=True,
-        transform=train_transforms,
-    )
+    train_dataset = VOCSegmentationDataset(root=root, train=True, transform=train_transforms)
 
     img, mask = next(iter(train_dataset))
     show_img_torch(img, True)

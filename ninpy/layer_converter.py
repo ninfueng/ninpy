@@ -15,13 +15,11 @@ class LayerConverter:
     """
     @staticmethod
     def convert_bn(
-        model, old_layer_type, new_layer_type,
-        convert_weights=False, num_groups=None) -> nn.Module:
+        model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None) -> nn.Module:
         r"""If num_groups is 1, GroupNorm turns into LayerNorm.
         If num_groups is None, GroupNorm turns into InstanceNorm
         Example:
-        >>> LayerConverter.convert_bn(
-            model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
+        >>> LayerConverter.convert_bn(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
@@ -46,11 +44,9 @@ class LayerConverter:
         model, old_layer_type, new_layer_type,
         convert_weights=False, **kwargs) -> nn.Module:
         r"""Example:
-        ```
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
         >>> LayerConverter.convert_conv(m, nn.Conv2d, nn.Conv1d)
-        ```
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
