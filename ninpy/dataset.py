@@ -16,21 +16,19 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 import torchvision
 import torchvision.transforms as transforms
-from torchvision.datasets import VOCSegmentation, ImageFolder
-from torch.utils.data.distributed import DistributedSampler
 import matplotlib.pyplot as plt
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
-STD_MNIST_MEAN = (0.1307)
-STD_MNIST_STD = (0.3081)
+MNIST_MEAN = (0.1307)
+MNIST_STD = (0.3081)
 # From: https://github.com/quark0/darts/blob/master/cnn/utils.py
-STD_CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124) #(0.4914, 0.4822, 0.4465)
-STD_CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768) #(0.2023, 0.1994, 0.2010)
-STD_CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
-STD_CIFAR100_STD = (0.2675, 0.2565, 0.2761)
-STD_IMAGENET_MEAN = (0.485, 0.456, 0.406)
-STD_IMAGENET_STD = (0.229, 0.224, 0.225)
+CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124) #(0.4914, 0.4822, 0.4465)
+CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768) #(0.2023, 0.1994, 0.2010)
+CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
+CIFAR100_STD = (0.2675, 0.2565, 0.2761)
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
 
 def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
     r"""Show an image from torch format with an option to denormalize imagenet normalized image.
@@ -55,8 +53,7 @@ def get_mnist_transforms() -> Tuple[Callable]:
     """
     transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(
-                STD_MNIST_MEAN, STD_MNIST_STD)])
+            transforms.Normalize(MNIST_MEAN, MNIST_STD)])
     return transform
 
 
@@ -69,10 +66,10 @@ def get_cifar10_transforms() -> Tuple[Callable, Callable]:
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD)])
+        transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD)])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR10_MEAN, STD_CIFAR10_STD)])
+        transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD)])
     return transform_train, transform_test
 
 
@@ -85,10 +82,10 @@ def get_cifar100_transforms() -> Tuple[Callable, Callable]:
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD)])
+        transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD)])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(STD_CIFAR100_MEAN, STD_CIFAR100_STD)])
+        transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD)])
     return transform_train, transform_test
 
 
@@ -184,72 +181,11 @@ def load_toy_dataset(
     train_loader = DataLoader(
         train_set, batch_size=num_train_batch, shuffle=True,
         num_workers=num_workers, pin_memory=True, drop_last=drop_last)
+    # Always not drop last for eval().
     test_loader = DataLoader(
         test_set, batch_size=num_test_batch, shuffle=False,
-        num_workers=num_workers, pin_memory=True, drop_last=drop_last)
+        num_workers=num_workers, pin_memory=True, drop_last=False)
     return train_loader, test_loader
-
-
-def get_imagenet_loaders(
-    root: str,
-    batch_size: int,
-    num_workers: int = cpu_count(),
-    crop_size: int = 256,
-    resize_size: int = 224,
-    distributed: bool = False,
-    train_transforms: Optional[Callable] = None,
-    val_transforms: Optional[Callable]  = None):
-    r"""Get ImageNet loaders by using ImageFolder.
-    """
-    assert isinstance(root, str)
-    assert isinstance(batch_size, str)
-    assert isinstance(num_workers, str)
-    assert isinstance(distributed, bool)
-    assert isinstance(crop_size, int)
-    assert isinstance(resize_size, int)
-
-    traindir = os.path.join(root, 'train')
-    valdir = os.path.join(root, 'val')
-    normalize = transforms.Normalize(
-        mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD)
-
-    if train_transforms is None:
-        train_transforms = transforms.Compose([
-            transforms.RandomResizedCrop(resize_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize])
-
-    if val_transforms is None:
-        val_transforms = transforms.Compose([
-            transforms.Resize(crop_size),
-            transforms.CenterCrop(resize_size),
-            transforms.ToTensor(),
-            normalize])
-
-    train_dataset = ImageFolder(traindir, train_transforms)
-    val_dataset = ImageFolder(valdir, val_transforms)
-
-    if distributed:
-        train_sampler = DistributedSampler(train_dataset)
-    else:
-        train_sampler = None
-
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=(train_sampler is None),
-        num_workers=num_workers,
-        pin_memory=True,
-        sampler=train_sampler)
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=True)
-
-    return train_loader, val_loader
 
 
 # TODO: VOCAugSegmentationDataset BASE_AUG = 'benchmark_RELEASE/dataset'
@@ -330,7 +266,7 @@ class VOCSegmentationDataset(Dataset):
                     A.Resize(520, 520),
                     A.RandomCrop(480, 480),
                     A.HorizontalFlip(),
-                    A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+                    A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                     ToTensorV2()])
                 transformed = transform(image=image, mask=mask)
                 image = transformed['image']
@@ -341,7 +277,7 @@ class VOCSegmentationDataset(Dataset):
                     A.Resize(520, 520),
                     A.Crop(480, 480),
                     A.HorizontalFlip(),
-                    A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+                    A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                     ToTensorV2()])
                 transformed = transform(image=image, mask=mask)
                 image = transformed['image']
@@ -371,7 +307,7 @@ if __name__ == '__main__':
             A.Resize(520, 520),
             A.RandomCrop(480, 480),
             A.HorizontalFlip(),
-            A.Normalize(mean=STD_IMAGENET_MEAN, std=STD_IMAGENET_STD),
+            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
             ToTensorV2()])
 
     root = '~/datasets/VOC'

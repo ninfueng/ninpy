@@ -95,7 +95,6 @@ def ninpy_setting(
     Get args, path to experiment folder, and, SummaryWriter.
     """
     assert isinstance(name_parser, str)
-
     parser = argparse.ArgumentParser(description=name_parser)
     parser.add_argument('--yaml', type=str, default=yaml_file)
     parser.add_argument('--exp_pth', type=str, default=exp_pth)

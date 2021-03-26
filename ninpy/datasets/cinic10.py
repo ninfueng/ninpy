@@ -1,15 +1,15 @@
 import os
 import glob
-from albumentations.pytorch.transforms import ToTensorV2
-
 import cv2
+from multiprocessing import cpu_count
+
+from PIL import Image
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
-import albumentations as A
 
-__all__ = ['get_cinic10_basic', 'Cinic10']
+__all__ = ['get_cinic10_basic', 'Cinic10', 'get_cinic10_loaders']
 CINIC_MEAN = [0.47889522, 0.47227842, 0.43047404]
 CINIC_STD = [0.24205776, 0.23828046, 0.25874835]
 CLASSES = {
@@ -19,6 +19,7 @@ CLASSES = {
 
 def get_cinic10_basic(root: str = '~/datasets/CINIC10'):
     """Get CINIC10 dataset with official settings from github.
+    Using Imagefolder and basic normalize only.
     Size: (3, 32, 32)
     Number train, valid and test: 90,000
 
@@ -45,22 +46,23 @@ def get_cinic10_basic(root: str = '~/datasets/CINIC10'):
 
 
 class Cinic10(Dataset):
-    """Load CINIC10 into RAM for fast processing.
+    """Load CINIC10 all images and stores into RAM for fast processing.
+    Note that supports only transforms from torchvision only.
     >>> Cinic10('~/datasets/CINIC10', mode='train', transforms=basic_transform)
     """
     def __init__(self, root: str, mode: str, transforms = None):
         super().__init__()
         self.transforms = transforms
         root = os.path.expanduser(root)
-        self.images = []
-        self.labels = []
+        self.images, self.labels = [], []
         mode = mode.lower()
+        self.mode = mode
 
-        if mode == 'train':
+        if self.mode == 'train':
             img_dir = os.path.join(root, 'train')
-        elif mode == 'valid':
+        elif self.mode == 'valid':
             img_dir = os.path.join(root, 'valid')
-        elif mode == 'test':
+        elif self.mode == 'test':
             img_dir = os.path.join(root, 'test')
         else:
             raise ValueError(
@@ -77,33 +79,64 @@ class Cinic10(Dataset):
                 self.images.append(img)
             self.labels += [CLASSES[k] for _ in img_dirs]
 
-        assert len(self.images) == 90_000
-        assert len(self.labels) == 90_000
+        assert len(self.images) == 90_000, 'Some images are missing.'
+        assert len(self.labels) == 90_000, 'Some labels are missing.'
 
     def __getitem__(self, idx: int):
         img = self.images[idx]
+        img = Image.fromarray(img, mode='RGB')
         label = self.labels[idx]
+
         if self.transforms is not None:
-            img = self.transforms(image=img)['image']
+            img = self.transforms(img)
+            # img = self.transforms(image=img)['image']
         else:
-            basic_transform = A.Compose(
-                [A.Normalize(CINIC_MEAN, CINIC_STD), ToTensorV2()])
-            img = basic_transform(image=img)['image']
+            if self.mode == 'train':
+                transform = transforms.Compose([
+                    transforms.RandomCrop(32, padding=4),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    transforms.Normalize(CINIC_MEAN, CINIC_STD)])
+            else:
+                transform = transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize(CINIC_MEAN, CINIC_STD)])
+            img = transform(img)
         return img, label
 
     def __len__(self) -> int:
         return len(self.images)
 
 
+def get_cinic10_loaders(root: str,  batch_size: int, num_workers: int = cpu_count()):
+    assert isinstance(root, str)
+    assert isinstance(num_workers, int)
+    assert isinstance(batch_size, int)
+
+    root = os.path.expanduser(root)
+    train_set, val_set = Cinic10(root, mode='train'), Cinic10(root, mode='valid')
+    test_set = Cinic10(root, mode='test')
+
+    train_loader = DataLoader(
+        train_set, batch_size=batch_size, shuffle=True,
+        num_workers=num_workers, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(
+        val_set, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=True, drop_last=False)
+    test_loader = DataLoader(
+        test_set, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=True, drop_last=False)
+    return train_loader, val_loader, test_loader
+
 if __name__ == '__main__':
     from tqdm import tqdm
 
     train_dataset, val_dataset, test_dataset = get_cinic10_basic()
     print('Testing load using ImageFolder.')
-    for i, j in tqdm(train_dataset):
+    for i, j in tqdm(val_dataset):
         pass
 
     print('Testing load from RAM.')
-    train_dataset = Cinic10('~/datasets/CINIC10', mode='train')
+    train_dataset = Cinic10('~/datasets/CINIC10', mode='test')
     for a, b in tqdm(train_dataset):
         pass

@@ -2,8 +2,10 @@ import re
 import os
 from typing import Optional, Callable
 
-import numpy as np
 import cv2
+import numpy as np
+
+from torch.utils.data.dataset import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 

@@ -6,6 +6,8 @@
 import logging
 import torch.nn as nn
 
+from torch.nn.modules.module import ModuleAttributeError
+
 class LayerConverter:
     r"""Collection of converter for layer to another type of layer.
     Supports:
@@ -116,7 +118,6 @@ class LayerConverter:
         >>> LayerConverter.convert_act(m, nn.ReLU, nn.ReLU6)
         ```
         """
-        from torch.nn.modules.module import ModuleAttributeError
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
