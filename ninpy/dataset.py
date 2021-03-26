@@ -40,8 +40,7 @@ def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
     if denormalize:
         inv_normalize = transforms.Normalize(
             mean=[-0.485/0.229, -0.456/0.224, -0.406/0.255],
-            std=[1/0.229, 1/0.224, 1/0.255]
-        )
+            std=[1/0.229, 1/0.224, 1/0.255])
         x = inv_normalize(x)
     x = x.transpose(0, 2).detach().cpu().numpy()
     plt.imshow(x)
@@ -118,11 +117,9 @@ def load_toy_dataset(
         os.makedirs(data_path, exist_ok=True)
 
     if train_transforms is None:
-        train_transforms = transforms.Compose(
-            [transforms.ToTensor()])
+        train_transforms = transforms.Compose([transforms.ToTensor()])
     if test_transforms is None:
-        test_transforms = transforms.Compose(
-            [transforms.ToTensor()])
+        test_transforms = transforms.Compose([transforms.ToTensor()])
 
     dataset_name = dataset_name.lower()
     if dataset_name == 'mnist':

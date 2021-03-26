@@ -4,7 +4,6 @@ from typing import Optional, Callable
 
 import cv2
 import numpy as np
-
 from torch.utils.data.dataset import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -53,13 +52,12 @@ class KITTIRoadDataset(Dataset):
             return image, mask
 
         else:
-            # Refer: Binary DAD-Net
+            # Refer: Resize as the Binary DAD-Net paper.
             transform = A.Compose([
                 A.Resize(256, 1024),
                 A.Normalize(
                     mean=(0.485, 0.456, 0.406),
-                    std=(0.229, 0.224, 0.225)
-                ),
+                    std=(0.229, 0.224, 0.225)),
                 ToTensorV2()
             ])
             transformed = transform(image=image, mask=mask)
