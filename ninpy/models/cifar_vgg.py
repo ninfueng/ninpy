@@ -14,11 +14,12 @@ cfg = {
 
 
 class VGG(nn.Module):
-    def __init__(self, vgg_name):
+    def __init__(self, vgg_name, num_classes: int = 10):
         super().__init__()
+        assert isinstance(num_classes, int)
         vgg_name = vgg_name.upper()
         self.features = self._make_layers(cfg[vgg_name])
-        self.classifier = nn.Linear(512, 10)
+        self.classifier = nn.Linear(512, num_classes)
 
     def forward(self, x):
         out = self.features(x)
@@ -76,3 +77,20 @@ class BasicBlock(nn.Module):
         out += self.shortcut(x)
         out = F.relu(out)
         return out
+
+
+def vgg11(num_classes: int = 10):
+    return VGG('VGG11', num_classes=num_classes)
+
+
+def vgg13(num_classes: int = 10):
+    return VGG('VGG13', num_classes=num_classes)
+
+
+def vgg16(num_classes: int = 10):
+    return VGG('VGG16', num_classes=num_classes)
+
+
+def vgg19(num_classes: int = 10):
+    return VGG('VGG19', num_classes=num_classes)
+

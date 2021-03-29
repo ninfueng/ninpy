@@ -112,6 +112,10 @@ class AttributeOrderedDictList(AttributeOrderedDict):
                 self[k] = torch.as_tensor(self[k])
         return dict(self)
 
+    def to_aim(self) -> None:
+        # TODO: support aim.
+        raise NotImplementedError('Not supported yet.')
+
 if __name__ == '__main__':
     dictlist = AttributeOrderedDictList('book0', 'book1')
     dictlist.book0.append(1)
