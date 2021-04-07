@@ -113,8 +113,13 @@ class AttributeOrderedDictList(AttributeOrderedDict):
         return dict(self)
 
     def to_aim(self) -> None:
-        # TODO: support aim.
+        # TODO: support an aim.
         raise NotImplementedError('Not supported yet.')
+
+    def to_tensorboard(self) -> None:
+        # TODO: support a tensorboard. Expected idx as epoch.
+        raise NotImplementedError('Not supported yet.')
+
 
 if __name__ == '__main__':
     dictlist = AttributeOrderedDictList('book0', 'book1')

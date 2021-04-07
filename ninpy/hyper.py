@@ -5,13 +5,14 @@ import pandas as pd
 from hyperopt import fmin, tpe, hp, Trials
 from typing import Callable
 
-from .config import dict2str, load_yaml
+from .yaml2 import dict2str, load_yaml
 from .job import launch_job
 
 
 def suggest_hparams(input):
     """Receive an extractable input and extract those information
     as the hyper parameters. For instance expected `trial` for optuna.
+    TODO: working in it.
     """
 
     return
