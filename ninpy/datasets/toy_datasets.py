@@ -32,7 +32,8 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 
 def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
     r"""Show an image from torch format with an option to denormalize imagenet normalized image.
-    From: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
+    Refer: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
+    For example:
     >>> show_img_torch(torch.zeros(3, 224, 224), False)
     """
     assert isinstance(denormalize, bool)
@@ -115,7 +116,6 @@ def load_toy_dataset(
 
     if not os.path.exists(data_path):
         os.makedirs(data_path, exist_ok=True)
-
     if train_transforms is None:
         train_transforms = transforms.Compose([transforms.ToTensor()])
     if test_transforms is None:
@@ -178,7 +178,7 @@ def load_toy_dataset(
     train_loader = DataLoader(
         train_set, batch_size=num_train_batch, shuffle=True,
         num_workers=num_workers, pin_memory=True, drop_last=drop_last)
-    # Always not drop last for eval().
+    # Not drop last for the evaluation.
     test_loader = DataLoader(
         test_set, batch_size=num_test_batch, shuffle=False,
         num_workers=num_workers, pin_memory=True, drop_last=False)

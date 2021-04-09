@@ -1,0 +1,6 @@
+prefetch_generator
+torch-tb-profiler
+albumentations
+seaborn
+knockknock
+pyyaml

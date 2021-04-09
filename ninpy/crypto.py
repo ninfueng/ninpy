@@ -1,4 +1,4 @@
-"""Basic cryptography to encode a basic message by given the key.
+"""Basic cryptography to encode or decode a string with a key.
 Modified: https://stackoverflow.com/questions/2490334/simple-way-to-encode-a-string-according-to-a-password
 """
 from cryptography.fernet import Fernet
