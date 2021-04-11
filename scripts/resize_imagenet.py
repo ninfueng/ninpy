@@ -52,6 +52,5 @@ if __name__ == "__main__":
             img_paths = glob(os.path.join(f, "*.JPEG"))
             for i in img_paths:
                 resized_class_folder = os.path.join(resized_path, dataset, class_folder)
-                print(resized_class_folder)
                 os.makedirs(resized_class_folder, exist_ok=True)
                 resize_save_img(i, resized_class_folder, args.resize)
