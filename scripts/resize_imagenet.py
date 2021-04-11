@@ -38,9 +38,13 @@ def resize_save_img(path: str, resized_path: str, resize: int) -> None:
 
 if __name__ == "__main__":
     path = os.path.expanduser(args.path)
+    # In case of `imagenet/`, get imagenet from this.
+    if path[-1] == "/":
+        path = path[:-1]
     basename = os.path.basename(path)
     dirname = os.path.dirname(path)
 
+    # Resized folder name = imagenet256.
     resized_path = os.path.join(dirname, basename + str(args.resize))
     datasets = ["train", "val"]
 
