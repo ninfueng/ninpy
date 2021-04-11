@@ -3,12 +3,14 @@
 """
 @author: Ninnart Fuengfusin
 """
-import os
 import glob
-import cv2
+import os
 from pathlib import Path
-import numpy as np
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class ImageResizer:
     """Given the directory of image dataset, prepare resized images of that directory.
@@ -16,15 +18,18 @@ class ImageResizer:
     >>> img_resize.show_img()
     >>> img_resize.gen_resize_imgs((256, 256))
     """
-    def __init__(self, filetype: str = '*.png'):
+
+    def __init__(self, filetype: str = "*.png"):
         assert isinstance(filetype, str)
-        assert filetype.find('*') > -1, 'Need to have a wildcard to find images.'
+        assert filetype.find("*") > -1, "Need to have a wildcard to find images."
 
         self.list_imgs = glob.glob(filetype)
         list_name_imgs = [Path(i).stem + Path(i).suffix for i in self.list_imgs]
         dir_loc = Path(filetype).parent
-        self.save_loc = str(dir_loc) + '_resize'
-        self.list_save_loc = [os.path.join(self.save_loc, str(img_loc)) for img_loc in list_name_imgs]
+        self.save_loc = str(dir_loc) + "_resize"
+        self.list_save_loc = [
+            os.path.join(self.save_loc, str(img_loc)) for img_loc in list_name_imgs
+        ]
 
     def gen_resize_imgs(self, resize=(), interpolation=cv2.INTER_NEAREST) -> None:
         assert len(resize) == 2
@@ -52,7 +57,8 @@ class ImageResizer:
         plt.title(path)
         plt.show()
 
-if __name__ == '__main__':
-    img_resize = ImageResizer('./imgs/*.png')
+
+if __name__ == "__main__":
+    img_resize = ImageResizer("./imgs/*.png")
     img_resize.show_img()
     img_resize.gen_resize_imgs((256, 256))

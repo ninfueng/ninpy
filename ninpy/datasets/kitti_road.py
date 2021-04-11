@@ -1,14 +1,15 @@
-import re
 import os
-from typing import Optional, Callable
+import re
+from typing import Callable, Optional
 
+import albumentations as A
 import cv2
 import numpy as np
-from torch.utils.data.dataset import Dataset
-import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from torch.utils.data.dataset import Dataset
 
-__all__ = ['KITTIRoadDataset']
+__all__ = ["KITTIRoadDataset"]
+
 
 class KITTIRoadDataset(Dataset):
     r"""KITTI Road dataset.
@@ -16,20 +17,18 @@ class KITTIRoadDataset(Dataset):
     >>> road_dataset = KITTIRoadDataset('~/datasets/KITTI')
     >>> img, mask = next(iter(road_dataset))
     """
-    def __init__(
-        self,
-        root: str,
-        transform: Optional[Callable] = None) -> None:
+
+    def __init__(self, root: str, transform: Optional[Callable] = None) -> None:
         assert isinstance(root, str)
 
         super().__init__()
         self.root = os.path.expanduser(root)
         self.transform = transform
 
-        BASE_KITTI = 'data_road/training'
+        BASE_KITTI = "data_road/training"
         base_dir = os.path.join(self.root, BASE_KITTI)
-        mask_dir = os.path.join(base_dir, 'gt_image_2')
-        image_dir = os.path.join(base_dir, 'image_2')
+        mask_dir = os.path.join(base_dir, "gt_image_2")
+        image_dir = os.path.join(base_dir, "image_2")
         images_dir = os.listdir(image_dir)
         masks_dir = KITTIRoadDataset.get_label_paths(mask_dir)
 
@@ -47,22 +46,22 @@ class KITTIRoadDataset(Dataset):
 
         if self.transform is not None:
             transformed = self.transform(image=image, mask=mask)
-            image = transformed['image']
-            mask = transformed['mask']
+            image = transformed["image"]
+            mask = transformed["mask"]
             return image, mask
 
         else:
             # Refer: Resize as the Binary DAD-Net paper.
-            transform = A.Compose([
-                A.Resize(256, 1024),
-                A.Normalize(
-                    mean=(0.485, 0.456, 0.406),
-                    std=(0.229, 0.224, 0.225)),
-                ToTensorV2()
-            ])
+            transform = A.Compose(
+                [
+                    A.Resize(256, 1024),
+                    A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+                    ToTensorV2(),
+                ]
+            )
             transformed = transform(image=image, mask=mask)
-            image = transformed['image']
-            mask = transformed['mask']
+            image = transformed["image"]
+            mask = transformed["mask"]
             return image, mask
 
     @staticmethod
@@ -79,6 +78,7 @@ class KITTIRoadDataset(Dataset):
         >>> get_label_paths(os.path.expanduser('~/datasets/KITTI/data_road/training/gt_image_2/'))
         """
         label_pths = {
-            re.sub(r'_(lane|road)_', '_', os.path.basename(path)): path
-            for path in glob.glob(os.path.join(label_pth, '*_road_*.png'))}
+            re.sub(r"_(lane|road)_", "_", os.path.basename(path)): path
+            for path in glob.glob(os.path.join(label_pth, "*_road_*.png"))
+        }
         return label_pths

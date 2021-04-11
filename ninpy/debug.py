@@ -4,9 +4,10 @@
 @author: Ninnart Fuengfusin
 """
 import urllib
+
 import torch
-from torchvision import transforms
 from PIL import Image
+from torchvision import transforms
 
 
 def get_imagenet_img() -> torch.Tensor:
@@ -17,19 +18,21 @@ def get_imagenet_img() -> torch.Tensor:
     Transform the image into Pytorch format and ready to process in Imagenet trained models.
     """
     url, filename = (
-        'https://github.com/pytorch/hub/raw/master/images/dog.jpg', 'dog.jpg')
+        "https://github.com/pytorch/hub/raw/master/images/dog.jpg",
+        "dog.jpg",
+    )
     try:
         urllib.URLopener().retrieve(url, filename)
     except:
         urllib.request.urlretrieve(url, filename)
     input_image = Image.open(filename)
-    preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]),
-        ])
+    preprocess = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
     input_tensor = preprocess(input_image).unsqueeze(0)
     return input_tensor

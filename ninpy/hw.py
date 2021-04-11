@@ -31,21 +31,25 @@ def measure_sparse(*ws) -> float:
             num_params += w.numel()
 
             total_sparsity += torch.where(
-                w == 0.0, 
-                torch.tensor(1.0).to(device),
-                torch.tensor(0.0).to(device)).sum()
+                w == 0.0, torch.tensor(1.0).to(device), torch.tensor(0.0).to(device)
+            ).sum()
         if num_params == 0:
             # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
             sparse = torch.tensor(0.0)
         else:
-            sparse = total_sparsity/num_params
+            sparse = total_sparsity / num_params
     return sparse.item()
 
 
 def numpy2cpp(
-        array: np.ndarray, type_var: str, name_var: str,
-        name_file: str, mode: str, header_guard: bool = True,
-        verbose: bool = True) -> None:
+    array: np.ndarray,
+    type_var: str,
+    name_var: str,
+    name_file: str,
+    mode: str,
+    header_guard: bool = True,
+    verbose: bool = True,
+) -> None:
 
     r"""Convert Python 1-4 dimensional array into cpp array.
     TODO: Adding comments sections (adding string) at header file.
@@ -68,7 +72,7 @@ def numpy2cpp(
     assert isinstance(name_file, str)
     assert isinstance(mode, str)
     assert isinstance(header_guard, bool)
-    assert mode in ['w', 'a']
+    assert mode in ["w", "a"]
 
     # Get stem and suffix from name_file.
     name_stem = Path(name_file)
@@ -78,74 +82,89 @@ def numpy2cpp(
         if header_guard:
             # Generate guard band for cpp header file.
             header_name = name_stem.upper()
-            file.write(
-                f'#ifndef __{header_name}__\n'.replace('.', '_'))
-            file.write(
-                f'#define __{header_name}__\n'.replace('.', '_'))
-        file.write('\n')
+            file.write(f"#ifndef __{header_name}__\n".replace(".", "_"))
+            file.write(f"#define __{header_name}__\n".replace(".", "_"))
+        file.write("\n")
 
         if len(array.shape) == 1:
-            file.write(
-                    type_var + ' ' + name_var + str([array.shape[0]]) + ' {')
+            file.write(type_var + " " + name_var + str([array.shape[0]]) + " {")
             for i in range(array.shape[0]):
                 file.write(str(array[i]))
-                file.write(',')
+                file.write(",")
 
         elif len(array.shape) == 2:
             file.write(
-                    type_var + ' ' + name_var + str([array.shape[0]])
-                    + str([array.shape[1]]) + ' {')
+                type_var
+                + " "
+                + name_var
+                + str([array.shape[0]])
+                + str([array.shape[1]])
+                + " {"
+            )
             for i in range(array.shape[0]):
-                file.write('{')
+                file.write("{")
                 for j in range(array.shape[1]):
                     file.write(str(array[i][j]))
-                    file.write(',')
-                file.write('},')
+                    file.write(",")
+                file.write("},")
 
         elif len(array.shape) == 3:
             file.write(
-                    type_var + ' ' + name_var + str([array.shape[0]])
-                    + str([array.shape[1]]) + str([array.shape[2]]) + ' {')
+                type_var
+                + " "
+                + name_var
+                + str([array.shape[0]])
+                + str([array.shape[1]])
+                + str([array.shape[2]])
+                + " {"
+            )
             for i in range(array.shape[0]):
-                file.write('{')
+                file.write("{")
                 for j in range(array.shape[1]):
-                    file.write('{')
+                    file.write("{")
                     for k in range(array.shape[2]):
                         file.write(str(array[i][j][k]))
-                        file.write(',')
-                    file.write('},')
-                file.write('},')
+                        file.write(",")
+                    file.write("},")
+                file.write("},")
 
         elif len(array.shape) == 4:
             file.write(
-                    type_var + ' ' + name_var + str([array.shape[0]])
-                    + str([array.shape[1]]) + str([array.shape[2]])
-                    + str([array.shape[3]]) + ' {')
+                type_var
+                + " "
+                + name_var
+                + str([array.shape[0]])
+                + str([array.shape[1]])
+                + str([array.shape[2]])
+                + str([array.shape[3]])
+                + " {"
+            )
             for i in range(array.shape[0]):
-                file.write('{')
+                file.write("{")
                 for j in range(array.shape[1]):
-                    file.write('{')
+                    file.write("{")
                     for k in range(array.shape[2]):
-                        file.write('{')
+                        file.write("{")
                         for l in range(array.shape[3]):
                             file.write(str(array[i][j][k][l]))
-                            file.write(',')
-                        file.write('},')
-                    file.write('},')
-                file.write('},')
+                            file.write(",")
+                        file.write("},")
+                    file.write("},")
+                file.write("},")
 
         else:
             raise NotImplementedError(
-                'array can have dimensional from 1-4.'
-                f'However you input has shape as {len(array.shape)}')
+                "array can have dimensional from 1-4."
+                f"However you input has shape as {len(array.shape)}"
+            )
 
-        file.write('};\n')
+        file.write("};\n")
         if header_guard:
             # Generate guard band for cpp header file.
-            file.write('\n')
-            file.write('#endif')
+            file.write("\n")
+            file.write("#endif")
 
         if verbose:
             logging.info(
-                f'Generate header file: {name_file}'
-                f'with guard band {header_guard}.')
+                f"Generate header file: {name_file}" f"with guard band {header_guard}."
+            )

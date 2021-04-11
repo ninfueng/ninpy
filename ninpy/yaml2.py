@@ -10,6 +10,7 @@ import yaml
 
 from .data import AttributeOrderedDict
 
+
 def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
     """Refer: https://stackabuse.com/reading-and-writing-yaml-to-a-file-in-python/
     Example:
@@ -18,7 +19,7 @@ def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
     ```
     """
     assert isinstance(yaml_file, str)
-    with open(yaml_file, 'r') as f:
+    with open(yaml_file, "r") as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
     if with_attribute:
         # TODO: recursive find dict and convert it into Attribute type.
@@ -39,7 +40,7 @@ def dump_yaml(input: dict, save_loc: str) -> None:
     """
     assert isinstance(save_loc, str)
     assert isinstance(input, dict)
-    with open(save_loc, 'w') as f:
+    with open(save_loc, "w") as f:
         yaml.dump(input, f)
 
 
@@ -56,12 +57,12 @@ def dict2str(input: dict) -> str:
     Return:
         string (str): compressed string.
     """
-    string = ''
+    string = ""
     for k, v in sorted(input.items()):
         if not isinstance(v, dict):
-            string += f'{k}:{v}-'
+            string += f"{k}:{v}-"
         else:
-            string += f'{k}::'
+            string += f"{k}::"
             string += dict2str(v)
     return string
 
@@ -71,7 +72,7 @@ def args2str(args) -> str:
     If argparse records hyper-parameters, then this compresses
     all hyper-parameters to a string.
     """
-    #args = parser.parse_args()
+    # args = parser.parse_args()
     args_dict = vars(args)
     string = dict2str(args_dict)
     return string
@@ -89,35 +90,36 @@ def name_experiment(hparams: dict) -> str:
     """
     exp_pth = dict2str(hparams)
     datetime = time.strftime("%Y:%m:%d-%H:%M:%S")
-    exp_pth = f'{datetime}-{exp_pth}'
+    exp_pth = f"{datetime}-{exp_pth}"
     # Protect for an argument with path and /, dash.
     # FileNotFoundError: [Errno 2] No such file or directory:
-    exp_pth = exp_pth.replace('/', '_')
+    exp_pth = exp_pth.replace("/", "_")
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         # Detect OSError: [WinError 123] The filename,
         # directory name, or volume label syntax is incorrect:
-        exp_pth = exp_pth.replace('.', '_')
-        exp_pth = exp_pth.replace(':', '_')
+        exp_pth = exp_pth.replace(".", "_")
+        exp_pth = exp_pth.replace(":", "_")
     if len(exp_pth) > 255:
-        exp_pth = exp_pth[0: 254]
+        exp_pth = exp_pth[0:254]
     return exp_pth
 
 
-if __name__ == '__main__':
-    import os, argparse
+if __name__ == "__main__":
+    import argparse
+    import os
 
-    test_dict = {1:2, 3:4, 5:{6:7}, 8:{9:{10:11}}}
-    LOAD_CONFIG = 'test_dumped.yaml'
+    test_dict = {1: 2, 3: 4, 5: {6: 7}, 8: {9: {10: 11}}}
+    LOAD_CONFIG = "test_dumped.yaml"
 
     dump_yaml(test_dict, LOAD_CONFIG)
     loaded_dict = load_yaml(LOAD_CONFIG)
     assert test_dict == loaded_dict
     print(dict2str(test_dict))
 
-    parser = argparse.ArgumentParser(description='Test config.')
-    parser.add_argument('--var0', type=int, default=1)
-    parser.add_argument('--var1', type=int, default=2)
+    parser = argparse.ArgumentParser(description="Test config.")
+    parser.add_argument("--var0", type=int, default=1)
+    parser.add_argument("--var1", type=int, default=2)
     args = parser.parse_args()
 
     args_str = args2str(args)

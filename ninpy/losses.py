@@ -20,11 +20,11 @@ def cal_cls_weights(loader, num_classes: int):
     for _, mask in tqdm(loader):
         mask = mask.numpy()
         uniq, count = np.unique(mask, return_counts=True)
-        pair_count = {u:c for u, c in zip(uniq.tolist(), count.tolist())}
+        pair_count = {u: c for u, c in zip(uniq.tolist(), count.tolist())}
         accum_count.update(pair_count)
     assert num_classes == len(accum_count.keys())
     weights = np.array([accum_count[k] for k in range(num_classes)])
-    weights = (1/weights)/((1/weights).sum())
+    weights = (1 / weights) / ((1 / weights).sum())
     return weights
 
 
@@ -33,6 +33,7 @@ class LabelSmoothingLoss(nn.Module):
     From:
         https://github.com/pytorch/pytorch/issues/7455#issuecomment-513062631
     """
+
     def __init__(self, classes, smoothing: float = 0.0, dim=-1):
         super().__init__()
         self.confidence = 1.0 - smoothing
@@ -45,8 +46,6 @@ class LabelSmoothingLoss(nn.Module):
         with torch.no_grad():
             true_dist = torch.zeros_like(pred)
             # One hot vector.
-            true_dist.fill_(self.smoothing/(self.cls - 1))
-            true_dist.scatter_(
-                1, target.data.unsqueeze(1), self.confidence)
-        return torch.mean(
-            torch.sum(-true_dist*pred, dim=self.dim))
+            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+        return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))

@@ -4,13 +4,14 @@
 A collection of data structure functions.
 @author: Ninnart Fuengfusin
 """
-import sys
 import logging
+import sys
 from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
 import torch
+
 
 class AttributeDict(dict):
     """From: https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
@@ -24,6 +25,7 @@ class AttributeDict(dict):
     {'d': 2, 'test': 5}
     ```
     """
+
     __slots__ = ()
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
@@ -42,6 +44,7 @@ class AttributeOrderedDict(OrderedDict):
     >>> {'d': 2, 'test': 5}
     ```
     """
+
     __slots__ = ()
     __getattr__ = OrderedDict.__getitem__
     __setattr__ = OrderedDict.__setitem__
@@ -52,6 +55,7 @@ class AttributeOrderedDict(OrderedDict):
                 # Not support standard datatypes.
                 self[k] = torch.as_tensor(self[k])
         return dict(self)
+
 
 class AttributeOrderedDictList(AttributeOrderedDict):
     """AttributeOrderedDict with initialization with the lists.
@@ -64,6 +68,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
     >>> dictlist.to_csv('book.csv', 0)
     ```
     """
+
     def __init__(self, *args) -> None:
         for arg in args:
             self.update({arg: []})
@@ -80,7 +85,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
         # Fill list in dictlist that len less than maxlen to maxlen.
         for k in self.keys():
             if len(self[k]) < maxlen:
-                diff =  maxlen - len(self[k])
+                diff = maxlen - len(self[k])
                 _ = [self[k].append(fill_var) for _ in range(diff)]
 
     def to_df(self, fill_var: float = np.nan) -> pd.DataFrame:
@@ -91,14 +96,16 @@ class AttributeOrderedDictList(AttributeOrderedDict):
         df = pd.DataFrame(self)
         return df
 
-    def to_csv(self, file_name: str, fill_var: float = np.nan, verbose: str = True)-> None:
+    def to_csv(
+        self, file_name: str, fill_var: float = np.nan, verbose: str = True
+    ) -> None:
         """Saving the dictlist to csv.
         """
         assert isinstance(file_name, str)
         df = self.to_df(fill_var=fill_var)
         df.to_csv(file_name, index=None)
         if verbose:
-            logging.info(f'Save csv@{file_name}.')
+            logging.info(f"Save csv@{file_name}.")
 
     def append_kwargs(self, **kwargs) -> None:
         """Append multiple lists in dict at the same time using kwargs.
@@ -114,15 +121,15 @@ class AttributeOrderedDictList(AttributeOrderedDict):
 
     def to_aim(self) -> None:
         # TODO: support an aim.
-        raise NotImplementedError('Not supported yet.')
+        raise NotImplementedError("Not supported yet.")
 
     def to_tensorboard(self) -> None:
         # TODO: support a tensorboard. Expected idx as epoch.
-        raise NotImplementedError('Not supported yet.')
+        raise NotImplementedError("Not supported yet.")
 
 
-if __name__ == '__main__':
-    dictlist = AttributeOrderedDictList('book0', 'book1')
+if __name__ == "__main__":
+    dictlist = AttributeOrderedDictList("book0", "book1")
     dictlist.book0.append(1)
     dictlist.book1.append(2)
     test_dict = dict(dictlist)

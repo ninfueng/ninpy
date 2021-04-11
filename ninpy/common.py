@@ -3,9 +3,9 @@
 """Common functions.
 @author: Ninnart Fuengfusin
 """
-import time
-import logging
 import argparse
+import logging
+import time
 
 
 def str2bool(v: str) -> bool:
@@ -16,26 +16,28 @@ def str2bool(v: str) -> bool:
         return v
 
     lower = v.lower()
-    if lower in ('yes', 'true', 't', 'y', '1'):
+    if lower in ("yes", "true", "t", "y", "1"):
         return True
-    elif lower in ('no', 'false', 'f', 'n', '0'):
+    elif lower in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError(
-            f'Boolean value is expected. Your input: {v}')
+        raise argparse.ArgumentTypeError(f"Boolean value is expected. Your input: {v}")
 
 
 def timewrap(func):
     r"""Wrapper of function to printing out the running of the wrapped function.
     """
+
     def wrapped(*args, **kwargs):
         t1 = time.time()
         func = func(*args, **kwargs)
         t2 = time.time() - t1
         logging.info(
             f'Wrapper of {func.__name__}: Run with timer: \
-            {time.strftime("%H:%M:%S", time.gmtime(t2))}')
+            {time.strftime("%H:%M:%S", time.gmtime(t2))}'
+        )
         return func
+
     return wrapped
 
 
@@ -47,7 +49,7 @@ def multilv_getattr(obj, multi_lv: str):
     >>> multilv_getattr(model, 'trunk.early')
     """
     assert isinstance(multi_lv, str)
-    lvs = multi_lv.split('.')
+    lvs = multi_lv.split(".")
     for l in lvs:
         obj = getattr(obj, l)
     return obj
@@ -61,7 +63,7 @@ def multilv_setattr(obj, multi_lv: str, set_with: object):
     >>> multilv_setattr(model, 'conv_up3.conv', nn.Conv2d(5, 5, 5))
     """
     assert isinstance(multi_lv, str)
-    lvs = multi_lv.split('.')
+    lvs = multi_lv.split(".")
     for l in lvs[:-1]:
         obj = getattr(obj, l)
     obj = setattr(obj, lvs[-1], set_with)
@@ -77,6 +79,7 @@ class RunningAverage(object):
     >>> loss_avg()
     ```
     """
+
     def __init__(self):
         self.numel = 0
         self.total = 0
@@ -88,7 +91,7 @@ class RunningAverage(object):
         self.steps += 1
 
     def __call__(self):
-        return self.total/self.numel
+        return self.total / self.numel
 
 
 def assertall(obj, func, *attrs):

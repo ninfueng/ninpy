@@ -1,11 +1,14 @@
 """Modified from: https://github.com/mttk/STL10/blob/master/stl10_input.py
 """
+import errno
+import os
 import sys
-import os, sys, tarfile, errno
+import tarfile
 import urllib.request as urllib
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 try:
     from imageio import imsave
 except:
@@ -20,16 +23,16 @@ DEPTH = 3
 SIZE = HEIGHT * WIDTH * DEPTH
 
 # path to the directory with the data
-DATA_DIR = './stl10'
+DATA_DIR = "./stl10"
 
 # url of the binary data
-DATA_URL = 'http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz'
+DATA_URL = "http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"
 
 # path to the binary train file with image data
-DATA_PATH = f'{DATA_DIR}/stl10_binary/train_X.bin'
+DATA_PATH = f"{DATA_DIR}/stl10_binary/train_X.bin"
 
 # path to the binary train file with labels
-LABEL_PATH = f'{DATA_DIR}/stl10_binary/train_y.bin'
+LABEL_PATH = f"{DATA_DIR}/stl10_binary/train_y.bin"
 
 
 def read_labels(path_to_labels):
@@ -37,7 +40,7 @@ def read_labels(path_to_labels):
     :param path_to_labels: path to the binary file containing labels from the STL-10 dataset
     :return: an array containing the labels
     """
-    with open(path_to_labels, 'rb') as f:
+    with open(path_to_labels, "rb") as f:
         labels = np.fromfile(f, dtype=np.uint8)
         return labels
 
@@ -48,7 +51,7 @@ def read_all_images(path_to_data):
     :return: an array containing all the images
     """
 
-    with open(path_to_data, 'rb') as f:
+    with open(path_to_data, "rb") as f:
         # read whole file in uint8 chunks
         everything = np.fromfile(f, dtype=np.uint8)
 
@@ -111,16 +114,20 @@ def download_and_extract():
     dest_directory = DATA_DIR
     if not os.path.exists(dest_directory):
         os.makedirs(dest_directory)
-    filename = DATA_URL.split('/')[-1]
+    filename = DATA_URL.split("/")[-1]
     filepath = os.path.join(dest_directory, filename)
     if not os.path.exists(filepath):
+
         def _progress(count, block_size, total_size):
-            sys.stdout.write('\rDownloading %s %.2f%%' % (filename,
-                float(count * block_size) / float(total_size) * 100.0))
+            sys.stdout.write(
+                "\rDownloading %s %.2f%%"
+                % (filename, float(count * block_size) / float(total_size) * 100.0)
+            )
             sys.stdout.flush()
+
         filepath, _ = urllib.urlretrieve(DATA_URL, filepath, reporthook=_progress)
-        print('Downloaded', filename)
-        tarfile.open(filepath, 'r:gz').extractall(dest_directory)
+        print("Downloaded", filename)
+        tarfile.open(filepath, "r:gz").extractall(dest_directory)
 
 
 def save_images(images, labels):
@@ -128,7 +135,7 @@ def save_images(images, labels):
     i = 0
     for image in images:
         label = labels[i]
-        directory = './img/' + str(label) + '/'
+        directory = "./img/" + str(label) + "/"
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
@@ -137,7 +144,8 @@ def save_images(images, labels):
         filename = directory + str(i)
         print(filename)
         save_image(image, filename)
-        i = i+1
+        i = i + 1
+
 
 if __name__ == "__main__":
     # download data if needed

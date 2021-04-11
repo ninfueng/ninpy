@@ -3,12 +3,11 @@
 """
 @author: Ninnart Fuengfusin
 """
+import argparse
+import logging
 import os
 import random
-import logging
-from typing import List, Optional, Tuple, Callable
-import argparse
-
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -17,10 +16,10 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from torch.utils.tensorboard import SummaryWriter
 
 from .common import multilv_getattr
+from .data import AttributeOrderedDict
 from .experiment import set_experiment
 from .log import set_logger
 from .yaml2 import load_yaml, name_experiment
-from .data import AttributeOrderedDict
 
 
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
@@ -35,14 +34,11 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
     elif len(x.shape) == 4:
         x = np.transpose(x, (2, 3, 1, 0))
     else:
-        raise ValueError(f'Not supporting with shape of {len(x.shape)}')
+        raise ValueError(f"Not supporting with shape of {len(x.shape)}")
     return x
 
 
-def topk_accuracy(
-        pred: torch.Tensor,
-        target: torch.Tensor,
-        k: int = 1) -> torch.Tensor:
+def topk_accuracy(pred: torch.Tensor, target: torch.Tensor, k: int = 1) -> torch.Tensor:
     r"""Get top-k corrected predictions and batch size.
     >>> topk_accuracy(torch.ones(batch_size, num_classes), torch.ones(batch_size))
     """
@@ -70,7 +66,7 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
     assert isinstance(verbose, bool)
 
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
     torch.backends.cudnn.enabled = True
     torch.manual_seed(seed)
@@ -81,7 +77,7 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
     else:
         torch.backends.cudnn.deterministic = True
     if verbose:
-        logging.info(f'Plant a random seed: {seed} with benchmark mode: {benchmark}.')
+        logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
 
 
 def ninpy_setting(
@@ -90,18 +86,19 @@ def ninpy_setting(
     exp_pth: Optional[str] = None,
     to_console: bool = False,
     benchmark: bool = False,
-    verbose: bool = True) -> Tuple[dict, str, Callable]:
+    verbose: bool = True,
+) -> Tuple[dict, str, Callable]:
     r"""Basic setting to utilize all features from ninpy.
     Get args, path to experiment folder, and, SummaryWriter.
     """
     assert isinstance(name_parser, str)
     parser = argparse.ArgumentParser(description=name_parser)
-    parser.add_argument('--yaml', type=str, default=yaml_file)
-    parser.add_argument('--exp_pth', type=str, default=exp_pth)
+    parser.add_argument("--yaml", type=str, default=yaml_file)
+    parser.add_argument("--exp_pth", type=str, default=exp_pth)
     args = parser.parse_args()
 
     hparams = AttributeOrderedDict(load_yaml(args.yaml))
-    assert hasattr(hparams, 'seed'), 'yaml file should contain a seed attribute.'
+    assert hasattr(hparams, "seed"), "yaml file should contain a seed attribute."
 
     if args.exp_pth == None:
         exp_pth = name_experiment(hparams)
@@ -109,44 +106,57 @@ def ninpy_setting(
         exp_pth = args.exp_pth
 
     set_experiment(exp_pth)
-    set_logger(os.path.join(exp_pth, 'info.log'), to_console)
+    set_logger(os.path.join(exp_pth, "info.log"), to_console)
     seed_torch(hparams.seed, benchmark=benchmark)
     writer = SummaryWriter(exp_pth)
     if verbose:
-        logging.info(f'Ninpy settings: hparams {hparams}@ {exp_pth}')
+        logging.info(f"Ninpy settings: hparams {hparams}@ {exp_pth}")
     return hparams, exp_pth, writer
 
 
 def save_model(
-    save_dir: str, model, optimizer, amp = None,
-    metric: float = None, epoch: int = None,
-    save_epoch: int = None, rm_old: bool = True,
-    verbose: bool = True) -> None:
+    save_dir: str,
+    model,
+    optimizer,
+    amp=None,
+    metric: float = None,
+    epoch: int = None,
+    save_epoch: int = None,
+    rm_old: bool = True,
+    verbose: bool = True,
+) -> None:
 
     r"""Save model, optimizer, amp, best_metric, best_epoch into a ckpt.
     Can automatically remove old save ckpt.
     """
     assert isinstance(save_dir, str)
-    assert save_dir.find('.pth') > -1, 'Should contains type as .pth, otherwise not support rm.'
+    assert (
+        save_dir.find(".pth") > -1
+    ), "Should contains type as .pth, otherwise not support rm."
 
     def _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose):
         if rm_old:
             save_pth = os.path.dirname(save_dir)
             rm_list = [
-                os.path.join(save_pth, i) for i in os.listdir(save_pth)
-                if i.find('.pth') > -1]
+                os.path.join(save_pth, i)
+                for i in os.listdir(save_pth)
+                if i.find(".pth") > -1
+            ]
             [os.remove(r) for r in rm_list]
 
-        torch.save({
-            'model_state_dict': model,
-            'optimizer_state_dict': optimizer,
-            'metric': metric,
-            'epoch': epoch,
-            'amp_state_dict': amp}, save_dir)
+        torch.save(
+            {
+                "model_state_dict": model,
+                "optimizer_state_dict": optimizer,
+                "metric": metric,
+                "epoch": epoch,
+                "amp_state_dict": amp,
+            },
+            save_dir,
+        )
 
         if verbose:
-            logging.info(
-                f'Save model@ {save_dir} with {epoch} epoch.')
+            logging.info(f"Save model@ {save_dir} with {epoch} epoch.")
 
     if model is not None:
         model = model.state_dict()
@@ -163,17 +173,17 @@ def save_model(
 
 
 def load_model(
-    save_dir: str, model: nn.Module,
-    optim = None, amp = None, verbose: bool = True):
+    save_dir: str, model: nn.Module, optim=None, amp=None, verbose: bool = True
+):
     r"""Load model from `save_dir` and extract compressed information.
     """
     assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
-    model_state_dict = ckpt['model_state_dict']
-    optimizer_state_dict = ckpt['optimizer_state_dict']
-    amp_state_dict = ckpt['amp_state_dict']
+    model_state_dict = ckpt["model_state_dict"]
+    optimizer_state_dict = ckpt["optimizer_state_dict"]
+    amp_state_dict = ckpt["amp_state_dict"]
 
-    metric, epoch = ckpt['metric'], ckpt['epoch']
+    metric, epoch = ckpt["metric"], ckpt["epoch"]
     model.load_state_dict(model_state_dict)
 
     if optim is not None:
@@ -181,15 +191,13 @@ def load_model(
     if amp is not None:
         amp = amp.load_state_dict(amp_state_dict)
     if verbose:
-        logging.info(f'Load a model with score {metric}@ {epoch} epoch')
+        logging.info(f"Load a model with score {metric}@ {epoch} epoch")
     return model, optim
 
 
 def add_weight_decay(
-    model: nn.Module,
-    weight_decay: float,
-    skip_list = (),
-    verbose: bool = True) -> None:
+    model: nn.Module, weight_decay: float, skip_list=(), verbose: bool = True
+) -> None:
     r"""Adding weight decay by avoiding batch norm and all bias.
     From:
         https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
@@ -205,22 +213,29 @@ def add_weight_decay(
         if not param.requires_grad:
             # Skip frozen weights or not require grad variables.
             continue
-        if(len(param.shape) == 1 or name.endswith('.bias') or name in skip_list):
+        if len(param.shape) == 1 or name.endswith(".bias") or name in skip_list:
             no_decay.append(param)
             if verbose:
-                logging.info(f'Skipping the weight decay on: {name}.')
+                logging.info(f"Skipping the weight decay on: {name}.")
         else:
             decay.append(param)
 
     assert len(list(model.parameters())) == len(decay) + len(no_decay)
     return [
-        {'params': no_decay, 'weight_decay': 0.0},
-        {'params': decay, 'weight_decay': weight_decay}]
+        {"params": no_decay, "weight_decay": 0.0},
+        {"params": decay, "weight_decay": weight_decay},
+    ]
 
 
 def set_warmup_lr(
-    init_lr: float, warmup_epochs: int, train_loader,
-    optimizer, batch_idx: int, epoch_idx: int, verbose: bool = True) -> None:
+    init_lr: float,
+    warmup_epochs: int,
+    train_loader,
+    optimizer,
+    batch_idx: int,
+    epoch_idx: int,
+    verbose: bool = True,
+) -> None:
     r"""Calculate and set the warmup learning rate.
     >>> for w in range(warmup_epochs):
     >>>     for idx, (data, target) in enumerate(train_loader):
@@ -229,13 +244,13 @@ def set_warmup_lr(
                     optimizer, idx, w, False)
     """
     assert isinstance(warmup_epochs, int)
-    total = warmup_epochs*(len(train_loader))
-    iteration = (batch_idx + 1) + (epoch_idx*len(train_loader))
-    lr = init_lr*(iteration/total)
-    optimizer.param_groups[0]['lr'] = lr
+    total = warmup_epochs * (len(train_loader))
+    iteration = (batch_idx + 1) + (epoch_idx * len(train_loader))
+    lr = init_lr * (iteration / total)
+    optimizer.param_groups[0]["lr"] = lr
 
     if verbose:
-        logging.info(f'Learning rate: {lr}, Step: {iteration}/{total}')
+        logging.info(f"Learning rate: {lr}, Step: {iteration}/{total}")
 
 
 def make_onehot(input, num_classes: int):
@@ -261,8 +276,8 @@ def get_bn_names(module: nn.Module) -> List[str]:
     name_bn_modules = []
     for n, m in module.named_modules():
         if isinstance(m, _BatchNorm):
-            name_bn_modules.append(n + '.bias')
-            name_bn_modules.append(n + '.weight')
+            name_bn_modules.append(n + ".bias")
+            name_bn_modules.append(n + ".weight")
     return name_bn_modules
 
 
@@ -272,7 +287,7 @@ def set_batchnorm_eval(m) -> None:
     >>> model.apply(set_batchnorm_eval)
     """
     classname = m.__class__.__name__
-    if classname.find('BatchNorm') != -1:
+    if classname.find("BatchNorm") != -1:
         m.eval()
 
 
@@ -282,20 +297,18 @@ def freeze_batchnorm(m) -> None:
     >>> model.apply(freeze_batchnorm)
     """
     classname = m.__class__.__name__
-    if classname.find('BatchNorm') != -1:
+    if classname.find("BatchNorm") != -1:
         for param in m.parameters():
             param.requires_grad = False
 
 
-def freeze_param_given_name(
-    m, freeze_names: list, verbose: bool = True) -> None:
+def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None:
     for name, param in m.named_parameters():
         if name in freeze_names:
             param.requires_grad = False
 
             if verbose:
-                logging.info(
-                    f'Layer: {name} was freeze.')
+                logging.info(f"Layer: {name} was freeze.")
 
 
 def normal_init(m):
@@ -303,15 +316,14 @@ def normal_init(m):
     >>> model.apply(normal_init)
     """
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    if classname.find("Conv") != -1:
         torch.nn.init.normal_(m.weight, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
+    elif classname.find("BatchNorm") != -1:
         torch.nn.init.normal_(m.weight, 1.0, 0.02)
         torch.nn.init.zeros_(m.bias)
 
 
-def get_num_weight_from_name(
-        model: nn.Module, name: str, verbose: bool = True) -> list:
+def get_num_weight_from_name(model: nn.Module, name: str, verbose: bool = True) -> list:
     r"""Get a number of weight from a name of module.
     >>> model = resnet18(pretrained=False)
     >>> num_weight = get_num_weight_from_name(model, 'fc')
@@ -320,8 +332,7 @@ def get_num_weight_from_name(
     module = multilv_getattr(model, name)
     num_weights = module.weight.numel()
     if verbose:
-        logging.info(
-            f'Module: {name} contains {num_weights} parameters.')
+        logging.info(f"Module: {name} contains {num_weights} parameters.")
     return num_weights
 
 
@@ -333,15 +344,17 @@ class EarlyStoppingException(Exception):
 class CheckPointer(object):
     r"""TODO: Adding with optimizer, model save, and unittest.
     """
-    def __init__(self, task: str = 'max', patience: int = 10, verbose: bool = True) -> None:
+
+    def __init__(
+        self, task: str = "max", patience: int = 10, verbose: bool = True
+    ) -> None:
         assert isinstance(verbose, bool)
-        if task == 'max':
+        if task == "max":
             self.var = np.finfo(float).min
-        elif task.lower() == 'min':
+        elif task.lower() == "min":
             self.var = np.finfo(float).max
         else:
-            raise NotImplementedError(
-                f'var can be only `max` or `min`. Your {verbose}')
+            raise NotImplementedError(f"var can be only `max` or `min`. Your {verbose}")
         self.task = task.lower()
         self.verbose = verbose
         self.patience = patience
@@ -352,45 +365,47 @@ class CheckPointer(object):
         Raise:
             EarlyStoppingException: if `score` is not better than `var` for `patience` times.
         """
-        if self.task == 'max':
+        if self.task == "max":
             if score > self.var:
                 # TODO: model saves
                 model.save_state_dict()
                 if self.verbose:
-                    logging.info(f'Save model@{score}.')
+                    logging.info(f"Save model@{score}.")
                 self.patience_counter = 0
             else:
                 self.patience_counter += 1
 
-        elif self.task == 'min':
+        elif self.task == "min":
             if score < self.var:
                 # TODO: model save
                 model.save_state_dict()
                 if self.verbose:
-                    logging.info('Save model@{score}.')
+                    logging.info("Save model@{score}.")
                 self.patience_counter = 0
             else:
                 self.patience_counter += 1
 
         if self.patience == self.patience_counter:
             raise EarlyStoppingException(
-                f'Exiting: patience_counter == {self.patience}.')
+                f"Exiting: patience_counter == {self.patience}."
+            )
 
         def __str__(self) -> str:
             # TODO: print and testing for which one is better str or repr.
             return (
-                f'Task: {self.task} \n Best value: {self.var}\n'
-                f'Counter: {self.patience_counter}\n')
+                f"Task: {self.task} \n Best value: {self.var}\n"
+                f"Counter: {self.patience_counter}\n"
+            )
 
 
 class SummaryWriterDictList(SummaryWriter):
     r"""SummaryWriter with support the adding multiple scalers to dictlist.
     """
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def add_scalar_from_dict(
-        self, counter: int = None, kwargs=None) -> None:
+    def add_scalar_from_dict(self, counter: int = None, kwargs=None) -> None:
         """Broadcast add_scalar to all elements in dict.
         """
         for key in kwargs.keys():
@@ -399,8 +414,7 @@ class SummaryWriterDictList(SummaryWriter):
             else:
                 self.add_scalar(str(key), kwargs[key])
 
-    def add_scalar_from_kwargs(
-        self, counter: int = None, **kwargs) -> None:
+    def add_scalar_from_kwargs(self, counter: int = None, **kwargs) -> None:
         """Broadcast add_scalar to all elements in dict.
         """
         for key in kwargs.keys():

@@ -21,15 +21,15 @@ def decrypt(token: bytes, key: bytes) -> str:
     return message.decode()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     key = generate_key()
     print(key.decode())
 
     bytekey = key.encode()
-    message = 'BOOK123panda'
+    message = "BOOK123panda"
     encrypt = encrypt(message, bytekey)
 
-    print(f'Encrypted Message: {encrypt.decode()}')
+    print(f"Encrypted Message: {encrypt.decode()}")
     decrypted_message = decrypt(encrypt, key)
-    print(f'Decoded Message: {message}')
+    print(f"Decoded Message: {message}")
     assert message == decrypted_message

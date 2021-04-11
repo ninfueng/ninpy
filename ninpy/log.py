@@ -3,16 +3,14 @@
 """
 @author: Ninnart Fuengfusin
 """
-import os
 import logging
+import os
 from pathlib import Path
 
 
 def set_logger(
-    log_pth: str,
-    to_console: bool = True,
-    rm_exist: bool = True,
-    verbose: bool = True) -> None:
+    log_pth: str, to_console: bool = True, rm_exist: bool = True, verbose: bool = True
+) -> None:
 
     r"""From: https://github.com/cs230-stanford/cs230-code-examples
     Set the logger to log info in terminal and file `log_path`.
@@ -43,8 +41,8 @@ def set_logger(
         # Logging to a file
         file_handler = logging.FileHandler(log_pth)
         file_handler.setFormatter(
-            logging.Formatter(
-                '%(asctime)s:%(filename)s: %(message)s'))
+            logging.Formatter("%(asctime)s:%(filename)s: %(message)s")
+        )
         logger.addHandler(file_handler)
 
         if to_console:
@@ -52,16 +50,16 @@ def set_logger(
             # This allows tqdm only to process in console.
             stream_handler = logging.StreamHandler()
             stream_handler.setFormatter(
-                logging.Formatter(
-                    '%(asctime)s:%(filename)s: %(message)s'))
+                logging.Formatter("%(asctime)s:%(filename)s: %(message)s")
+            )
             logger.addHandler(stream_handler)
     if verbose:
-        logging.info(f'Logging@{log_pth}.')
+        logging.info(f"Logging@{log_pth}.")
 
-if __name__ == '__main__':
-    set_logger('test_log/test.log', False)
-    logging.info('test')
-    assert os.path.isfile('test_log/test.log')
-    os.remove('test_log/test.log')
-    os.rmdir('test_log')
 
+if __name__ == "__main__":
+    set_logger("test_log/test.log", False)
+    logging.info("test")
+    assert os.path.isfile("test_log/test.log")
+    os.remove("test_log/test.log")
+    os.rmdir("test_log")

@@ -3,24 +3,24 @@
 """
 @author: Ninnart Fuengfusin
 """
-import os
 import argparse
+import logging
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
+from prefetch_generator import BackgroundGenerator
 from torch.optim.lr_scheduler import StepLR
+from torch.utils.tensorboard import SummaryWriter
+from torchvision import datasets, transforms
 from tqdm import tqdm
 
-import logging
-from prefetch_generator import BackgroundGenerator
-from torch.utils.tensorboard import SummaryWriter
-
-from ninpy.log import set_logger
-from ninpy.experiment import set_experiment
-from ninpy.yaml2 import dump_yaml, load_yaml, dict2str
 from ninpy.data import AttributeOrderedDict
+from ninpy.experiment import set_experiment
+from ninpy.log import set_logger
+from ninpy.yaml2 import dict2str, dump_yaml, load_yaml
 
 
 class Net(nn.Module):
@@ -53,7 +53,7 @@ def train(hypers, model, device, train_loader, optimizer, epoch):
     """
     """
     model.train()
-    pbar = tqdm(BackgroundGenerator(enumerate(train_loader)), total=len(train_loader))    
+    pbar = tqdm(BackgroundGenerator(enumerate(train_loader)), total=len(train_loader))
     for batch_idx, (data, target) in pbar:
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
@@ -61,13 +61,19 @@ def train(hypers, model, device, train_loader, optimizer, epoch):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % hypers['log_interval'] == 0:
-            logging.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-            if hypers['dry_run']:
+        if batch_idx % hypers["log_interval"] == 0:
+            logging.info(
+                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                    epoch,
+                    batch_idx * len(data),
+                    len(train_loader.dataset),
+                    100.0 * batch_idx / len(train_loader),
+                    loss.item(),
+                )
+            )
+            if hypers["dry_run"]:
                 break
-        #pbar.set_description(f'Train acc: {100. * correct / len(train_loader.dataset)}')
+        # pbar.set_description(f'Train acc: {100. * correct / len(train_loader.dataset)}')
 
 
 def test(model, device, test_loader, epoch, writer):
@@ -79,22 +85,31 @@ def test(model, device, test_loader, epoch, writer):
         for data, target in pbar:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
-            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            test_loss += F.nll_loss(
+                output, target, reduction="sum"
+            ).item()  # sum up batch loss
+            pred = output.argmax(
+                dim=1, keepdim=True
+            )  # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
-            pbar.set_description(f'Test {epoch}')
-            pbar.set_postfix({'acc': 100. * correct / len(test_loader.dataset)})
+            pbar.set_description(f"Test {epoch}")
+            pbar.set_postfix({"acc": 100.0 * correct / len(test_loader.dataset)})
 
     test_loss /= len(test_loader.dataset)
-    writer.add_scalar('loss/test', test_loss, epoch)
-    logging.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
-    
+    writer.add_scalar("loss/test", test_loss, epoch)
+    logging.info(
+        "\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+            test_loss,
+            correct,
+            len(test_loader.dataset),
+            100.0 * correct / len(test_loader.dataset),
+        )
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+    parser = argparse.ArgumentParser(description="PyTorch MNIST Example")
     # parser.add_argument('--batch-size', type=int, default=64, metavar='N',
     #                     help='input batch size for training (default: 64)')
     # parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
@@ -115,54 +130,49 @@ if __name__ == '__main__':
     #                     help='how many batches to wait before logging training status')
     # parser.add_argument('--save-model', action='store_true', default=False,
     #                     help='For Saving the current Model')
-    parser.add_argument('--yaml', type=str, default='test_net.yaml')
+    parser.add_argument("--yaml", type=str, default="test_net.yaml")
     args = parser.parse_args()
-        
+
     # argsdict = vars(args)
     # dump_yaml(argsdict, 'test_net.yaml')
-    
+
     hypers = AttributeOrderedDict(load_yaml(args.yaml))
-    use_cuda = not hypers['no_cuda'] and torch.cuda.is_available()
+    use_cuda = not hypers["no_cuda"] and torch.cuda.is_available()
 
     setup_str = dict2str(hypers)
     exp_pth = set_experiment(setup_str)
-    set_logger(os.path.join(exp_pth, 'info.log'), False)
-    writer = SummaryWriter(log_dir=os.path.join(exp_pth, 'tensorboard'))
-    
-    torch.manual_seed(hypers['seed'])
+    set_logger(os.path.join(exp_pth, "info.log"), False)
+    writer = SummaryWriter(log_dir=os.path.join(exp_pth, "tensorboard"))
+
+    torch.manual_seed(hypers["seed"])
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    train_kwargs = {'batch_size': hypers['batch_size']}
-    test_kwargs = {'batch_size': hypers['test_batch_size']}
+    train_kwargs = {"batch_size": hypers["batch_size"]}
+    test_kwargs = {"batch_size": hypers["test_batch_size"]}
     if use_cuda:
-        cuda_kwargs = {'num_workers': 8,
-                       'pin_memory': True,
-                       'shuffle': True}
+        cuda_kwargs = {"num_workers": 8, "pin_memory": True, "shuffle": True}
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
 
-    transform=transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-        ])
-    dataset1 = datasets.MNIST('../data', train=True, download=True,
-                       transform=transform)
-    dataset2 = datasets.MNIST('../data', train=False,
-                       transform=transform)
-    train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+    )
+    dataset1 = datasets.MNIST("../data", train=True, download=True, transform=transform)
+    dataset2 = datasets.MNIST("../data", train=False, transform=transform)
+    train_loader = torch.utils.data.DataLoader(dataset1, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
     model = Net().to(device)
-    optimizer = optim.Adadelta(model.parameters(), lr=hypers['lr'])
+    optimizer = optim.Adadelta(model.parameters(), lr=hypers["lr"])
 
-    scheduler = StepLR(optimizer, step_size=1, gamma=hypers['gamma'])
-    for epoch in range(1, hypers['epochs'] + 1):
+    scheduler = StepLR(optimizer, step_size=1, gamma=hypers["gamma"])
+    for epoch in range(1, hypers["epochs"] + 1):
         train(hypers, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader, epoch, writer)
         scheduler.step()
 
-    if hypers['save_model']:
+    if hypers["save_model"]:
         torch.save(model.state_dict(), "mnist_cnn.pt")
-    
-    save_params = {'hyper': dict(hypers), 'results': {'test_acc': 0.992}}
-    dump_yaml(save_params, os.path.join(exp_pth, 'results.yaml'))
+
+    save_params = {"hyper": dict(hypers), "results": {"test_acc": 0.992}}
+    dump_yaml(save_params, os.path.join(exp_pth, "results.yaml"))
