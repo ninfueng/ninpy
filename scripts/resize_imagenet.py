@@ -30,7 +30,7 @@ def resize_save_img(path: str, resized_path: str, resize: int) -> None:
 
     basename = os.path.basename(path)
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    assert img is not None
+    assert img is not None, f"Cannot find an image {path}"
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (resize, resize))
     cv2.imwrite(os.path.join(resized_path, basename), img)

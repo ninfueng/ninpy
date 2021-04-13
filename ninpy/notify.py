@@ -25,8 +25,7 @@ except KeyError:
     user_mentions=["@binmanager"],
 )
 def basic_notify(results_dict: dict) -> dict:
-    """Basic wrapper function to notify to both slack and desktop.
-    """
+    """Basic wrapper function to notify to both slack and desktop."""
     assert isinstance(results_dict, dict)
     return results_dict
 

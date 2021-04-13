@@ -25,8 +25,7 @@ def str2bool(v: str) -> bool:
 
 
 def timewrap(func):
-    r"""Wrapper of function to printing out the running of the wrapped function.
-    """
+    r"""Wrapper of function to printing out the running of the wrapped function."""
 
     def wrapped(*args, **kwargs):
         t1 = time.time()

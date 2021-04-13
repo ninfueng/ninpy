@@ -27,8 +27,7 @@ def temp_objective(
     suggest_hparams: Callable,
     is_minimize: bool = False,
 ) -> float:
-    """Template objective function.
-    """
+    """Template objective function."""
     assert isinstance(py_script, str)
     assert isinstance(basic_yaml, str)
     assert isinstance(target_name, str)

@@ -79,15 +79,13 @@ def args2str(args) -> str:
 
 
 def args2yaml(args, yaml_name: str) -> None:
-    r"""Convert argparse to a yaml file.
-    """
+    r"""Convert argparse to a yaml file."""
     args = vars(args)
     dump_yaml(args, yaml_name)
 
 
 def name_experiment(hparams: dict) -> str:
-    """Combine all hparams into name and make sure save-able in a folder.
-    """
+    """Combine all hparams into name and make sure save-able in a folder."""
     exp_pth = dict2str(hparams)
     datetime = time.strftime("%Y:%m:%d-%H:%M:%S")
     exp_pth = f"{datetime}-{exp_pth}"

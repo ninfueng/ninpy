@@ -85,6 +85,12 @@ def get_imagenet_loaders(
 
 
 class BurstImageFolderLoader(ImageFolder):
+    """
+    Example:
+    >>> traindir = os.path.expanduser("~/datasets/CINIC10/train")
+    >>> dataset = BurstImageFolderLoader(traindir)
+    >>> dataset.load_img_classes()
+    """
     IMG_EXTENSIONS = (
         ".jpg",
         ".jpeg",

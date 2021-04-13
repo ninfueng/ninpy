@@ -39,8 +39,7 @@ def measure_sparse(*ws) -> float:
 
 
 def ternary_threshold(delta: float = 0.7, *ws):
-    """Ternary threshold find in ws.
-    """
+    """Ternary threshold find in ws."""
     assert isinstance(delta, float)
     assert 0.0 < delta < 1.0
     num_params, sum_w = 0, 0
@@ -74,8 +73,7 @@ class BinConnectQuant(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_o):
-        r"""Clipped grad where, -1 < w < 1.
-        """
+        r"""Clipped grad where, -1 < w < 1."""
         (w,) = ctx.saved_tensors
         device = w.device
         grad_i = grad_o.clone()
@@ -86,8 +84,7 @@ class BinConnectQuant(torch.autograd.Function):
 
 
 class TerQuant(torch.autograd.Function):
-    r"""Ternary Weight quantization function.
-    """
+    r"""Ternary Weight quantization function."""
 
     @staticmethod
     def forward(ctx, w, threshold):
@@ -102,9 +99,8 @@ class TerQuant(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_o):
-        r"""Back propagation using same as an identity function.
-        """
-        w, thre, = ctx.saved_tensors
+        r"""Back propagation using same as an identity function."""
+        (w, thre,) = ctx.saved_tensors
         grad_i = grad_o.clone()
         return grad_i, None
 
@@ -130,8 +126,7 @@ class Conv2d(nn.Conv2d):
 
 
 class BinConnectConv2d(Conv2d):
-    """BinaryConnect.
-    """
+    """BinaryConnect."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,8 +138,7 @@ class BinConnectConv2d(Conv2d):
 
 
 class BinConnectLinear(Linear):
-    r"""Binarized neural networks.
-    """
+    r"""Binarized neural networks."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -156,8 +150,7 @@ class BinConnectLinear(Linear):
 
 
 class TerLinear(Linear):
-    r"""Ternary Weight Layer.
-    """
+    r"""Ternary Weight Layer."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -210,8 +203,7 @@ class QuantModule(nn.Module):
     def quantization(
         self, module_types: str, shortcut_types: str, verbose: bool = True
     ) -> None:
-        """Convert quantization type to each module.
-        """
+        """Convert quantization type to each module."""
         list_name_modules, list_name_shortcuts = self.get_name_layers()
         assert len(shortcut_types) == len(list_name_shortcuts)
         assert len(module_types) == len(list_name_modules)
@@ -308,8 +300,7 @@ class QuantModule(nn.Module):
                     logging.info(f"Skipping {n} layer with quantization type {w}.")
 
     def sparse_all(self) -> float:
-        """Get all sparse from all layers that has attribute, weight_q.
-        """
+        """Get all sparse from all layers that has attribute, weight_q."""
         ws = []
         for l in self.modules():
             if hasattr(l, "weight_q"):
@@ -317,8 +308,7 @@ class QuantModule(nn.Module):
         return measure_sparse(*ws)
 
     def sparse_layerwise(self) -> list:
-        """Sparse layerwise
-        """
+        """Sparse layerwise"""
         spar_ws = []
         for l in self.modules():
             if hasattr(l, "weight_q"):
@@ -327,8 +317,7 @@ class QuantModule(nn.Module):
 
 
 class ResNet18(QuantModule):
-    """ResNet18.
-    """
+    """ResNet18."""
 
     def __init__(self, in_channels: int = 3):
         super().__init__()

@@ -11,8 +11,7 @@ from ninpy.torch_utils import get_num_weight_from_name, topk_accuracy
 
 
 def test_get_imagenet_img():
-    r"""Checking for an example imagenet link is dead for not.
-    """
+    r"""Checking for an example imagenet link is dead for not."""
     PRETRAINED = False
     test_img = get_imagenet_img()
     model = alexnet(pretrained=PRETRAINED)

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-@author: Ninnart Fuengfusin
-"""
+"""@author: Ninnart Fuengfusin"""
 import argparse
 import logging
 import os
@@ -13,7 +11,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
+from torch.optim import optimizer
 from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import hparams
 
 from .common import multilv_getattr
 from .data import AttributeOrderedDict
@@ -23,8 +23,7 @@ from .yaml2 import load_yaml, name_experiment
 
 
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
-    r"""Converting torch format tensor to `numpy` or `tensorflow` format.
-    """
+    r"""Converting torch format tensor to `numpy` or `tensorflow` format."""
     assert isinstance(x, torch.Tensor)
     x = x.detach().cpu().numpy()
     if len(x.shape) == 2:
@@ -34,31 +33,61 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
     elif len(x.shape) == 4:
         x = np.transpose(x, (2, 3, 1, 0))
     else:
-        raise ValueError(f"Not supporting with shape of {len(x.shape)}")
+        raise ValueError(
+            f"Not supporting with shape of {len(x.shape)}, please update this function to support it."
+        )
     return x
 
 
-def topk_accuracy(pred: torch.Tensor, target: torch.Tensor, k: int = 1) -> torch.Tensor:
-    r"""Get top-k corrected predictions and batch size.
-    >>> topk_accuracy(torch.ones(batch_size, num_classes), torch.ones(batch_size))
+def tensorboard_models(
+    writer: SummaryWriter, model: nn.Module, idx: int
+) -> SummaryWriter:
+    """Tracking all parameters with Tensorboard."""
+    assert isinstance(idx, int)
+    for name, param in model.named_parameters():
+        writer.add_histogram(name, param, idx)
+    return writer
+
+
+def tensorboard_hparams(writer, hparam_dict, metric_dict):
+    """Modified: https://github.com/lanpa/tensorboardX/issues/479"""
+    exp, ssi, sei = hparams(hparam_dict, metric_dict)
+    writer.file_writer.add_summary(exp)
+    writer.file_writer.add_summary(ssi)
+    writer.file_writer.add_summary(sei)
+    for k, v in metric_dict.items():
+        writer.add_scalar(k, v)
+
+
+def topk_accuracy(
+    output: torch.Tensor, target: torch.Tensor, topk: Tuple[int] = (1,)
+) -> Tuple[torch.Tensor, int]:
+    """Get top-k corrected predictions and batch size.
+
+    Example:
+    >>> output = torch.tensor([[0.0, 0.1, 0.3, 0.9], [0.0, 0.8, 0.3, 0.4]])
+    >>> target = torch.tensor([3, 1])
+    >>> acc = accuracy(output, target)
+    ([tensor(2.)], 2)
     """
-    assert isinstance(k, int)
-    assert k >= 1
-
-    pred, target = pred.detach().data, target.detach().data
-    batch_size = target.shape[0]
-    _, pred = pred.topk(k, dim=-1)
-
-    # Make targets shape same as the topk pred.
-    target = target.expand_as(pred.T)
-    correct = target.T.eq(pred)
-    return correct.numpy().sum(), batch_size
+    maxk = max(topk)
+    batch_size = target.size(0)
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    res = []
+    for k in topk:
+        correct_k = correct[:k].reshape(-1).float().sum(0)
+        res.append(correct_k)
+    return res, batch_size
 
 
 def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) -> None:
     """Seed the random seed to all possible modules.
+
     From: https://github.com/pytorch/pytorch/issues/11278
         https://pytorch.org/docs/stable/notes/randomness.html
+    Example:
     >>> seed_torch(2021)
     """
     assert isinstance(seed, int)
@@ -78,6 +107,16 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
         torch.backends.cudnn.deterministic = True
     if verbose:
         logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
+
+
+def speed_torch():
+    """For speed training without using any random seeds.
+
+    Example:
+    >>> speed_torch()
+    """
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
 
 
 def ninpy_setting(
@@ -125,16 +164,26 @@ def save_model(
     rm_old: bool = True,
     verbose: bool = True,
 ) -> None:
-
     r"""Save model, optimizer, amp, best_metric, best_epoch into a ckpt.
     Can automatically remove old save ckpt.
     """
     assert isinstance(save_dir, str)
     assert (
         save_dir.find(".pth") > -1
-    ), "Should contains type as .pth, otherwise not support rm."
+    ), "Should contains type as `.pth`, otherwise not support removing old files."
 
-    def _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose):
+    def _save_model(
+        save_dir,
+        model_name,
+        optimizer_name,
+        model,
+        optimizer,
+        amp,
+        metric,
+        epoch,
+        rm_old,
+        verbose,
+    ):
         if rm_old:
             save_pth = os.path.dirname(save_dir)
             rm_list = [
@@ -144,9 +193,12 @@ def save_model(
             ]
             [os.remove(r) for r in rm_list]
 
+        # Still in _save_model.
         torch.save(
             {
+                "model_name": model_name,
                 "model_state_dict": model,
+                "optimizer_name": optimizer_name,
                 "optimizer_state_dict": optimizer,
                 "metric": metric,
                 "epoch": epoch,
@@ -158,41 +210,66 @@ def save_model(
         if verbose:
             logging.info(f"Save model@ {save_dir} with {epoch} epoch.")
 
-    if model is not None:
-        model = model.state_dict()
-    if optimizer is not None:
-        optimizer = optimizer.state_dict()
+    model = model.state_dict()
+    model_name = model.__class__.__name__
+    optimizer = optimizer.state_dict()
+    optimizer_name = optimizer.__class__.__name__
+
     if amp is not None:
         amp = amp.state_dict()
 
     if save_epoch is not None:
         if epoch >= save_epoch:
-            _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose)
+            _save_model(
+                save_dir,
+                model_name,
+                optimizer_name,
+                model,
+                optimizer,
+                amp,
+                metric,
+                epoch,
+                rm_old,
+                verbose,
+            )
     else:
-        _save_model(save_dir, model, optimizer, amp, metric, epoch, rm_old, verbose)
+        _save_model(
+            save_dir,
+            model_name,
+            optimizer_name,
+            model,
+            optimizer,
+            amp,
+            metric,
+            epoch,
+            rm_old,
+            verbose,
+        )
 
 
 def load_model(
-    save_dir: str, model: nn.Module, optim=None, amp=None, verbose: bool = True
+    save_dir: str, model: nn.Module, optimizer=None, amp=None, verbose: bool = True
 ):
-    r"""Load model from `save_dir` and extract compressed information.
-    """
+    r"""Load model from `save_dir` and extract compressed information."""
     assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
     model_state_dict = ckpt["model_state_dict"]
     optimizer_state_dict = ckpt["optimizer_state_dict"]
     amp_state_dict = ckpt["amp_state_dict"]
-
+    model_name = ckpt["model_name"]
+    optimizer_name = ckpt["optimizer_name"]
     metric, epoch = ckpt["metric"], ckpt["epoch"]
     model.load_state_dict(model_state_dict)
 
-    if optim is not None:
-        optim = optim.load_state_dict(optimizer_state_dict)
+    if optimizer is not None:
+        optimizer.load_state_dict(optimizer_state_dict)
     if amp is not None:
-        amp = amp.load_state_dict(amp_state_dict)
+        amp.load_state_dict(amp_state_dict)
     if verbose:
-        logging.info(f"Load a model with score {metric}@ {epoch} epoch")
-    return model, optim
+        logging.info(
+            f"Load a model {model_name} and an optimizer {optimizer_name} with score {metric}@ {epoch} epoch"
+        )
+    return model, optimizer
 
 
 def add_weight_decay(
@@ -271,8 +348,7 @@ def make_onehot(input, num_classes: int):
 
 
 def get_bn_names(module: nn.Module) -> List[str]:
-    r"""Designed for using with `add_weight_decay` as `skip_list`.
-    """
+    r"""Designed for using with `add_weight_decay` as `skip_list`."""
     name_bn_modules = []
     for n, m in module.named_modules():
         if isinstance(m, _BatchNorm):
@@ -342,8 +418,7 @@ class EarlyStoppingException(Exception):
 
 
 class CheckPointer(object):
-    r"""TODO: Adding with optimizer, model save, and unittest.
-    """
+    r"""TODO: Adding with optimizer, model save, and unittest."""
 
     def __init__(
         self, task: str = "max", patience: int = 10, verbose: bool = True
@@ -399,15 +474,13 @@ class CheckPointer(object):
 
 
 class SummaryWriterDictList(SummaryWriter):
-    r"""SummaryWriter with support the adding multiple scalers to dictlist.
-    """
+    r"""SummaryWriter with support the adding multiple scalers to dictlist."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     def add_scalar_from_dict(self, counter: int = None, kwargs=None) -> None:
-        """Broadcast add_scalar to all elements in dict.
-        """
+        """Broadcast add_scalar to all elements in dict."""
         for key in kwargs.keys():
             if counter is not None:
                 self.add_scalar(str(key), kwargs[key], counter)
@@ -415,8 +488,7 @@ class SummaryWriterDictList(SummaryWriter):
                 self.add_scalar(str(key), kwargs[key])
 
     def add_scalar_from_kwargs(self, counter: int = None, **kwargs) -> None:
-        """Broadcast add_scalar to all elements in dict.
-        """
+        """Broadcast add_scalar to all elements in dict."""
         for key in kwargs.keys():
             if counter is not None:
                 self.add_scalar(str(key), kwargs[key], counter)

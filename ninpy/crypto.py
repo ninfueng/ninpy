@@ -19,4 +19,3 @@ def encrypt(message: str, key: bytes) -> bytes:
 def decrypt(token: bytes, key: bytes) -> str:
     message = Fernet(key).decrypt(token)
     return message.decode()
-

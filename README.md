@@ -1,13 +1,16 @@
-# Ninpy
+# Ninpy #
+
 My collection of reuse-able Python scripts and others.
 
-## Install
+## Install ##
+
 ```bash
 python setup.py develop
 ```
 
-## Directory
-```
+## Directory ##
+
+```bash
 ninpy
 ├── common.py
 ├── crypto.py
@@ -18,7 +21,6 @@ ninpy
 │   ├── imagenet.py
 │   ├── __init__.py
 │   ├── kitti_road.py
-│   ├── __pycache__
 │   └── voc2012.py
 ├── debug.py
 ├── experiment.py
@@ -34,10 +36,8 @@ ninpy
 │   ├── cifar_resnet.py
 │   ├── cifar_vgg.py
 │   ├── __init__.py
-│   ├── __pycache__
 │   └── small_models.py
 ├── notify.py
-├── __pycache__
 ├── quant.py
 ├── README.md
 ├── requirement.txt
@@ -46,3 +46,9 @@ ninpy
 └── yaml2.py
 ```
 
+## TODO ##
+
+[ ] Reorganize torch2.
+    [ ] Adding base module with tensorboard tracking.
+    [ ] Dataset with tensorboard add_images.
+    [ ] Tensorboard with add_scalars with a dict input.

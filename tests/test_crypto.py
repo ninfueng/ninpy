@@ -1,4 +1,4 @@
-from ninpy.crypto import generate_key, encrypt, decrypt
+from ninpy.crypto import decrypt, encrypt, generate_key
 
 
 def test_crypto():

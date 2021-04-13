@@ -50,8 +50,7 @@ class Net(nn.Module):
 
 
 def train(hypers, model, device, train_loader, optimizer, epoch):
-    """
-    """
+    """"""
     model.train()
     pbar = tqdm(BackgroundGenerator(enumerate(train_loader)), total=len(train_loader))
     for batch_idx, (data, target) in pbar:

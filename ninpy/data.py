@@ -74,8 +74,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
             self.update({arg: []})
 
     def _fill_dictlist_equal_len(self, fill_var: int = 0) -> dict:
-        """Make all lists in dict have the same len.
-        """
+        """Make all lists in dict have the same len."""
         # Get maxlen from all keys.
         maxlen = -sys.maxsize - 1
         for k in self.keys():
@@ -99,8 +98,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
     def to_csv(
         self, file_name: str, fill_var: float = np.nan, verbose: str = True
     ) -> None:
-        """Saving the dictlist to csv.
-        """
+        """Saving the dictlist to csv."""
         assert isinstance(file_name, str)
         df = self.to_df(fill_var=fill_var)
         df.to_csv(file_name, index=None)
@@ -108,8 +106,7 @@ class AttributeOrderedDictList(AttributeOrderedDict):
             logging.info(f"Save csv@{file_name}.")
 
     def append_kwargs(self, **kwargs) -> None:
-        """Append multiple lists in dict at the same time using kwargs.
-        """
+        """Append multiple lists in dict at the same time using kwargs."""
         _ = [self[key].append(kwargs[key]) for key in kwargs.keys()]
 
     def to_dict(self) -> dict:
