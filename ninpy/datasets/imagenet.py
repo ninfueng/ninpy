@@ -4,6 +4,11 @@ import os
 from multiprocessing import cpu_count
 from typing import Callable, List, Optional
 
+from multiprocessing import cpu_count
+from multiprocessing import Pool
+from PIL import Image
+from functools import reduce
+
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
@@ -155,13 +160,33 @@ class BurstImageFolder(ImageFolder):
 
 
 if __name__ == "__main__":
-    traindir = os.path.expanduser("~/datasets/CINIC10/train")
-    dataset = ImageFolder(traindir)
-    for x, y in tqdm(dataset):
-        pass
+    # traindir = os.path.expanduser("~/datasets/CINIC10/train")
+    # dataset = ImageFolder(traindir)
+    # for x, y in tqdm(dataset):
+    #     pass
 
-    dataset = BurstImageFolder(traindir)
-    dataset.load_imgs()
-    for x, y in tqdm(dataset):
-        pass
-    print(x, y)
+    # dataset = BurstImageFolder(traindir)
+    # dataset.load_imgs()
+    # for x, y in tqdm(dataset):
+    #     pass
+    # print(x, y)
+
+
+    def load_imgs_from_list(imgdirs: List[str]) -> List[str]:
+        """Load images from list of directories."""
+        imglist = []
+        for d in tqdm(imgdirs):
+            img = pil_loader(d)
+            imglist.append(img)
+        return imglist
+
+
+    def mp_load_imgs_from_list(imgdirs: List[str], num_workers=cpu_count()) -> List[Image.Image]:
+        """Multi-processing load images to list."""
+        assert isinstance(num_workers, int)
+        pool = Pool(num_workers)
+        imgdir_per_workers = [imgdirs[i:i + num_workers] for i in range(0, len(imgdirs), num_workers)]
+        imgs = pool.map(load_imgs_from_list, imgdir_per_workers)
+        imgs = reduce(sum, imgs)
+        return imgs
+
