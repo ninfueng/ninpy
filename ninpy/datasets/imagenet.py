@@ -136,9 +136,8 @@ class BurstImageFolder(ImageFolder):
                 instances.append(item)
 
         self.samples = instances
-        def _identity(x):
-            return x
-        self.loader = _identity
+
+        self.loader = self._identity
         if self.verbose:
             logging.info("Store all image into RAM.")
 
@@ -148,6 +147,10 @@ class BurstImageFolder(ImageFolder):
             imgs = glob.glob(os.path.join(path, "*" + e))
             imgs += glob.glob(os.path.join(path, "*" + e.upper()))
         return imgs
+
+    @staticmethod
+    def _identity(x):
+        return x
 
 
 if __name__ == "__main__":
