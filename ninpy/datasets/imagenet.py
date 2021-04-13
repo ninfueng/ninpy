@@ -84,11 +84,11 @@ def get_imagenet_loaders(
     return train_loader, val_loader
 
 
-class BurstImageFolderLoader(ImageFolder):
+class BurstImageFolder(ImageFolder):
     """
     Example:
     >>> traindir = os.path.expanduser("~/datasets/CINIC10/train")
-    >>> dataset = BurstImageFolderLoader(traindir)
+    >>> dataset = BurstImageFolder(traindir)
     >>> dataset.load_img_classes()
     """
     IMG_EXTENSIONS = (
@@ -121,7 +121,7 @@ class BurstImageFolderLoader(ImageFolder):
         )
         self.verbose = verbose
 
-    def load_img_classes(self) -> None:
+    def load_imgs(self) -> None:
         list_classes = sorted(os.listdir(self.root))
         root = os.path.expanduser(self.root)
         instances = []
@@ -136,7 +136,9 @@ class BurstImageFolderLoader(ImageFolder):
                 instances.append(item)
 
         self.samples = instances
-        self.loader = lambda x: x
+        def _identity(x):
+            return x
+        self.loader = _identity
         if self.verbose:
             logging.info("Store all image into RAM.")
 
@@ -154,8 +156,8 @@ if __name__ == "__main__":
     for x, y in tqdm(dataset):
         pass
 
-    dataset = BurstImageFolderLoader(traindir)
-    dataset.load_img_classes()
+    dataset = BurstImageFolder(traindir)
+    dataset.load_imgs()
     for x, y in tqdm(dataset):
         pass
     print(x, y)

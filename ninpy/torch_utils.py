@@ -11,7 +11,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
-from torch.optim import optimizer
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.tensorboard.writer import hparams
 
