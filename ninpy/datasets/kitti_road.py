@@ -66,8 +66,7 @@ class KITTIRoadDataset(Dataset):
 
     @staticmethod
     def cvt2mask(mask) -> np.ndarray:
-        """Cvt 3-channels mask to binary mask.
-        """
+        """Cvt 3-channels mask to binary mask."""
         mask = np.all(mask == np.array([0, 0, 255]), axis=2)
         return mask.astype(np.float32)
 

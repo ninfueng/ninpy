@@ -51,8 +51,7 @@ def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
 
 
 def get_mnist_transforms() -> Tuple[Callable]:
-    r"""Modified: https://github.com/itayhubara/BinaryNet.pytorch/blob/master/main_mnist.py
-    """
+    r"""Modified: https://github.com/itayhubara/BinaryNet.pytorch/blob/master/main_mnist.py"""
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
     )
@@ -338,8 +337,7 @@ class VOCSegmentationDataset(Dataset):
                 return image
 
     def cvt2mask(self, mask: np.ndarray) -> np.ndarray:
-        r"""Convert a mask to class array.
-        """
+        r"""Convert a mask to class array."""
         height, width = mask.shape[:2]
         colormap = self.VOC_COLORMAP
         segmentation_mask = np.zeros((height, width, len(colormap)), dtype=np.float32)

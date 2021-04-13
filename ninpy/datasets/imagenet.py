@@ -1,11 +1,15 @@
+import glob
+import logging
 import os
 from multiprocessing import cpu_count
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
+from torchvision.datasets.folder import pil_loader
+from tqdm import tqdm
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -21,8 +25,7 @@ def get_imagenet_loaders(
     train_transforms: Optional[Callable] = None,
     val_transforms: Optional[Callable] = None,
 ):
-    r"""Get ImageNet loaders by using ImageFolder.
-    """
+    r"""Get ImageNet loaders by using ImageFolder."""
     assert isinstance(root, str)
     assert isinstance(batch_size, str)
     assert isinstance(num_workers, str)
@@ -79,3 +82,74 @@ def get_imagenet_loaders(
     )
 
     return train_loader, val_loader
+
+
+class BurstImageFolderLoader(ImageFolder):
+    IMG_EXTENSIONS = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".ppm",
+        ".bmp",
+        ".pgm",
+        ".tif",
+        ".tiff",
+        ".webp",
+    )
+
+    def __init__(
+        self,
+        root: str,
+        transform=None,
+        target_transform=None,
+        loader=pil_loader,
+        is_valid_file=None,
+        verbose=False,
+    ):
+        super().__init__(
+            root,
+            transform=transform,
+            target_transform=target_transform,
+            loader=loader,
+            is_valid_file=is_valid_file,
+        )
+        self.verbose = verbose
+
+    def load_img_classes(self) -> None:
+        list_classes = sorted(os.listdir(self.root))
+        root = os.path.expanduser(self.root)
+        instances = []
+
+        for idx, c in enumerate(tqdm(list_classes)):
+            classdir = os.path.join(root, c)
+            imgdirs = self.load_img_with_extension(classdir)
+
+            for i in imgdirs:
+                img = pil_loader(i)
+                item = img, idx
+                instances.append(item)
+
+        self.samples = instances
+        self.loader = lambda x: x
+        if self.verbose:
+            logging.info("Store all image into RAM.")
+
+    def load_img_with_extension(self, path: str) -> List[str]:
+        assert isinstance(path, str)
+        for e in self.IMG_EXTENSIONS:
+            imgs = glob.glob(os.path.join(path, "*" + e))
+            imgs += glob.glob(os.path.join(path, "*" + e.upper()))
+        return imgs
+
+
+if __name__ == "__main__":
+    traindir = os.path.expanduser("~/datasets/CINIC10/train")
+    dataset = ImageFolder(traindir)
+    for x, y in tqdm(dataset):
+        pass
+
+    dataset = BurstImageFolderLoader(traindir)
+    dataset.load_img_classes()
+    for x, y in tqdm(dataset):
+        pass
+    print(x, y)
