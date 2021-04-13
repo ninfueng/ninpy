@@ -143,10 +143,11 @@ class BurstImageFolder(ImageFolder):
 
     def load_img_with_extension(self, path: str) -> List[str]:
         assert isinstance(path, str)
+        imgdirs = []
         for e in self.IMG_EXTENSIONS:
-            imgs = glob.glob(os.path.join(path, "*" + e))
-            imgs += glob.glob(os.path.join(path, "*" + e.upper()))
-        return imgs
+            imgdirs += glob.glob(os.path.join(path, "*" + e))
+            imgdirs += glob.glob(os.path.join(path, "*" + e.upper()))
+        return imgdirs
 
     @staticmethod
     def _identity(x):
