@@ -89,7 +89,7 @@ class BurstImageFolder(ImageFolder):
     Example:
     >>> traindir = os.path.expanduser("~/datasets/CINIC10/train")
     >>> dataset = BurstImageFolder(traindir)
-    >>> dataset.load_img_classes()
+    >>> dataset.load_imgs()
     """
     IMG_EXTENSIONS = (
         ".jpg",
@@ -112,6 +112,7 @@ class BurstImageFolder(ImageFolder):
         is_valid_file=None,
         verbose=False,
     ):
+        root = os.path.expanduser(root)
         super().__init__(
             root,
             transform=transform,
@@ -136,7 +137,6 @@ class BurstImageFolder(ImageFolder):
                 instances.append(item)
 
         self.samples = instances
-
         self.loader = self._identity
         if self.verbose:
             logging.info("Store all image into RAM.")
