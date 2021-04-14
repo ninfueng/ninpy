@@ -11,7 +11,11 @@ from torchvision.datasets.folder import pil_loader
 from tqdm import tqdm
 
 
-def load_imgs_from_list(imgdirs: List[str]) -> List[str]:
+def reduce_sum(x, y):
+    return x + y
+
+
+def load_img_from_list(imgdirs: List[str]) -> List[str]:
     """Load images from list of directories."""
     imglist = []
     for d in tqdm(imgdirs):
@@ -20,17 +24,19 @@ def load_imgs_from_list(imgdirs: List[str]) -> List[str]:
     return imglist
 
 
-def mp_load_imgs_from_list(
+def mp_load_img_from_list(
     imgdirs: List[str], num_workers=cpu_count()
 ) -> List[Image.Image]:
     """Multi-processing load images to list."""
     assert isinstance(num_workers, int)
     pool = Pool(num_workers)
+    img_per_worker = int(len(imgdirs) / num_workers)
     imgdir_per_workers = [
-        imgdirs[i : i + num_workers] for i in range(0, len(imgdirs), num_workers)
+        imgdirs[i : i + img_per_worker] for i in range(0, len(imgdirs), img_per_worker)
     ]
-    imgs = pool.map(load_imgs_from_list, imgdir_per_workers)
-    imgs = reduce(sum, imgs)
+    imgs = pool.map(load_img_from_list, imgdir_per_workers)
+    # In case of pickle this function must not be a lambda function.
+    imgs = reduce(reduce_sum, imgs)
     return imgs
 
 
@@ -103,3 +109,17 @@ class BurstImageFolder(ImageFolder):
     @staticmethod
     def _identity(x):
         return x
+
+
+if __name__ == "__main__":
+    root = os.path.expanduser("~/datasets/CINIC10/train")
+    list_classes = sorted(os.listdir(root))
+    root = os.path.expanduser(root)
+
+    imgdirs = []
+    for idx, c in enumerate(tqdm(list_classes)):
+        classdir = os.path.join(root, c)
+        imgdirs += glob.glob(os.path.join(classdir, "*.png"))
+
+    listimgs = load_img_from_list(imgdirs)
+    listimgs = mp_load_img_from_list(imgdirs)
