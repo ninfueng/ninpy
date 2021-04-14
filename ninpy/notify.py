@@ -1,6 +1,6 @@
-"""Basic Notify script.
-"""
+"""Basic Notify script."""
 import os
+import warnings
 
 from knockknock import desktop_sender, slack_sender
 
@@ -12,10 +12,11 @@ try:
     key = os.environ["SLACK_KEY"]
     SLACK_WEBHOOK = decrypt(ENCRYPTED_SLACK_WEBHOOK.encode(), key.encode())
 except KeyError:
-    raise KeyError(
+    warnings.warn(
         f"Environment variable `SLACK_KEY` is not found."
         f'Please put `export SLACK_KEY="KEY_VALUE".'
     )
+    SLACK_WEBHOOK = ""
 
 
 @desktop_sender(title="Training was done!!!")

@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 
 def reduce_sum(x, y):
+    """Use instead of lambda for pickle-able."""
     return x + y
 
 
@@ -80,8 +81,7 @@ class BurstImageFolder(ImageFolder):
         self.verbose = verbose
 
     def load_imgs(self) -> None:
-        """TODO: update with multi-processing loading.
-        """
+        """TODO: update with multi-processing loading."""
         list_classes = sorted(os.listdir(self.root))
         root = os.path.expanduser(self.root)
         instances = []

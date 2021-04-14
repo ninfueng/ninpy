@@ -1,3 +1,4 @@
+"""Basic imagenet functions."""
 import os
 from multiprocessing import cpu_count
 from typing import Callable, Optional
