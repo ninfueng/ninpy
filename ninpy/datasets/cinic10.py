@@ -10,8 +10,8 @@ from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 
 __all__ = ["get_cinic10_basic", "Cinic10", "get_cinic10_loaders"]
-CINIC_MEAN = [0.47889522, 0.47227842, 0.43047404]
-CINIC_STD = [0.24205776, 0.23828046, 0.25874835]
+CINIC_MEAN = (0.47889522, 0.47227842, 0.43047404)
+CINIC_STD = (0.24205776, 0.23828046, 0.25874835)
 CLASSES = {
     "airplane": 0,
     "automobile": 1,
