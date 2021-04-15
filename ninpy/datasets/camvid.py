@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 
 
-
 # TODO: Camvid loader.
 class Camvid(Dataset):
     """CamVid dataset. Support only burst mode. Using `color_map` same as SegNet.
@@ -46,7 +45,7 @@ class Camvid(Dataset):
             (64, 128, 192),
             (192, 128, 192),
             (192, 64, 128),
-            #(128, 64, 64), # OtherMoving, check from the SegNet repository does not have.
+            # (128, 64, 64), # OtherMoving, check from the SegNet repository does not have.
         ],
         # Pedestrian
         9: [(64, 64, 0), (192, 128, 64), (64, 0, 192), (64, 128, 64)],
