@@ -65,7 +65,7 @@ class Camvid(Dataset):
         assert mode in ["train", "val", "test"]
         assert img_mode in ["RGB", "BGR"]
         assert isinstance(root, str)
-
+        root = os.path.expanduser(root)
         self.mode = mode
         self.img_mode = img_mode
         self.imgs, self.masks = [], []
@@ -73,13 +73,16 @@ class Camvid(Dataset):
         traindir, valdir, testdir = self._camvid_dir()
         if self.mode == "train":
             imgdirs = traindir
+            assert len(imgdirs) == 367
         if self.mode == "val":
             imgdirs = valdir
+            assert len(imgdirs) == 101
         if self.mode == "test":
             imgdirs = testdir
+            assert len(imgdirs) == 233
 
-        imgdirs = [os.path.join(root, "images", i) for i in imgdirs]
         labelsdirs = [os.path.join(root, "labels", i) for i in imgdirs]
+        imgdirs = [os.path.join(root, "images", i) for i in imgdirs]
         for i in imgdirs:
             img = self._load_img(i)
             self.imgs.append(img)
@@ -104,20 +107,28 @@ class Camvid(Dataset):
         path = os.path.join(dirname, x + "_L" + "." + y)
         mask = cv2.imread(path, cv2.IMREAD_COLOR)
         assert mask is not None
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
 
-        accum_mask = np.zeros((mask.shape[0], mask.shape[1]))
-        for c in range(len(self.COLOR_MAP)):
-            accum_mask += c * (
-                cv2.inRange(mask, self.COLOR_MAP[c], self.COLOR_MAP[c]) / 255.0
-            )
+        cls_masks = np.full((mask.shape[0], mask.shape[1]), 11)
+        mask_pth = os.path.expanduser("~/datasets/camvid/labels/0001TP_006840_L.png")
+        mask = cv2.imread(mask_pth, cv2.IMREAD_COLOR)
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
 
-        # masklist = []
-        # for c in range(len(self.COLOR_MAP)):
-        #     color_map = self.COLOR_MAP[c]
-        #     mask_per_class = cv2.inRange(mask,  color_map, color_map)
-        #     masklist.append(mask_per_class)
-        # masks = np.concatenate(masklist)
-        return accum_mask
+        for i in range(len(self.COLOR_MAP)):
+            if i in [1, 2, 3, 4, 5, 6, 8, 9, 10]:
+                for j in range(len(self.COLOR_MAP[i])):
+                    cls_mask = (
+                        cv2.inRange(mask, self.COLOR_MAP[i][j], self.COLOR_MAP[i][j])
+                        / 255.0
+                    )
+                    cls_masks[cls_mask.astype(bool)] = i
+            else:
+                cls_mask = (
+                    cv2.inRange(mask, self.COLOR_MAP[i], self.COLOR_MAP[i]) / 255.0
+                )
+                cls_masks[cls_mask.astype(bool)] = i
+
+        return cls_masks.astype(np.uint8)
 
     def _filter_camvid_path(self, segnet_path):
         path = segnet_path.split(" ")
