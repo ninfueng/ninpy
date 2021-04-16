@@ -20,7 +20,7 @@ from ninpy.torch_utils import (
     tensorboard_models,
 )
 from tqdm import tqdm
-from .utils import test, train, trainv2, warmup
+from ninpy.torch2 import test, train, trainv2, warmup
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
