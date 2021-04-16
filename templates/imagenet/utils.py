@@ -69,7 +69,16 @@ def train(model, device, train_loader, optimizer, criterion, epoch, writer=None)
         writer.add_scalar("train_loss", avgloss(), epoch)
 
 
-def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=None, accelerator=None):
+def train_accelerator(
+    model,
+    device,
+    train_loader,
+    optimizer,
+    criterion,
+    epoch,
+    writer=None,
+    accelerator=None,
+):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for data, target in train_loader:
@@ -93,9 +102,7 @@ def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=Non
         avgloss.update(loss, batch_size)
         avgacc.update(acc, batch_size)
 
-    logging.info(
-        f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
-    )
+    logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
     if writer is not None:
         writer.add_scalar("train_acc", avgacc(), epoch)
         writer.add_scalar("train_loss", avgloss(), epoch)

@@ -231,4 +231,3 @@ if __name__ == "__main__":
     # plt.show()
     # resize_save_camvid("~/datasets/camvid", "~/datasets/camvid256", (256, 256))
     resize_save_camvid("~/datasets/camvid", "~/datasets/camvid_segnet", (480, 360))
-

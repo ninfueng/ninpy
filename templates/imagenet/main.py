@@ -28,10 +28,11 @@ if __name__ == "__main__":
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=False
     )
 
-    accelerator = Accelerator(fp16=hparams.opt_lv != "O0")
+    # accelerator = Accelerator(fp16=hparams.opt_lv != "O0")
     model = resnet18(pretrained=False)
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    # model = model.to(device)
+    model = nn.DataParallel(model)
+    model = model.to(device)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
     optimizer = optim.Adam(
@@ -40,12 +41,13 @@ if __name__ == "__main__":
         weight_decay=float(hparams.weight_decay),
     )
 
-    #model, optimizer = amp.initialize(
+    # model, optimizer = amp.initialize(
     #    model, optimizer, opt_level=hparams.opt_lv, verbosity=1
-    #)
+    # )
 
-    model, optimizer, train_loader, test_loader = accelerator.prepare(
-        model, optimizer, train_loader, test_loader)
+    # model, optimizer, train_loader, test_loader = accelerator.prepare(
+    #     model, optimizer, train_loader, test_loader
+    # )
     if hparams.load:
         model, optimizer = load_model(hparams.load_dir, model, optimizer)
         model.remove_branch()
@@ -57,7 +59,16 @@ if __name__ == "__main__":
     best_acc = 0.0
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
-        trainv2(model, device, train_loader, optimizer, criterion, epoch, writer, accelerator)
+        train(
+            model,
+            device,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
+            #accelerator,
+        )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
 
