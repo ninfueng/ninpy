@@ -25,8 +25,8 @@ def get_imagenet_loaders(
     r"""Get ImageNet loaders by using ImageFolder."""
     # TODO: update with albumentations.
     assert isinstance(root, str)
-    assert isinstance(batch_size, str)
-    assert isinstance(num_workers, str)
+    assert isinstance(batch_size, int)
+    assert isinstance(num_workers, int)
     assert isinstance(distributed, bool)
     assert isinstance(crop_size, int)
     assert isinstance(resize_size, int)

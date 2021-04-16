@@ -7,7 +7,7 @@ import torch.optim as optim
 from torchvision.models import resnet18
 
 from apex import amp
-from accelerator import Accelerator
+from accelerate import Accelerator
 from ninpy.datasets import get_imagenet_loaders
 
 from ninpy.models import resnet20
