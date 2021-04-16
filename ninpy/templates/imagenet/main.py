@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     accelerator = Accelerator(fp16=hparams.opt_lv != "O0")
     model = resnet18(pretrained=False)
-    writer.add_graph(model, torch.zeros(1, 3, 32, 32))
+    writer.add_graph(model, torch.zeros(1, 3, 224, 224))
     # model = model.to(device)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
