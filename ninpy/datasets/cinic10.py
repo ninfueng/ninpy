@@ -57,6 +57,7 @@ def get_cinic10_basic(root: str = "~/datasets/CINIC10"):
 class Cinic10(Dataset):
     """Load CINIC10 all images and stores into RAM for fast processing.
     Note that supports only transforms from torchvision only.
+    # TODO: support albumentations
     >>> Cinic10('~/datasets/CINIC10', mode='train', transforms=basic_transform)
     """
 

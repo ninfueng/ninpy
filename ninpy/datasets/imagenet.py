@@ -23,6 +23,7 @@ def get_imagenet_loaders(
     val_transforms: Optional[Callable] = None,
 ):
     r"""Get ImageNet loaders by using ImageFolder."""
+    # TODO: update with albumentations.
     assert isinstance(root, str)
     assert isinstance(batch_size, str)
     assert isinstance(num_workers, str)
@@ -30,6 +31,7 @@ def get_imagenet_loaders(
     assert isinstance(crop_size, int)
     assert isinstance(resize_size, int)
 
+    root = os.path.expanduser(root)
     traindir = os.path.join(root, "train")
     valdir = os.path.join(root, "val")
     normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
@@ -57,6 +59,7 @@ def get_imagenet_loaders(
     train_dataset = ImageFolder(traindir, train_transforms)
     val_dataset = ImageFolder(valdir, val_transforms)
 
+    # distributedsampler?
     if distributed:
         train_sampler = DistributedSampler(train_dataset)
     else:
@@ -69,6 +72,7 @@ def get_imagenet_loaders(
         num_workers=num_workers,
         pin_memory=True,
         sampler=train_sampler,
+        drop_last=True,
     )
     val_loader = DataLoader(
         val_dataset,

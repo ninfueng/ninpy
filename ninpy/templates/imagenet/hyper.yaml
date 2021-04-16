@@ -1,0 +1,17 @@
+epochs: 150
+init_lr: 1e-2
+weight_decay: 4e-5
+train_batch: 256
+test_batch: 256
+num_workers: 8
+step_size:
+  - 50
+  - 100
+seed: 2021
+opt_lv: "O0"
+save_epoch: 100
+step_down_rate: 0.1
+num_classes: 10
+load: false
+dataset_dir: "groups/gcc50527/datasets/imagenet"
+load_dir: "entropy/0_8973.pth"
