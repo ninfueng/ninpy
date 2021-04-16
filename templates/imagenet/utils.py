@@ -70,45 +70,6 @@ def train(model, device, train_loader, optimizer, criterion, epoch, writer=None)
         writer.add_scalar("train_loss", avgloss(), epoch)
 
 
-def train_accelerator(
-    model,
-    device,
-    train_loader,
-    optimizer,
-    criterion,
-    epoch,
-    writer=None,
-    accelerator=None,
-):
-    avgloss, avgacc = RunningAverage(), RunningAverage()
-    model.train()
-    for data, target in train_loader:
-        if accelerator is None:
-            data, target = data.to(device), target.to(device)
-        output = model(data)
-        batch_size = target.shape[0]
-        # TODO: Find best constant
-        loss = criterion(output, target)
-
-        optimizer.zero_grad(set_to_none=True)
-        if accelerator is None:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
-                # nn.utils.clip_grad_norm_(model.parameters(), 5)
-        else:
-            accelerator.backward(loss)
-
-        optimizer.step()
-        acc = (output.argmax(-1) == target).float().sum()
-        avgloss.update(loss, batch_size)
-        avgacc.update(acc, batch_size)
-
-    logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
-    if writer is not None:
-        writer.add_scalar("train_acc", avgacc(), epoch)
-        writer.add_scalar("train_loss", avgloss(), epoch)
-
-
 def test(model, device, test_loader, criterion, epoch: int, writer=None) -> float:
     avgloss, avgacc = RunningAverage(), RunningAverage()
 
@@ -128,5 +89,4 @@ def test(model, device, test_loader, criterion, epoch: int, writer=None) -> floa
     if writer is not None:
         writer.add_scalar("test_acc", avgacc(), epoch)
         writer.add_scalar("test_loss", avgloss(), epoch)
-
     return avgacc()
