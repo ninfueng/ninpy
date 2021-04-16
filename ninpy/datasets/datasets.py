@@ -42,7 +42,7 @@ def mp_load_img_from_list(
 
 
 class BurstImageFolder(ImageFolder):
-    """
+    """ImageFolder but loading all image into RAM.
     Example:
     >>> traindir = os.path.expanduser("~/datasets/CINIC10/train")
     >>> dataset = BurstImageFolder(traindir)

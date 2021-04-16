@@ -19,7 +19,7 @@ from ninpy.torch_utils import (
     tensorboard_models,
 )
 from tqdm import tqdm
-from utils import test, train, trainv2, warmup
+from utils import test, train, train_accelerator, warmup
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
@@ -44,20 +44,16 @@ if __name__ == "__main__":
     # model, optimizer = amp.initialize(
     #    model, optimizer, opt_level=hparams.opt_lv, verbosity=1
     # )
-
     # model, optimizer, train_loader, test_loader = accelerator.prepare(
     #     model, optimizer, train_loader, test_loader
     # )
-    if hparams.load:
-        model, optimizer = load_model(hparams.load_dir, model, optimizer)
-        model.remove_branch()
-        logging.info(f"Remove branch: {model.remove_branch}")
+
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
     )
 
     best_acc = 0.0
-    pbar = tqdm(range(hparams.epochs))
+    pbar = range(hparams.epochs)
     for epoch in pbar:
         train(
             model,
@@ -82,7 +78,6 @@ if __name__ == "__main__":
                 save_epoch=hparams.save_epoch,
                 epoch=epoch,
             )
-        # clamp_bin(model, threshold=1.0, extra_infor='binarized')
         tensorboard_models(writer, model, epoch)
 
     logging.info(f"Best test accuracy: {best_acc}")
