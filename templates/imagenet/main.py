@@ -10,7 +10,6 @@ from apex import amp
 from accelerate import Accelerator
 from ninpy.datasets import get_imagenet_loaders
 
-from ninpy.models import resnet20
 from ninpy.notify import basic_notify
 from ninpy.torch_utils import (
     load_model,
@@ -20,7 +19,7 @@ from ninpy.torch_utils import (
     tensorboard_models,
 )
 from tqdm import tqdm
-from ninpy.torch2 import test, train, trainv2, warmup
+from utils import test, train, trainv2, warmup
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)

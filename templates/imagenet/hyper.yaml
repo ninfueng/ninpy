@@ -13,5 +13,5 @@ save_epoch: 100
 step_down_rate: 0.1
 num_classes: 10
 load: false
-dataset_dir: "groups/gcc50527/datasets/imagenet"
+dataset_dir: "/groups/gcc50527/ninnart/datasets/imagenet256"
 load_dir: "entropy/0_8973.pth"
