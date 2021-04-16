@@ -28,10 +28,10 @@ if __name__ == "__main__":
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=False
     )
 
-    # accelerator = Accelerator(fp16=hparams.opt_lv != "O0")
+    accelerator = Accelerator(fp16=hparams.opt_lv != "O0")
     model = resnet18(pretrained=False)
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    model = nn.DataParallel(model)
+    #model = nn.DataParallel(model)
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     # model, optimizer = amp.initialize(
     #    model, optimizer, opt_level=hparams.opt_lv, verbosity=1
     # )
-    # model, optimizer, train_loader, test_loader = accelerator.prepare(
-    #     model, optimizer, train_loader, test_loader
-    # )
+    model, optimizer, train_loader, test_loader = accelerator.prepare(
+        model, optimizer, train_loader, test_loader
+    )
 
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     best_acc = 0.0
     pbar = range(hparams.epochs)
     for epoch in pbar:
-        train(
+        train_accelerator(
             model,
             device,
             train_loader,
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             criterion,
             epoch,
             writer,
-            #accelerator,
+            accelerator,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
