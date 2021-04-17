@@ -72,6 +72,31 @@ def train(model, device, train_loader, optimizer, criterion, epoch, writer=None,
             writer.add_scalar("train_loss", avgloss(), epoch)
 
 
+def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose = True):
+    avgloss, avgacc = RunningAverage(), RunningAverage()
+    model.train()
+    for data, target in tqdm(train_loader):
+        data, target = data.to(device), target.to(device)
+        output = model(data)
+        batch_size = target.shape[0]
+        loss = criterion(output, target)
+
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+            # nn.utils.clip_grad_norm_(model.parameters(), 5)
+
+        optimizer.step()
+        acc = (output.argmax(-1) == target).float().sum()
+        avgloss.update(loss, batch_size)
+        avgacc.update(acc, batch_size)
+
+    if verbose:
+        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        if writer is not None:
+            writer.add_scalar("train_acc", avgacc(), epoch)
+            writer.add_scalar("train_loss", avgloss(), epoch)
+
+
 def test(model, device, test_loader, criterion, epoch: int, writer=None, verbose = True) -> float:
     avgloss, avgacc = RunningAverage(), RunningAverage()
 

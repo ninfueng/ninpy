@@ -1,5 +1,6 @@
 """
 TODO: Consider adding SyncBatchNorm to low batch size training.
+TODO: apex DistributedDataParallelj
 """
 import logging
 import os

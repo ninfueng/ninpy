@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from apex import amp
 from torchvision.models import resnet18
-from utils import test, train, warmup
+from utils import test, train, warmup, trainv2
 
 from ninpy.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
@@ -37,9 +37,9 @@ if __name__ == "__main__":
         weight_decay=float(hparams.weight_decay),
     )
 
-    model, optimizer = amp.initialize(
-        model, optimizer, opt_level=hparams.opt_lv, verbosity=1
-    )
+    # model, optimizer = amp.initialize(
+    #     model, optimizer, opt_level=hparams.opt_lv, verbosity=1
+    # )
     model = nn.DataParallel(model, device_ids)
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     best_acc = 0.0
     pbar = range(hparams.epochs)
     for epoch in pbar:
-        train(
+        trainv2(
             model, device, train_loader, optimizer, criterion, epoch, writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
