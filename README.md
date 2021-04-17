@@ -8,6 +8,12 @@ My collection of reuse-able Python scripts and others.
 python setup.py develop
 ```
 
+## Unittest ##
+
+```
+pytest
+```
+
 ## Directory ##
 
 ```bash
