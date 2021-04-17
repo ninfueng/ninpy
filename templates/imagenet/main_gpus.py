@@ -44,7 +44,7 @@ def worker(rank, hparams):
     verbose = rank == 0
     hparams.train_batch = int(hparams.train_batch / hparams.world_size)
     hparams.num_workers = int(hparams.num_workers / hparams.world_size)
-    # torch.cuda.set_device(rank)
+    torch.cuda.set_device(rank)
     train_loader, test_loader = get_imagenet_loaders(
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=True
     )
@@ -66,7 +66,7 @@ def worker(rank, hparams):
         model, optimizer, opt_level=hparams.opt_lv, verbosity=1
     )
 
-    model = DistributedDataParallel(model, device_ids=[rank])
+    model = DistributedDataParallel(model)
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
     )
