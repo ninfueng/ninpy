@@ -31,11 +31,6 @@ def worker(rank, hparams):
     assert isinstance(rank, int)
     assert rank < hparams.world_size
 
-    global best_acc
-    verbose = rank == 0
-    hparams.train_batch = int(hparams.train_batch / hparams.world_size)
-    hparams.num_workers = int(hparams.num_workers / hparams.world_size)
-    # torch.cuda.set_device(rank)
     print(f"Using GPU: {rank} for training.")
     print(hparams)
     dist.init_process_group(
@@ -45,6 +40,12 @@ def worker(rank, hparams):
         world_size=hparams.world_size,
     )
     print("INITIAL SUCCESS.")
+
+    global best_acc
+    verbose = rank == 0
+    hparams.train_batch = int(hparams.train_batch / hparams.world_size)
+    hparams.num_workers = int(hparams.num_workers / hparams.world_size)
+    # torch.cuda.set_device(rank)
     train_loader, test_loader = get_imagenet_loaders(
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=True
     )
