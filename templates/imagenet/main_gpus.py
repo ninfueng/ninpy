@@ -27,7 +27,7 @@ from ninpy.torch_utils import (
 # https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
 # inside of main_worker.
 
-def worker(rank, hparams, writer):
+def worker(rank, hparams):
     assert isinstance(rank, int)
     assert rank < hparams.world_size
 
