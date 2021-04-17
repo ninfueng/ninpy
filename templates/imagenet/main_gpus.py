@@ -33,13 +33,13 @@ def worker(rank, hparams):
 
     global best_acc
     verbose = rank == 0
-    hparams.batchsize = int(hparams.batchsize / hparams.world_size)
-    hparams.workers = int(hparams.workers / hparams.world_size)
+    hparams.train_batch = int(hparams.train_batch/ hparams.world_size)
+    hparams.num_workers = int(hparams.num_workers / hparams.world_size)
 
     torch.cuda.set_device(rank)
     dist.init_process_group(
         backend=hparams.backend,
-        init_method="tcp://201.180.126.246:117",
+        init_method="tcp://224.66.41.62:23456",
         rank=rank,
         world_size=hparams.world_size,
     )
