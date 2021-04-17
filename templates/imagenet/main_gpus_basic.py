@@ -37,9 +37,9 @@ if __name__ == "__main__":
         weight_decay=float(hparams.weight_decay),
     )
 
-    # model, optimizer = amp.initialize(
-    #     model, optimizer, opt_level=hparams.opt_lv, verbosity=1
-    # )
+    model, optimizer = amp.initialize(
+        model, optimizer, opt_level=hparams.opt_lv, verbosity=1
+    )
     model = nn.DataParallel(model, device_ids)
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
