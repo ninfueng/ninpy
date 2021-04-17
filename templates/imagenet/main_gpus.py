@@ -37,9 +37,10 @@ def worker(rank, hparams):
     hparams.num_workers = int(hparams.num_workers / hparams.world_size)
 
     torch.cuda.set_device(rank)
+    print(f"Using GPU: {rank} for training.")
     dist.init_process_group(
         backend=hparams.backend,
-        init_method="tcp://224.66.41.62:23456",
+        init_method=hparams.init_method,
         rank=rank,
         world_size=hparams.world_size,
     )
@@ -104,5 +105,5 @@ def worker(rank, hparams):
 if __name__ == "__main__":
     best_acc = 0
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
-    mp.spawn(worker, args=(hparams,), nprocs=hparams.world_size, join=True)
+    mp.spawn(worker, args=(hparams,), nprocs=hparams.world_size)
     dist.destroy_process_group()
