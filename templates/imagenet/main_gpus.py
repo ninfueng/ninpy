@@ -24,22 +24,19 @@ from ninpy.torch_utils import (
     tensorboard_models,
 )
 
-# https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
-# inside of main_worker.
 
 def worker(rank, hparams):
     assert isinstance(rank, int)
     assert rank < hparams.world_size
 
     print(f"Using GPU: {rank} for training.")
-    print(hparams)
+    print(f"Hyper parameters: {hparams}")
     dist.init_process_group(
         backend=hparams.backend,
         init_method=hparams.init_method,
         rank=rank,
         world_size=hparams.world_size,
     )
-    print("INITIAL SUCCESS.")
 
     global best_acc
     verbose = rank == 0
@@ -83,9 +80,10 @@ def worker(rank, hparams):
 
         if test_acc > best_acc:
             best_acc = test_acc
+            print(best_acc.item())
             print(best_acc)
             if verbose:
-                pbar.set_description(f"Best test acc: {best_acc.item():.4f}.")
+                pbar.set_descreption(f"Best test acc: {best_acc.item():.4f}.")
                 save_model(
                     os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
                     model,
@@ -108,5 +106,7 @@ def worker(rank, hparams):
 if __name__ == "__main__":
     best_acc = 0
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
+
+    # https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
     mp.spawn(worker, args=(hparams, ), nprocs=hparams.world_size)
     dist.destroy_process_group()
