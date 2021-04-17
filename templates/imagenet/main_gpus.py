@@ -53,6 +53,7 @@ def worker(rank, hparams):
     model = resnet18(pretrained=False)
     # if verbose:
     #     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
+    writer = None
     model = model.to(rank)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(rank)
