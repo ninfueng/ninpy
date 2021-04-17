@@ -32,7 +32,6 @@ def worker(rank, hparams):
     assert rank < hparams.world_size
 
     print(f"Using GPU: {rank} for training.")
-    print(f"Hyper parameters: {hparams}")
     dist.init_process_group(
         backend=hparams.backend,
         init_method=hparams.init_method,
@@ -41,17 +40,17 @@ def worker(rank, hparams):
     )
 
     global best_acc
+    torch.cuda.set_device(rank)
     verbose = rank == 0
     hparams.train_batch = int(hparams.train_batch / hparams.world_size)
     hparams.num_workers = int(hparams.num_workers / hparams.world_size)
-    torch.cuda.set_device(rank)
+
+    print(f"Hyper parameters: {hparams}")
     train_loader, test_loader = get_imagenet_loaders(
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=True
     )
 
     model = resnet18(pretrained=False)
-    # if verbose:
-    #     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
     writer = None
     model = model.to(rank)
 
@@ -83,7 +82,6 @@ def worker(rank, hparams):
         if test_acc > best_acc:
             best_acc = test_acc
             if verbose:
-                pbar.set_descreption(f"Best test acc: {best_acc.item():.4f}.")
                 save_model(
                     os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
                     model,
