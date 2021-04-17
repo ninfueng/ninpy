@@ -17,7 +17,6 @@ dataset_dir: "/groups/gcc50527/ninnart/datasets/imagenet256"
 load_dir: "entropy/0_8973.pth"
 
 distributed: true
-# Which number of GPU.
 # Total number of GPU
 world_size: 4
 backend: "nccl"

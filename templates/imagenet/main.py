@@ -4,11 +4,11 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models import resnet18
-
 from apex import amp
-from ninpy.datasets import get_imagenet_loaders
+from torchvision.models import resnet18
+from utils import test, train, warmup
 
+from ninpy.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
 from ninpy.torch_utils import (
     load_model,
@@ -17,7 +17,6 @@ from ninpy.torch_utils import (
     tensorboard_hparams,
     tensorboard_models,
 )
-from utils import test, train, warmup
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
@@ -49,13 +48,7 @@ if __name__ == "__main__":
     pbar = range(hparams.epochs)
     for epoch in pbar:
         train(
-            model,
-            device,
-            train_loader,
-            optimizer,
-            criterion,
-            epoch,
-            writer,
+            model, device, train_loader, optimizer, criterion, epoch, writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()

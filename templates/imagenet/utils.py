@@ -2,14 +2,15 @@
 import logging
 from pathlib import Path
 
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from apex import amp
+from prefetch_generator import BackgroundGenerator
+from tqdm import tqdm
+
 from ninpy.common import RunningAverage
 from ninpy.torch_utils import set_warmup_lr
-from prefetch_generator import BackgroundGenerator
 
 
 def warmup(
@@ -45,7 +46,7 @@ def warmup(
         logging.info(f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
 
 
-def train(model, device, train_loader, optimizer, criterion, epoch, writer=None):
+def train(model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose = True):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for data, target in tqdm(train_loader):
@@ -64,13 +65,14 @@ def train(model, device, train_loader, optimizer, criterion, epoch, writer=None)
         avgloss.update(loss, batch_size)
         avgacc.update(acc, batch_size)
 
-    logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
-    if writer is not None:
-        writer.add_scalar("train_acc", avgacc(), epoch)
-        writer.add_scalar("train_loss", avgloss(), epoch)
+    if verbose:
+        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        if writer is not None:
+            writer.add_scalar("train_acc", avgacc(), epoch)
+            writer.add_scalar("train_loss", avgloss(), epoch)
 
 
-def test(model, device, test_loader, criterion, epoch: int, writer=None) -> float:
+def test(model, device, test_loader, criterion, epoch: int, writer=None, verbose = True) -> float:
     avgloss, avgacc = RunningAverage(), RunningAverage()
 
     model.eval()
@@ -85,8 +87,9 @@ def test(model, device, test_loader, criterion, epoch: int, writer=None) -> floa
             avgloss.update(loss, batch_size)
             avgacc.update(acc, batch_size)
 
-    logging.info(f"Test epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
-    if writer is not None:
-        writer.add_scalar("test_acc", avgacc(), epoch)
-        writer.add_scalar("test_loss", avgloss(), epoch)
+    if verbose:
+        logging.info(f"Test epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        if writer is not None:
+            writer.add_scalar("test_acc", avgacc(), epoch)
+            writer.add_scalar("test_loss", avgloss(), epoch)
     return avgacc()
