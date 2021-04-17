@@ -46,7 +46,9 @@ def warmup(
         logging.info(f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
 
 
-def train(model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose = True):
+def train(
+    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
+):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for data, target in tqdm(train_loader):
@@ -72,7 +74,9 @@ def train(model, device, train_loader, optimizer, criterion, epoch, writer=None,
             writer.add_scalar("train_loss", avgloss(), epoch)
 
 
-def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose = True):
+def trainv2(
+    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
+):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for data, target in tqdm(train_loader):
@@ -98,7 +102,9 @@ def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=Non
             writer.add_scalar("train_loss", avgloss(), epoch)
 
 
-def test(model, device, test_loader, criterion, epoch: int, writer=None, verbose = True) -> float:
+def test(
+    model, device, test_loader, criterion, epoch: int, writer=None, verbose=True
+) -> float:
     avgloss, avgacc = RunningAverage(), RunningAverage()
 
     model.eval()

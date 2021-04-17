@@ -1,13 +1,13 @@
 import logging
 import os
 
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from apex import amp
 from torchvision.models import resnet18
-from utils import test, train, warmup, trainv2
+from tqdm import tqdm
+from utils import test, train, trainv2, warmup
 
 from ninpy.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify

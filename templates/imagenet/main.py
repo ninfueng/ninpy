@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from apex import amp
 from torchvision.models import resnet18
+from tqdm import tqdm
 from utils import test, train, warmup
 
 from ninpy.datasets import get_imagenet_loaders
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     )
 
     best_acc = 0.0
-    pbar = range(hparams.epochs)
+    pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         train(
             model, device, train_loader, optimizer, criterion, epoch, writer,

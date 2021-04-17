@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from apex import amp
 from apex.parallel import DistributedDataParallel
+
 # from torch.nn.parallel import DistributedDataParallel
 from torchvision.models import resnet18
 from utils import test, train, warmup
@@ -74,9 +75,7 @@ def worker(rank, hparams):
     best_acc = 0.0
     pbar = range(hparams.epochs)
     for epoch in pbar:
-        train(
-            model, rank, train_loader, optimizer, criterion, epoch, writer, verbose
-        )
+        train(model, rank, train_loader, optimizer, criterion, epoch, writer, verbose)
         test_acc = test(model, rank, test_loader, criterion, epoch, writer, verbose)
         scheduler.step()
 
@@ -107,5 +106,5 @@ if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
 
     # https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
-    mp.spawn(worker, args=(hparams, ), nprocs=hparams.world_size)
+    mp.spawn(worker, args=(hparams,), nprocs=hparams.world_size)
     dist.destroy_process_group()
