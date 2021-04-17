@@ -27,7 +27,7 @@ from ninpy.torch_utils import (
 # https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
 # inside of main_worker.
 
-def worker(rank, hparams):
+def worker(rank, hparams, writer):
     assert isinstance(rank, int)
     assert rank < hparams.world_size
 
@@ -53,7 +53,7 @@ def worker(rank, hparams):
     model = resnet18(pretrained=False)
     if verbose:
         writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    # model = model.to(rank)
+    model = model.to(rank)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(rank)
     optimizer = optim.Adam(
@@ -107,5 +107,5 @@ def worker(rank, hparams):
 if __name__ == "__main__":
     best_acc = 0
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
-    mp.spawn(worker, args=(hparams,), nprocs=hparams.world_size)
+    mp.spawn(worker, args=(hparams, writer,), nprocs=hparams.world_size)
     dist.destroy_process_group()

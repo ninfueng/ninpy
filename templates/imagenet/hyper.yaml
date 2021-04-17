@@ -20,4 +20,5 @@ distributed: true
 # Total number of GPU
 world_size: 4
 backend: "nccl"
+# Trying with arbitary tcp not work!
 init_method: "tcp://127.0.0.1:2021"
