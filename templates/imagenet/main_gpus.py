@@ -33,11 +33,11 @@ def worker(rank, hparams):
 
     global best_acc
     verbose = rank == 0
-    hparams.train_batch = int(hparams.train_batch/ hparams.world_size)
+    hparams.train_batch = int(hparams.train_batch / hparams.world_size)
     hparams.num_workers = int(hparams.num_workers / hparams.world_size)
-
     # torch.cuda.set_device(rank)
     print(f"Using GPU: {rank} for training.")
+    print(hparams)
     dist.init_process_group(
         backend=hparams.backend,
         init_method=hparams.init_method,

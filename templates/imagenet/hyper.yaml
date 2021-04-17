@@ -20,4 +20,4 @@ distributed: true
 # Total number of GPU
 world_size: 4
 backend: "nccl"
-init_method: "tcp://224.66.41.63:23456"
+init_method: "tcp://224.66.41.63:23457"
