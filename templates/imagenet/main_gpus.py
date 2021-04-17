@@ -51,8 +51,8 @@ def worker(rank, hparams, writer):
     )
 
     model = resnet18(pretrained=False)
-    if verbose:
-        writer.add_graph(model, torch.zeros(1, 3, 224, 224))
+    # if verbose:
+    #     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
     model = model.to(rank)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(rank)
@@ -92,20 +92,20 @@ def worker(rank, hparams, writer):
                     save_epoch=hparams.save_epoch,
                     epoch=epoch,
                 )
-        if verbose:
-            tensorboard_models(writer, model, epoch)
+        # if verbose:
+        #     tensorboard_models(writer, model, epoch)
 
     if verbose:
         logging.info(f"Best test accuracy: {best_acc}")
         metric_dict = {"best_acc": best_acc}
-        tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
+        # tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
 
-        metric_dict.update(hparams.to_dict())
+        # metric_dict.update(hparams.to_dict())
         basic_notify(metric_dict)
 
 
 if __name__ == "__main__":
     best_acc = 0
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
-    mp.spawn(worker, args=(hparams, writer,), nprocs=hparams.world_size)
+    mp.spawn(worker, args=(hparams, ), nprocs=hparams.world_size)
     dist.destroy_process_group()
