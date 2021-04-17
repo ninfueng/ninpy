@@ -28,7 +28,7 @@ if __name__ == "__main__":
     model = resnet18(pretrained=False)
     device_ids = [i for i in range(torch.cuda.device_count())]
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    #model = model.cuda()
+    model = model.to(device)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
     optimizer = optim.Adam(
