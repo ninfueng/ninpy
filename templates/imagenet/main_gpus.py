@@ -1,6 +1,7 @@
 """
 TODO: Consider adding SyncBatchNorm to low batch size training.
-TODO: apex DistributedDataParallelj
+TODO: apex DistributedDataParallel
+TODO: How to set writer for process 0 and how to accumulate loss over models.
 """
 import logging
 import os
