@@ -36,7 +36,7 @@ def worker(rank, hparams):
     hparams.train_batch = int(hparams.train_batch/ hparams.world_size)
     hparams.num_workers = int(hparams.num_workers / hparams.world_size)
 
-    torch.cuda.set_device(rank)
+    # torch.cuda.set_device(rank)
     print(f"Using GPU: {rank} for training.")
     dist.init_process_group(
         backend=hparams.backend,
@@ -44,6 +44,7 @@ def worker(rank, hparams):
         rank=rank,
         world_size=hparams.world_size,
     )
+    print("INITIAL SUCCESS.")
     train_loader, test_loader = get_imagenet_loaders(
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=True
     )
@@ -51,7 +52,7 @@ def worker(rank, hparams):
     model = resnet18(pretrained=False)
     if verbose:
         writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    model = model.to(rank)
+    # model = model.to(rank)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(rank)
     optimizer = optim.Adam(
