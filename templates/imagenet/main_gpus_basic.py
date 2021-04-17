@@ -1,6 +1,7 @@
 import logging
 import os
 
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     model = resnet18(pretrained=False)
     device_ids = [i for i in range(torch.cuda.device_count())]
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    model = model.to(device)
+    model = model.to(device_ids)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
     optimizer = optim.Adam(
@@ -37,16 +38,16 @@ if __name__ == "__main__":
         weight_decay=float(hparams.weight_decay),
     )
 
-    # model, optimizer = amp.initialize(
-    #     model, optimizer, opt_level=hparams.opt_lv, verbosity=1
-    # )
+    model, optimizer = amp.initialize(
+        model, optimizer, opt_level=hparams.opt_lv, verbosity=1
+    )
     model = nn.DataParallel(model, device_ids)
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
     )
 
     best_acc = 0.0
-    pbar = range(hparams.epochs)
+    pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         trainv2(
             model, device, train_loader, optimizer, criterion, epoch, writer,
@@ -56,8 +57,6 @@ if __name__ == "__main__":
 
         if test_acc > best_acc:
             best_acc = test_acc
-            print(best_acc)
-            pbar.set_description(f"Best test acc: {best_acc.item():.4f}.")
             save_model(
                 os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
                 model,

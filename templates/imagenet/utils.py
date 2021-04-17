@@ -25,7 +25,7 @@ def warmup(
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for w in range(warmup_epochs):
-        for idx, (data, target) in BackgroundGenerator(enumerate(train_loader)):
+        for idx, (data, target) in enumerate(train_loader):
             set_warmup_lr(
                 initial_lr, warmup_epochs, train_loader, optimizer, idx, w, False
             )
@@ -82,7 +82,8 @@ def trainv2(model, device, train_loader, optimizer, criterion, epoch, writer=Non
         loss = criterion(output, target)
 
         optimizer.zero_grad(set_to_none=True)
-        loss.backward()
+        with amp.scale_loss(loss, optimizer) as scaled_loss:
+            scaled_loss.backward()
             # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
         optimizer.step()

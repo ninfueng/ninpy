@@ -11,7 +11,8 @@ import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.optim as optim
 from apex import amp
-from torch.nn.parallel import DistributedDataParallel
+from apex.parallel import DistributedDataParallel
+# from torch.nn.parallel import DistributedDataParallel
 from torchvision.models import resnet18
 from utils import test, train, warmup
 
@@ -81,8 +82,6 @@ def worker(rank, hparams):
 
         if test_acc > best_acc:
             best_acc = test_acc
-            print(best_acc.item())
-            print(best_acc)
             if verbose:
                 pbar.set_descreption(f"Best test acc: {best_acc.item():.4f}.")
                 save_model(
