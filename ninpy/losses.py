@@ -11,18 +11,18 @@ import torch.nn as nn
 from tqdm import tqdm
 
 
-def cal_cls_weights(loader, num_classes: int):
-    r"""Given masks, finding occurrences for each class.
+def class_weights(dataset):
+    r"""Get masks from a Dataset, finding occurrences for each class.
     Make in 1/occurrences and to convert into range [0, 1].
+    May return more classes than
     """
-    assert isinstance(num_classes, int)
     accum_count = Counter()
-    for _, mask in tqdm(loader):
-        mask = mask.numpy()
-        uniq, count = np.unique(mask, return_counts=True)
-        pair_count = {u: c for u, c in zip(uniq.tolist(), count.tolist())}
+    for _, mask in tqdm(dataset):
+        unique, count = np.unique(mask, return_counts=True)
+        pair_count = {u: c for u, c in zip(unique.tolist(), count.tolist())}
         accum_count.update(pair_count)
-    assert num_classes == len(accum_count.keys())
+
+    num_classes = len(accum_count.keys())
     weights = np.array([accum_count[k] for k in range(num_classes)])
     weights = (1 / weights) / ((1 / weights).sum())
     return weights

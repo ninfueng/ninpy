@@ -63,7 +63,6 @@ def train(
             # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
         optimizer.step()
-        # TODO: find all metric to check with.
         acc = (output.argmax(-1) == target).float().sum()
         avgloss.update(loss, batch_size)
         avgacc.update(acc, batch_size)

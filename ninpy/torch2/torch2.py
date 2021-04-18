@@ -26,9 +26,8 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
     r"""Converting torch format tensor to `numpy` or `tensorflow` format."""
     assert isinstance(x, torch.Tensor)
     x = x.detach().cpu().numpy()
-    if len(x.shape) == 2:
-        x = np.transpose(x, (1, 0))
-    elif len(x.shape) == 3:
+    # TODO: check in case NLP 2 dim.
+    if len(x.shape) == 3:
         x = np.transpose(x, (1, 2, 0))
     elif len(x.shape) == 4:
         x = np.transpose(x, (2, 3, 1, 0))
@@ -36,6 +35,14 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
         raise ValueError(
             f"Not supporting with shape of {len(x.shape)}, please update this function to support it."
         )
+    return x
+
+def numpy2torch(x: np.ndarray) -> torch.Tensor:
+    # TODO:
+    if len(x.shape) == 3:
+        x = np.moveaxis(x, -1, 0)
+    elif len(x.shape) == 4:
+        raise NotImplementedError()
     return x
 
 

@@ -5,12 +5,13 @@
 """
 import urllib
 
+import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
 
 
-def get_imagenet_img() -> torch.Tensor:
+def get_imagenet_img(preprocess: bool = False) -> torch.Tensor:
     """From: https://pytorch.org/hub/pytorch_vision_alexnet/
     https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
     Correct label should be 258 or Samoyed, Samoyede.
@@ -25,14 +26,16 @@ def get_imagenet_img() -> torch.Tensor:
         urllib.URLopener().retrieve(url, filename)
     except:
         urllib.request.urlretrieve(url, filename)
+
     input_image = Image.open(filename)
-    preprocess = transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    input_tensor = preprocess(input_image).unsqueeze(0)
-    return input_tensor
+    if preprocess:
+        preprocess = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+        input_image = preprocess(input_image).unsqueeze(0)
+    return input_image

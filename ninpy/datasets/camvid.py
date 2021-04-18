@@ -56,12 +56,12 @@ class Camvid(Dataset):
         # Void, Other are ignored.
         # 11: (0, 0, 0),
     }
-
+    NUM_CLASSES = 11
     SEGNET_CAMVID_URL = (
         "https://raw.githubusercontent.com/alexgkendall/SegNet-Tutorial/master/CamVid/"
     )
 
-    def __init__(self, root, mode="train", img_mode="RGB"):
+    def __init__(self, root,  mode, transforms, img_mode="RGB"):
         img_mode = img_mode.upper()
         mode = mode.lower()
         assert mode in ["train", "val", "test"]
@@ -71,6 +71,7 @@ class Camvid(Dataset):
         self.mode = mode
         self.img_mode = img_mode
         self.imgs, self.masks = [], []
+        self.transforms = transforms
 
         traindir, valdir, testdir = self._camvid_dir()
         if self.mode == "train":
@@ -98,6 +99,11 @@ class Camvid(Dataset):
 
     def __getitem__(self, idx: int):
         img, mask = self.imgs[idx], self.masks[idx]
+
+        if self.transforms is not None:
+            augment = self.transforms(image=img, mask=mask)
+            img, mask = augment["image"], augment["mask"]
+        return img, mask.long()
 
     def _load_img(self, path):
         assert isinstance(path, str)
@@ -148,10 +154,6 @@ class Camvid(Dataset):
         self, save_txt: bool = False
     ) -> Tuple[List[str], List[str], List[str]]:
         """Loading train, validation, test dataset lists from SegNet repository.
-        Return:
-            list_train (367):
-            list_val (101):
-            list_test (233):
         """
         assert isinstance(save_txt, bool)
         train_txt = requests.get(os.path.join(self.SEGNET_CAMVID_URL, "train.txt"))
@@ -179,6 +181,9 @@ class Camvid(Dataset):
             np.savetxt("train.txt", list_train, fmt="%s")
             np.savetxt("val.txt", list_val, fmt="%s")
             np.savetxt("test.txt", list_test, fmt="%s")
+        assert len(list_train) == 367, "Maybe SegNet repository was removed. Please check."
+        assert len(list_val) == 101
+        assert len(list_test) == 233
         return list_train, list_val, list_test
 
     def save_imgs_masks(self, save_path: str, resize_size: Tuple[int, int]) -> None:
@@ -208,6 +213,9 @@ class Camvid(Dataset):
             resized_mask = cv2.resize(i, resize_size, interpolation=cv2.INTER_NEAREST)
             cv2.imwrite(p, resized_mask)
 
+    def __len__(self):
+        return len(self.imgs)
+
 
 def resize_save_camvid(root: str, save_root: str, resize_size: Tuple[int, int]) -> None:
     dataset = Camvid(root, "train")
@@ -218,6 +226,7 @@ def resize_save_camvid(root: str, save_root: str, resize_size: Tuple[int, int]) 
 
     dataset = Camvid(root, "test")
     dataset.save_imgs_masks(save_root, resize_size)
+
 
 
 if __name__ == "__main__":
