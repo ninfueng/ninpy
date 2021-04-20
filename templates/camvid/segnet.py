@@ -14,8 +14,14 @@ class SegNet(nn.Module):
         drop_rate (float): dropout rate of each encoder/decoder module
         filter_config (list of 5 ints): number of output features at each level
     """
-    def __init__(self, num_classes, n_init_features=1, drop_rate=0.5,
-                 filter_config=(64, 128, 256, 512, 512)):
+
+    def __init__(
+        self,
+        num_classes,
+        n_init_features=1,
+        drop_rate=0.5,
+        filter_config=(64, 128, 256, 512, 512),
+    ):
         super(SegNet, self).__init__()
 
         self.encoders = nn.ModuleList()
@@ -28,14 +34,24 @@ class SegNet(nn.Module):
 
         for i in range(0, 5):
             # encoder architecture
-            self.encoders.append(_Encoder(encoder_filter_config[i],
-                                          encoder_filter_config[i + 1],
-                                          encoder_n_layers[i], drop_rate))
+            self.encoders.append(
+                _Encoder(
+                    encoder_filter_config[i],
+                    encoder_filter_config[i + 1],
+                    encoder_n_layers[i],
+                    drop_rate,
+                )
+            )
 
             # decoder architecture
-            self.decoders.append(_Decoder(decoder_filter_config[i],
-                                          decoder_filter_config[i + 1],
-                                          decoder_n_layers[i], drop_rate))
+            self.decoders.append(
+                _Decoder(
+                    decoder_filter_config[i],
+                    decoder_filter_config[i + 1],
+                    decoder_n_layers[i],
+                    drop_rate,
+                )
+            )
 
         # final classifier (equivalent to a fully connected layer)
         self.classifier = nn.Conv2d(filter_config[0], num_classes, 3, 1, 1)
@@ -69,14 +85,18 @@ class _Encoder(nn.Module):
         """
         super(_Encoder, self).__init__()
 
-        layers = [nn.Conv2d(n_in_feat, n_out_feat, 3, 1, 1),
-                  nn.BatchNorm2d(n_out_feat),
-                  nn.ReLU(inplace=True)]
+        layers = [
+            nn.Conv2d(n_in_feat, n_out_feat, 3, 1, 1),
+            nn.BatchNorm2d(n_out_feat),
+            nn.ReLU(inplace=True),
+        ]
 
         if n_blocks > 1:
-            layers += [nn.Conv2d(n_out_feat, n_out_feat, 3, 1, 1),
-                       nn.BatchNorm2d(n_out_feat),
-                       nn.ReLU(inplace=True)]
+            layers += [
+                nn.Conv2d(n_out_feat, n_out_feat, 3, 1, 1),
+                nn.BatchNorm2d(n_out_feat),
+                nn.ReLU(inplace=True),
+            ]
             if n_blocks == 3:
                 layers += [nn.Dropout(drop_rate)]
 
@@ -96,17 +116,22 @@ class _Decoder(nn.Module):
         n_blocks (int): number of conv-batch-relu block inside the decoder
         drop_rate (float): dropout rate to use
     """
+
     def __init__(self, n_in_feat, n_out_feat, n_blocks=2, drop_rate=0.5):
         super(_Decoder, self).__init__()
 
-        layers = [nn.Conv2d(n_in_feat, n_in_feat, 3, 1, 1),
-                  nn.BatchNorm2d(n_in_feat),
-                  nn.ReLU(inplace=True)]
+        layers = [
+            nn.Conv2d(n_in_feat, n_in_feat, 3, 1, 1),
+            nn.BatchNorm2d(n_in_feat),
+            nn.ReLU(inplace=True),
+        ]
 
         if n_blocks > 1:
-            layers += [nn.Conv2d(n_in_feat, n_out_feat, 3, 1, 1),
-                       nn.BatchNorm2d(n_out_feat),
-                       nn.ReLU(inplace=True)]
+            layers += [
+                nn.Conv2d(n_in_feat, n_out_feat, 3, 1, 1),
+                nn.BatchNorm2d(n_out_feat),
+                nn.ReLU(inplace=True),
+            ]
             if n_blocks == 3:
                 layers += [nn.Dropout(drop_rate)]
 

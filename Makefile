@@ -8,6 +8,7 @@ clean:
 	find . -iname ".mypy_cache" | xargs rm -rf
 
 format:
+	# TODO: consider autopep8, yapf and others.
 	@echo "Formatting Python files with black and isort."
 	find . -iname "*.py" | xargs isort
 	# isort might change format of black. Recommend to isort first then black.

@@ -6,11 +6,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from apex import amp
-from prefetch_generator import BackgroundGenerator
 from tqdm import tqdm
 
 from ninpy.common import RunningAverage
-from ninpy.torch_utils import set_warmup_lr
+from ninpy.metrics import ConfusionMatrix
+from ninpy.torch2 import set_warmup_lr
 
 
 def warmup(
@@ -49,9 +49,12 @@ def warmup(
 def train(
     model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
 ):
-    avgloss, avgacc = RunningAverage(), RunningAverage()
+    NUM_CLASSES = 11
+    confusion_matrix = ConfusionMatrix(NUM_CLASSES)
+    avgloss = RunningAverage()
+
     model.train()
-    for data, target in tqdm(train_loader):
+    for data, target in train_loader:
         data, target = data.to(device), target.to(device)
         output = model(data)
         batch_size = target.shape[0]
@@ -63,65 +66,43 @@ def train(
             # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
         optimizer.step()
-        acc = (output.argmax(-1) == target).float().sum()
         avgloss.update(loss, batch_size)
-        avgacc.update(acc, batch_size)
+        pred = output.data.cpu().numpy().argmax(1)
+        target = target.cpu().numpy()
+        confusion_matrix.update(pred, target)
 
     if verbose:
-        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        miou = confusion_matrix.miou_score()
+        logging.info(f"Train epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}")
         if writer is not None:
-            writer.add_scalar("train_acc", avgacc(), epoch)
-            writer.add_scalar("train_loss", avgloss(), epoch)
-
-
-def trainv2(
-    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
-):
-    avgloss, avgacc = RunningAverage(), RunningAverage()
-    model.train()
-    for data, target in tqdm(train_loader):
-        data, target = data.to(device), target.to(device)
-        output = model(data)
-        batch_size = target.shape[0]
-        loss = criterion(output, target)
-
-        optimizer.zero_grad(set_to_none=True)
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
-            # nn.utils.clip_grad_norm_(model.parameters(), 5)
-
-        optimizer.step()
-        acc = (output.argmax(-1) == target).float().sum()
-        avgloss.update(loss, batch_size)
-        avgacc.update(acc, batch_size)
-
-    if verbose:
-        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
-        if writer is not None:
-            writer.add_scalar("train_acc", avgacc(), epoch)
-            writer.add_scalar("train_loss", avgloss(), epoch)
+            writer.add_scalar("train/loss", avgloss(), epoch)
+            writer.add_scalar("train/miou", miou, epoch)
 
 
 def test(
     model, device, test_loader, criterion, epoch: int, writer=None, verbose=True
 ) -> float:
-    avgloss, avgacc = RunningAverage(), RunningAverage()
+    NUM_CLASSES = 11
+    confusion_matrix = ConfusionMatrix(NUM_CLASSES)
+    avgloss = RunningAverage()
 
     model.eval()
     with torch.no_grad():
-        for data, target in tqdm(test_loader):
+        for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             batch_size = target.shape[0]
             output = model(data)
 
             loss = criterion(output, target)
-            acc = (output.argmax(-1) == target).float().sum()
             avgloss.update(loss, batch_size)
-            avgacc.update(acc, batch_size)
+            pred = output.data.cpu().numpy().argmax(1)
+            target = target.cpu().numpy()
+            confusion_matrix.update(pred, target)
 
     if verbose:
-        logging.info(f"Test epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        miou = confusion_matrix.miou_score()
+        logging.info(f"Test epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}")
         if writer is not None:
-            writer.add_scalar("test_acc", avgacc(), epoch)
-            writer.add_scalar("test_loss", avgloss(), epoch)
-    return avgacc()
+            writer.add_scalar("test/loss", avgloss(), epoch)
+            writer.add_scalar("test/miou", miou, epoch)
+    return miou

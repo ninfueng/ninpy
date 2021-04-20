@@ -100,7 +100,10 @@ class TerQuant(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_o):
         r"""Back propagation using same as an identity function."""
-        (w, thre,) = ctx.saved_tensors
+        (
+            w,
+            thre,
+        ) = ctx.saved_tensors
         grad_i = grad_o.clone()
         return grad_i, None
 

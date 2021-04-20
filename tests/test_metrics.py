@@ -1,4 +1,5 @@
 import numpy as np
+
 from ninpy.metrics import ConfusionMatrix
 
 
@@ -11,7 +12,7 @@ class TestConfusionMatrix:
 
     def test_incorrect(self):
         matrix = ConfusionMatrix(3)
-        matrix.update(np.array((0, 1, 2)), np.array((0,1,0)))
+        matrix.update(np.array((0, 1, 2)), np.array((0, 1, 0)))
         miou = matrix.miou_score()
         assert miou == 0.5
 

@@ -37,6 +37,7 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
         )
     return x
 
+
 def numpy2torch(x: np.ndarray) -> torch.Tensor:
     # TODO:
     if len(x.shape) == 3:

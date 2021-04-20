@@ -29,4 +29,3 @@ def test_get_num_weight_from_name():
 
     num_weight = get_num_weight_from_name(model, "layer1.0.conv1")
     assert num_weight == 64 * 64 * 3 * 3
-

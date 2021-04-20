@@ -17,7 +17,9 @@ def class_weights(dataset):
     May return more classes than
     """
     accum_count = Counter()
-    for _, mask in tqdm(dataset):
+    pbar = tqdm(dataset)
+    pbar.set_description("Calculate for class weights")
+    for _, mask in dataset:
         unique, count = np.unique(mask, return_counts=True)
         pair_count = {u: c for u, c in zip(unique.tolist(), count.tolist())}
         accum_count.update(pair_count)
@@ -34,11 +36,11 @@ class LabelSmoothingLoss(nn.Module):
         https://github.com/pytorch/pytorch/issues/7455#issuecomment-513062631
     """
 
-    def __init__(self, classes, smoothing: float = 0.0, dim=-1):
+    def __init__(self, num_classes, smooth: float = 0.0, dim=-1):
         super().__init__()
-        self.confidence = 1.0 - smoothing
-        self.smoothing = smoothing
-        self.cls = classes
+        self.confidence = 1.0 - smooth
+        self.smooth = smooth
+        self.num_classes = num_classes
         self.dim = dim
 
     def forward(self, pred, target):
@@ -46,6 +48,6 @@ class LabelSmoothingLoss(nn.Module):
         with torch.no_grad():
             true_dist = torch.zeros_like(pred)
             # One hot vector.
-            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.fill_(self.smooth / (self.num_classes - 1))
             true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
         return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))
