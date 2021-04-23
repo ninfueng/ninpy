@@ -2,6 +2,7 @@ clean:
 	@echo "Remove build, dist, pytest_cache, pycache, and mypy_cache."
 	rm -rf build/
 	rm -rf dist/
+	rm -rf *.egg-info
 
 	find . -iname "__pycache__" | xargs rm -rf
 	find . -iname "pytest_cache" | xargs rm -rf
@@ -26,4 +27,8 @@ test:
 	pytest
 	cd -
 
-.PHONY: clean format lint test
+publish:
+	python setup.py sdist
+	twine upload dist/*
+
+.PHONY: clean format lint test publish
