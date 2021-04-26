@@ -59,7 +59,7 @@ def tensorboard_models(
 
 def tensorboard_hparams(writer, hparam_dict, metric_dict):
     """From: https://github.com/lanpa/tensorboardX/issues/479
-    Add hyperparameters to SummaryWriter without additional files.
+    Add hyperparameters to SummaryWriter without causing additional files.
     """
     exp, ssi, sei = hparams(hparam_dict, metric_dict)
     writer.file_writer.add_summary(exp)
@@ -175,8 +175,8 @@ def save_model(
     rm_old: bool = True,
     verbose: bool = True,
 ) -> None:
-    r"""Save model, optimizer, amp, best_metric, best_epoch into a ckpt.
-    Can automatically remove old save ckpt.
+    r"""Save model state_dict, model name, optimizer state_dict, optimizer name,
+    amp state_dict, best_metric, best_epoch into a pth. Can automatically remove old pth.
     """
     assert isinstance(save_dir, str)
     assert (
@@ -259,23 +259,53 @@ def save_model(
 
 
 def load_model(
-    save_dir: str, model: nn.Module, optimizer=None, amp=None, verbose: bool = True
+    save_dir: str, model: nn.Module, optimizer=None, amp=None, scheduler=None, verbose: bool = True
 ):
     r"""Load model from `save_dir` and extract compressed information."""
     assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
-    model_state_dict = ckpt["model_state_dict"]
-    optimizer_state_dict = ckpt["optimizer_state_dict"]
-    amp_state_dict = ckpt["amp_state_dict"]
-    model_name = ckpt["model_name"]
-    optimizer_name = ckpt["optimizer_name"]
-    metric, epoch = ckpt["metric"], ckpt["epoch"]
-    model.load_state_dict(model_state_dict)
 
-    if optimizer is not None:
-        optimizer.load_state_dict(optimizer_state_dict)
-    if amp is not None:
+    # Checking each key is exist or not and load it.
+    if "model_state_dict" in ckpt.keys():
+        model_state_dict = ckpt["model_state_dict"]
+    else:
+        model_state_dict = None
+    if "optimizer_state_dict" in ckpt.keys():
+        optimizer_state_dict = ckpt["optimizer_state_dict"]
+    else:
+        optimizer_state_dict = None
+    if "amp_state_dict" in ckpt.keys():
+        amp_state_dict = ckpt["amp_state_dict"]
         amp.load_state_dict(amp_state_dict)
+    else:
+        amp_state_dict = None
+
+    if "model_name" in ckpt.keys():
+        model_name = ckpt["model_name"]
+    else:
+        model_name = None
+    if "optimizer_name" in ckpt.keys():
+        optimizer_name = ckpt["optimizer_name"]
+        optimizer.load_state_dict(optimizer_state_dict)
+    else:
+        optimizer_name = None
+    if "metric" in ckpt.keys():
+        metric = ckpt["metric"]
+    else:
+        metric = None
+    if "epoch" in ckpt.keys():
+        epoch = ckpt["epoch"]
+    else:
+        epoch = None
+
+    model.load_state_dict(model_state_dict)
+    if scheduler is not None and epoch is not None:
+        try:
+            for _ in range(epoch):
+                scheduler.step()
+        except TypeError:
+            raise TypeError("{scheduler.__class__.__name__()}: requires input metrics.")
+
     if verbose:
         logging.info(
             f"Load a model {model_name} and an optimizer {optimizer_name} with score {metric}@ {epoch} epoch"
