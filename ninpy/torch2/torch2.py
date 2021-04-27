@@ -166,7 +166,7 @@ def ninpy_setting(
 
 def save_model(
     save_dir: str,
-    model,
+    model: nn.Module,
     optimizer,
     amp=None,
     metric: float = None,
@@ -259,19 +259,27 @@ def save_model(
 
 
 def load_model(
-    save_dir: str, model: nn.Module, optimizer=None, amp=None, scheduler=None, verbose: bool = True
-):
-    r"""Load model from `save_dir` and extract compressed information."""
+    save_dir: str, model: nn.Module, optimizer=None, amp=None, scheduler=None,
+    verbose: bool = True
+) -> Optional[int]:
+    r"""Load model from `save_dir` and extract compressed information.
+    Return:
+        epoch (int): a number of epoch that is already trained.
+    """
     assert isinstance(save_dir, str)
     ckpt = torch.load(save_dir)
 
     # Checking each key is exist or not and load it.
     if "model_state_dict" in ckpt.keys():
         model_state_dict = ckpt["model_state_dict"]
+        model.load_state_dict(model_state_dict)
+        logging.info("Load a model_state_dict.")
     else:
         model_state_dict = None
     if "optimizer_state_dict" in ckpt.keys():
         optimizer_state_dict = ckpt["optimizer_state_dict"]
+        optimizer.load_state_dict(optimizer_state_dict)
+        logging.info("Load an optimizer_state_dict.")
     else:
         optimizer_state_dict = None
     if "amp_state_dict" in ckpt.keys():
@@ -286,7 +294,6 @@ def load_model(
         model_name = None
     if "optimizer_name" in ckpt.keys():
         optimizer_name = ckpt["optimizer_name"]
-        optimizer.load_state_dict(optimizer_state_dict)
     else:
         optimizer_name = None
     if "metric" in ckpt.keys():
@@ -298,19 +305,20 @@ def load_model(
     else:
         epoch = None
 
-    model.load_state_dict(model_state_dict)
     if scheduler is not None and epoch is not None:
         try:
             for _ in range(epoch):
                 scheduler.step()
         except TypeError:
-            raise TypeError("{scheduler.__class__.__name__()}: requires input metrics.")
+            raise TypeError(
+                "{scheduler.__class__.__name__()}: requires input metrics.")
 
     if verbose:
         logging.info(
-            f"Load a model {model_name} and an optimizer {optimizer_name} with score {metric}@ {epoch} epoch"
+            f"Load a model {model_name} and an optimizer {optimizer_name}"
+            f" with score {metric}@ {epoch} epoch"
         )
-    return model, optimizer
+    return epoch
 
 
 def add_weight_decay(
@@ -460,7 +468,6 @@ class EarlyStoppingException(Exception):
 
 class CheckPointer(object):
     r"""TODO: Adding with optimizer, model save, and unittest."""
-
     def __init__(
         self, task: str = "max", patience: int = 10, verbose: bool = True
     ) -> None:

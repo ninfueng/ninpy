@@ -6,12 +6,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from apex import amp
-from prefetch_generator import BackgroundGenerator
 from tqdm import tqdm
 
 from ninpy.common import RunningAverage
 from ninpy.torch_utils import set_warmup_lr
-
 
 def warmup(
     model,
