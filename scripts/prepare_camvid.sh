@@ -6,6 +6,7 @@ LABEL_URL="http://web4.cs.ucl.ac.uk/staff/g.brostow/MotionSegRecData/data/Labele
 IMAGE_ZIP="701_StillsRaw_full.zip"
 LABEL_ZIP="LabeledApproved_full.zip"
 
+set -e
 echo "Your download path: $1."
 mkdir -p $1
 cd $1
@@ -17,7 +18,7 @@ echo "Downloading CamVid Label (16 MB)."
 wget $LABEL_URL
 
 echo "Unzip images."
-unzip $IMAGE_URL
+unzip $IMAGE_ZIP
 mv "701_StillsRaw_full" images
 
 echo "Unzip labels."
