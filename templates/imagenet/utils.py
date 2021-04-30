@@ -11,6 +11,7 @@ from tqdm import tqdm
 from ninpy.common import RunningAverage
 from ninpy.torch_utils import set_warmup_lr
 
+
 def warmup(
     model,
     device,

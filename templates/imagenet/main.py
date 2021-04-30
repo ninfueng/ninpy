@@ -47,19 +47,14 @@ if __name__ == "__main__":
 
     if hparams.resume:
         from ninpy.torch2 import load_model
+
         load_model(hparams.resume_path, model, optimizer, None, scheduler)
 
     best_acc = 0.0
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         train(
-            model,
-            device,
-            train_loader,
-            optimizer,
-            criterion,
-            epoch,
-            writer,
+            model, device, train_loader, optimizer, criterion, epoch, writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()

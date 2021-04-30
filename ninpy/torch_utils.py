@@ -44,11 +44,11 @@ def tensorboard_models(
     """Tracking all parameters with Tensorboard."""
     assert isinstance(idx, int)
     for name, param in model.named_parameters():
-        writer.add_histogram(name, param, idx)
+        writer.add_histogram(os.path.join("parameters", name), param, idx)
     return writer
 
 
-def tensorboard_hparams(writer, hparam_dict, metric_dict):
+def tensorboard_hparams(writer, hparam_dict, metric_dict) -> None:
     """Modified: https://github.com/lanpa/tensorboardX/issues/479"""
     exp, ssi, sei = hparams(hparam_dict, metric_dict)
     writer.file_writer.add_summary(exp)

@@ -53,20 +53,20 @@ def tensorboard_models(
     """Tracking all parameters with Tensorboard."""
     assert isinstance(idx, int)
     for name, param in model.named_parameters():
-        writer.add_histogram(name, param, idx)
+        writer.add_histogram(os.path.join("parameters", name), param, idx)
     return writer
 
 
-def tensorboard_hparams(writer, hparam_dict, metric_dict):
-    """From: https://github.com/lanpa/tensorboardX/issues/479
-    Add hyperparameters to SummaryWriter without causing additional files.
-    """
+def tensorboard_hparams(
+    writer: SummaryWriter, hparam_dict: dict, metric_dict: dict
+) -> None:
+    """Modified: https://github.com/lanpa/tensorboardX/issues/479"""
     exp, ssi, sei = hparams(hparam_dict, metric_dict)
     writer.file_writer.add_summary(exp)
     writer.file_writer.add_summary(ssi)
     writer.file_writer.add_summary(sei)
     for k, v in metric_dict.items():
-        writer.add_scalar(k, v)
+        writer.add_scalar(os.path.join("hyperparameters", k), v)
 
 
 def topk_accuracy(
@@ -259,8 +259,12 @@ def save_model(
 
 
 def load_model(
-    save_dir: str, model: nn.Module, optimizer=None, amp=None, scheduler=None,
-    verbose: bool = True
+    save_dir: str,
+    model: nn.Module,
+    optimizer=None,
+    amp=None,
+    scheduler=None,
+    verbose: bool = True,
 ) -> Optional[int]:
     r"""Load model from `save_dir` and extract compressed information.
     Return:
@@ -310,8 +314,7 @@ def load_model(
             for _ in range(epoch):
                 scheduler.step()
         except TypeError:
-            raise TypeError(
-                "{scheduler.__class__.__name__()}: requires input metrics.")
+            raise TypeError("{scheduler.__class__.__name__()}: requires input metrics.")
 
     if verbose:
         logging.info(
@@ -468,6 +471,7 @@ class EarlyStoppingException(Exception):
 
 class CheckPointer(object):
     r"""TODO: Adding with optimizer, model save, and unittest."""
+
     def __init__(
         self, task: str = "max", patience: int = 10, verbose: bool = True
     ) -> None:
