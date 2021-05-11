@@ -1,9 +1,12 @@
 import glob
 import os
 from multiprocessing import cpu_count
+from typing import Tuple
 
+import albumentations as A
 import cv2
 import torchvision.transforms as transforms
+from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
@@ -26,19 +29,19 @@ CLASSES = {
 }
 
 
-def get_cinic10_basic(root: str = "~/datasets/CINIC10"):
-    """Get CINIC10 dataset with official settings from github.
-    Using Imagefolder and basic normalize only.
-    Size: (3, 32, 32)
-    Number train, valid and test: 90,000
+def get_cinic10_basic(
+    root: str = "~/datasets/CINIC10",
+) -> Tuple[ImageFolder, ImageFolder, ImageFolder]:
+    """Get CINIC10 dataset with official settings from CINIC github repository.
+    Using ImageFolder and unit variance and zero mean normalization only.
 
     Expect folders in this format:
-    root
-    |__train
-        |__airplane
-        ...
-    |__test
-    |__valid
+        root
+        |__train
+            |__airplane
+            ...
+        |__test
+        |__valid
     """
     root = os.path.expanduser(root)
     train_dir = os.path.join(root, "train")
@@ -47,7 +50,6 @@ def get_cinic10_basic(root: str = "~/datasets/CINIC10"):
     basic_transforms = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize(mean=CINIC_MEAN, std=CINIC_STD)]
     )
-
     train_dataset = ImageFolder(train_dir, transform=basic_transforms)
     val_dataset = ImageFolder(val_dir, transform=basic_transforms)
     test_dataset = ImageFolder(test_dir, transform=basic_transforms)
@@ -57,17 +59,15 @@ def get_cinic10_basic(root: str = "~/datasets/CINIC10"):
 class Cinic10(Dataset):
     """Load CINIC10 all images and stores into RAM for fast processing.
     Note that supports only transforms from torchvision only.
-    # TODO: support albumentations
     >>> Cinic10('~/datasets/CINIC10', mode='train', transforms=basic_transform)
     """
 
-    def __init__(self, root: str, mode: str, transforms=None):
+    def __init__(self, root: str, mode: str, transforms=None) -> None:
         super().__init__()
         self.transforms = transforms
         root = os.path.expanduser(root)
         self.images, self.labels = [], []
-        mode = mode.lower()
-        self.mode = mode
+        self.mode = mode.lower()
 
         if self.mode == "train":
             img_dir = os.path.join(root, "train")
@@ -77,46 +77,52 @@ class Cinic10(Dataset):
             img_dir = os.path.join(root, "test")
         else:
             raise ValueError(
-                f"mode should be in `train`, `valid`, or `test`, your mode: {mode}"
+                f"mode should be in `train`, `valid`, or `test`, your mode: {self.mode}"
             )
 
         for k in CLASSES.keys():
             search_glob = os.path.join(img_dir, k, "*.png")
             img_dirs = glob.glob(search_glob)
+
             for i in img_dirs:
                 img = cv2.imread(i, cv2.IMREAD_COLOR)
-                assert img is not None
+                assert img is not None, f"Cannot find image from {i}."
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
                 # Keep every image to RAM for faster access.
                 self.images.append(img)
             self.labels += [CLASSES[k] for _ in img_dirs]
 
-        assert len(self.images) == 90_000, "Some images are missing."
-        assert len(self.labels) == 90_000, "Some labels are missing."
+        assert (
+            len(self.images) == 90_000
+        ), f"Some images are missing. Found {len(self.image)} images."
+        assert (
+            len(self.labels) == 90_000
+        ), f"Some labels are missing. Found {len(self.labels)} images."
 
     def __getitem__(self, idx: int):
         img = self.images[idx]
-        img = Image.fromarray(img, mode="RGB")
+        # img = Image.fromarray(img, mode="RGB")
         label = self.labels[idx]
 
         if self.transforms is not None:
-            img = self.transforms(img)
-            # img = self.transforms(image=img)['image']
+            img = transforms(image=img)["image"]
         else:
             if self.mode == "train":
-                transform = transforms.Compose(
+                transform = A.Compose(
                     [
-                        transforms.RandomCrop(32, padding=4),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        transforms.Normalize(CINIC_MEAN, CINIC_STD),
+                        A.RandomCrop(32, padding=4),
+                        A.RandomHorizontalFlip(),
+                        A.Normalize(CINIC_MEAN, CINIC_STD),
+                        ToTensorV2(),
                     ]
                 )
+
             else:
-                transform = transforms.Compose(
-                    [transforms.ToTensor(), transforms.Normalize(CINIC_MEAN, CINIC_STD)]
+                transform = A.Compose(
+                    [A.Normalize(CINIC_MEAN, CINIC_STD), ToTensorV2()]
                 )
-            img = transform(img)
+            img = transform(image=img)["image"]
         return img, label
 
     def __len__(self) -> int:
@@ -129,7 +135,8 @@ def get_cinic10_loaders(root: str, batch_size: int, num_workers: int = cpu_count
     assert isinstance(batch_size, int)
 
     root = os.path.expanduser(root)
-    train_set, val_set = Cinic10(root, mode="train"), Cinic10(root, mode="valid")
+    train_set = Cinic10(root, mode="train")
+    val_set = Cinic10(root, mode="valid")
     test_set = Cinic10(root, mode="test")
 
     train_loader = DataLoader(

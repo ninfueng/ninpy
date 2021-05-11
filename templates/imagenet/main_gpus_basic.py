@@ -50,7 +50,13 @@ if __name__ == "__main__":
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         trainv2(
-            model, device, train_loader, optimizer, criterion, epoch, writer,
+            model,
+            device,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
