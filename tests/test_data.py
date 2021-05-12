@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from ninpy.data import AttributeOrderedDictList
+from ninpy.data import AttributeOrderedDictList, AttrDict
 
 
 def test_attribute_ordered_dictlist():
@@ -16,3 +16,10 @@ def test_attribute_ordered_dictlist():
     assert df["book0"][0] == 5
     assert df["book0"][1] == 10
     assert df["book1"][0] == 0
+
+
+def test_attrdict():
+    attrdict = AttrDict(
+        {"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
+    assert attrdict.test.test2 == 1
+    assert attrdict.recursive[-1].test3.test4 == 4
