@@ -29,7 +29,7 @@ if __name__ == "__main__":
     model = resnet18(pretrained=False)
     # device_ids = [i for i in range(torch.cuda.device_count())]
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
-    model = model.to(device)
+    # model = model.to(device)
 
     criterion = nn.CrossEntropyLoss(reduction="mean").to(device)
     optimizer = optim.Adam(
@@ -38,10 +38,11 @@ if __name__ == "__main__":
         weight_decay=float(hparams.weight_decay),
     )
 
-    model, optimizer = amp.initialize(
-        model, optimizer, opt_level=hparams.opt_lv, verbosity=1
-    )
+    # model, optimizer = amp.initialize(
+    #     model, optimizer, opt_level=hparams.opt_lv, verbosity=1
+    # )
     model = nn.DataParallel(model)
+    model = model.to(device)
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=hparams.step_size, gamma=hparams.step_down_rate
     )
