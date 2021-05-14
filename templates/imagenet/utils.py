@@ -26,7 +26,7 @@ def warmup(
                 initial_lr, warmup_epochs, train_loader, optimizer, idx, w, False
             )
             data, target = data.to(device), target.to(device)
-            optimizer.zero_grad(set_to_none=True)
+            optimizer.zero_grad()
             output = model(data)
             batch_size = target.shape[0]
             loss = criterion(output, target)
@@ -82,7 +82,8 @@ def trainv2(
         batch_size = target.shape[0]
         loss = criterion(output, target)
 
-        optimizer.zero_grad(set_to_none=True)
+        # optimizer.zero_grad(set_to_none=True)
+        optimizer.zero_grad()
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
             # nn.utils.clip_grad_norm_(model.parameters(), 5)
