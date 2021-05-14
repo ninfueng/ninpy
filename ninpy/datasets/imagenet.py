@@ -5,26 +5,60 @@ from typing import Callable, Optional, Tuple
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from ninpy.datasets import WrappedCompose
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import ImageFolder
 
+from ninpy.datasets import WrappedCompose
+
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+
+
+from typing import Callable, Tuple, Union
+
+
+def get_imagenet_albumentations_transforms(
+    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
+) -> Tuple[Callable, Callable]:
+
+    if isinstance(crop_size, int):
+        crop_size = (crop_size, crop_size)
+    if isinstance(resize_size, int):
+        resize_size = (resize_size, resize_size)
+    assert len(crop_size) == 2
+    assert len(resize_size) == 2
+
+    train_transforms = WrappedCompose(
+        [
+            A.RandomResizedCrop(crop_size[0], crop_size[1]),
+            A.HorizontalFlip(),
+            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+            ToTensorV2(),
+        ]
+    )
+    val_transforms = WrappedCompose(
+        [
+            A.Resize(crop_size[0], crop_size[1]),
+            A.CenterCrop(resize_size[0], resize_size[1]),
+            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+            ToTensorV2(),
+        ]
+    )
+    return train_transforms, val_transforms
 
 
 def get_imagenet_loaders(
     root: str,
     batch_size: int,
     num_workers: int = cpu_count(),
-    crop_size: int = 256,
-    resize_size: int = 224,
+    crop_size: Union[int, Tuple[int, int]]= 256,
+    resize_size: Union[int, Tuple[int, int]] = 224,
     distributed: bool = False,
     train_transforms: Optional[Callable] = None,
     val_transforms: Optional[Callable] = None,
 ) -> Tuple[DataLoader, DataLoader]:
-    r"""Get ImageNet loaders by using ImageFolder."""
+    """Get ImageNet loaders by using ImageFolder."""
     assert isinstance(root, str)
     assert isinstance(batch_size, int)
     assert isinstance(num_workers, int)
@@ -36,25 +70,14 @@ def get_imagenet_loaders(
     traindir = os.path.join(root, "train")
     valdir = os.path.join(root, "val")
 
+    (
+        default_train_transforms,
+        default_val_transforms,
+    ) = get_imagenet_albumentations_transforms(crop_size, resize_size)
     if train_transforms is None:
-        train_transforms = WrappedCompose(
-            [
-                A.RandomResizedCrop(resize_size, resize_size),
-                A.HorizontalFlip(),
-                A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-                ToTensorV2(),
-            ]
-        )
-
+        train_transforms = default_train_transforms
     if val_transforms is None:
-        val_transforms = WrappedCompose(
-            [
-                A.Resize(crop_size, crop_size),
-                A.CenterCrop(resize_size, resize_size),
-                A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-                ToTensorV2(),
-            ]
-        )
+        val_transforms = default_val_transforms
 
     train_dataset = ImageFolder(traindir, train_transforms)
     val_dataset = ImageFolder(valdir, val_transforms)
@@ -95,3 +118,4 @@ if __name__ == "__main__":
     #     pass
     # print(x, y)
     pass
+

@@ -116,10 +116,10 @@ ninpy
 
 ## TODO ##
 
-- [ ] Reorganize torch2.
-    - [ ] Adding base module with tensorboard tracking.
-    - [ ] Dataset with tensorboard add_images.
-    - [ ] Tensorboard with add_scalars with a dict input.
-    - [ ] Base dataset with mode "RGB" and "BGR".
-    - [ ] Base dataset with from_txt and folder.
-    - [ ] Burst read for all base dataset.
+* [ ] Reorganize torch2.
+    * [ ] Adding base module with tensorboard tracking.
+    * [ ] Dataset with tensorboard add_images.
+    * [ ] Tensorboard with add_scalars with a dict input.
+    * [ ] Base dataset with mode "RGB" and "BGR".
+    * [ ] Base dataset with from_txt and folder.
+    * [ ] Burst read for all base dataset.
