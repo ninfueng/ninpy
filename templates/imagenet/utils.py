@@ -75,7 +75,7 @@ def trainv2(
     model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
 ):
     avgloss, avgacc = RunningAverage(), RunningAverage()
-    model.train(rem)
+    model.train()
     for data, target in tqdm(train_loader):
         data, target = data.to(device), target.to(device)
         output = model(data)

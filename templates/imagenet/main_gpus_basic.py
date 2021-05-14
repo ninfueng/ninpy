@@ -21,13 +21,13 @@ from ninpy.torch2 import (
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     train_loader, test_loader = get_imagenet_loaders(
         hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=False
     )
 
     model = resnet18(pretrained=False)
-    device_ids = [i for i in range(torch.cuda.device_count())]
+    # device_ids = [i for i in range(torch.cuda.device_count())]
     writer.add_graph(model, torch.zeros(1, 3, 224, 224))
     model = model.to(device)
 
