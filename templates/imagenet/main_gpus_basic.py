@@ -10,7 +10,7 @@ from tqdm import tqdm
 from utils import test, train, trainv2, warmup
 
 from ninpy.datasets import get_imagenet_loaders
-from ninpy.notify import basic_notify
+# from ninpy.notify import basic_notify
 from ninpy.torch2 import (
     load_model,
     ninpy_setting,
@@ -68,6 +68,6 @@ if __name__ == "__main__":
 
     logging.info(f"Best test accuracy: {best_acc}")
     metric_dict = {"best_acc": best_acc}
-    tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
+    # tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
     metric_dict.update(hparams.to_dict())
-    basic_notify(metric_dict)
+    # basic_notify(metric_dict)

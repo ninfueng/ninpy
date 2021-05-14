@@ -1,7 +1,0 @@
-{
-  "source_directories": [
-    "."
-  ],
-  "taint_models_path": "/home/ninnart/miniconda3/lib",
-  "search_path": "home/ninnart/miniconda3/lib"
-}

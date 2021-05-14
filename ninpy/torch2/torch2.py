@@ -32,7 +32,8 @@ def torch2numpy(x: torch.Tensor) -> np.ndarray:
         x = np.transpose(x, (2, 3, 1, 0))
     else:
         raise ValueError(
-            f"Not supporting with shape of {len(x.shape)}, please update this function to support it."
+            f"Not supporting with shape of {len(x.shape)},"
+            "please update this function to support it."
         )
     return x
 
@@ -66,6 +67,7 @@ def tensorboard_hparams(
     writer.file_writer.add_summary(exp)
     writer.file_writer.add_summary(ssi)
     writer.file_writer.add_summary(sei)
+
     for k, v in metric_dict.items():
         writer.add_scalar(os.path.join("hyperparameters", k), v)
 
@@ -400,7 +402,7 @@ def make_onehot(input, num_classes: int):
     return result
 
 
-def get_bn_names(module: nn.Module) -> List[str]:
+def get_batchnorm_names(module: nn.Module) -> List[str]:
     r"""Designed for using with `add_weight_decay` as `skip_list`."""
     name_bn_modules = []
     for n, m in module.named_modules():
@@ -527,8 +529,7 @@ class CheckPointer(object):
 
 
 class SummaryWriterDictList(SummaryWriter):
-    r"""SummaryWriter with support the adding multiple scalers to dictlist."""
-
+    """SummaryWriter with support the adding multiple scalers to dictlist."""
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
