@@ -99,3 +99,9 @@ def assertall(obj, func, *attrs):
     """
     assert callable(func)
     return all([func(obj, attr) for attr in attrs])
+
+
+class DuplicationWarning(UserWarning):
+    """Warning for Duplicated function or class that considered to be remove
+    in future iteration."""
+    pass

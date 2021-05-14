@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Save images into npy format.
+For converting images to binary for faster accessing.
 """
 import glob
 import os

@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 from hyperopt import Trials, fmin, hp, tpe
 
-from .job import launch_job
-from .yaml2 import dict2str, load_yaml
+from ninpy.job import launch_job
+from ninpy.yaml2 import dict2str, load_yaml
+# from .job import launch_job
+# from .yaml2 import dict2str, load_yaml
 
 
 def suggest_hparams(input):
@@ -15,7 +17,6 @@ def suggest_hparams(input):
     as the hyper parameters. For instance expected `trial` for optuna.
     TODO: working in it.
     """
-
     return
 
 

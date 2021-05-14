@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """@author: Ninnart Fuengfusin."""
 import logging
 
@@ -8,8 +7,7 @@ from torch.nn.modules.module import ModuleAttributeError
 
 
 class LayerConverter:
-    r"""Collection of converter for layer to another type of layer.
-
+    """Collection of converter for layer to another type of layer.
     Supports:
         Conv, Linear, Activation, and BatchNorm.
     Modified from:
@@ -17,18 +15,17 @@ class LayerConverter:
     """
 
     @staticmethod
-    def convert_bn(
+    def convert_normalization(
         model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None
     ) -> nn.Module:
         r"""If num_groups is 1, GroupNorm turns into LayerNorm. If num_groups is None, GroupNorm turns into InstanceNorm
-
         Example:
-        >>> LayerConverter.convert_bn(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
+        >>> LayerConverter.convert_normalization(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_bn(
+                model._modules[name] = LayerConverter.normalization(
                     module,
                     old_layer_type,
                     new_layer_type,
@@ -51,18 +48,18 @@ class LayerConverter:
         return model
 
     @staticmethod
-    def convert_conv(
+    def convert_convolution(
         model, old_layer_type, new_layer_type, convert_weights=False, **kwargs
     ) -> nn.Module:
         r"""Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
-        >>> LayerConverter.convert_conv(m, nn.Conv2d, nn.Conv1d)
+        >>> LayerConverter.convert_convolution(m, nn.Conv2d, nn.Conv1d)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_conv(
+                model._modules[name] = LayerConverter.convert_convolution(
                     module, old_layer_type, new_layer_type, convert_weights, **kwargs
                 )
             # single module
@@ -125,19 +122,19 @@ class LayerConverter:
         return model
 
     @staticmethod
-    def convert_act(model, old_layer_type, new_layer_type, **kwargs) -> nn.Module:
+    def convert_activation(
+        model, old_layer_type, new_layer_type, **kwargs
+    ) -> nn.Module:
         r"""
         Example:
-        ```
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
-        >>> LayerConverter.convert_act(m, nn.ReLU, nn.ReLU6)
-        ```
+        >>> LayerConverter.convert_activation(m, nn.ReLU, nn.ReLU6)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_act(
+                model._modules[name] = LayerConverter.convert_activation(
                     module, old_layer_type, new_layer_type, **kwargs
                 )
             # single module

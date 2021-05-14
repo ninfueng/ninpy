@@ -501,7 +501,6 @@ if __name__ == "__main__":
     # dataset = Camvid("~/datasets/camvid", "train")
     # plt.imshow(dataset.imgs[0])
     # plt.show()
-
     # plt.imshow(dataset.masks[0])
     # plt.show()
     # resize_save_camvid("~/datasets/camvid", "~/datasets/camvid256", (256, 256))

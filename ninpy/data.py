@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """data.py
 A collection of data structure functions.
 @author: Ninnart Fuengfusin
 """
 import logging
 import sys
+import warnings
 from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
 import torch
+
+from ninpy.common import DuplicationWarning
 
 
 class AttributeDict(dict):
@@ -25,10 +27,10 @@ class AttributeDict(dict):
     {'d': 2, 'test': 5}
     ```
     """
-
     __slots__ = ()
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
+    warnings.warn("Duplicate with AttrDict.", DuplicationWarning)
 
 
 class AttributeOrderedDict(OrderedDict):
@@ -36,7 +38,7 @@ class AttributeOrderedDict(OrderedDict):
     Same case as `AttributeDict`, however with support from OrderedDict instead.
     Example:
     ```
-    >>> a = AttributeOrderedDict({'d': 2})
+    >>> a = AttributeOrderedDict({'d': 2, 'd2': {'d3': 3}})
     >>> a.d
     2
     >>> a.test = 5
@@ -48,6 +50,7 @@ class AttributeOrderedDict(OrderedDict):
     __slots__ = ()
     __getattr__ = OrderedDict.__getitem__
     __setattr__ = OrderedDict.__setitem__
+    warnings.warn("Duplicate with AttrDict.", DuplicationWarning)
 
     def to_dict(self) -> dict:
         for k in self.keys():
@@ -61,15 +64,14 @@ class AttributeOrderedDictList(AttributeOrderedDict):
     """AttributeOrderedDict with initialization with the lists.
     With additional methods to support.
     Example:
-    ```
     >>> dictlist = AttributeOrderedDictList('book0', 'book1')
     >>> dictlist.book0.append(5)
     >>> dictlist.book0.append(10)
     >>> dictlist.to_csv('book.csv', 0)
-    ```
     """
 
     def __init__(self, *args) -> None:
+        warnings.warn("Duplicate with DictList.", DuplicationWarning)
         for arg in args:
             self.update({arg: []})
 
@@ -116,20 +118,115 @@ class AttributeOrderedDictList(AttributeOrderedDict):
                 self[k] = torch.as_tensor(self[k])
         return dict(self)
 
-    def to_aim(self) -> None:
-        # TODO: support an aim.
+    def to_tensorboard(self) -> None:
+        # TODO: support a tensorboard. Expected idx as epoch.
         raise NotImplementedError("Not supported yet.")
+
+    def to_yaml() -> None:
+        # TODO: support dict to yaml.
+        raise NotImplementedError("Not supported yet.")
+
+
+class AttrDict(OrderedDict):
+    """Recusive attribute OrderedDict.
+    Example:
+    >>> attrdict = AttrDict(
+        {"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
+    >>> attrdict.test
+    AttrDict([('test2', 1)])
+    >>> attrdict.recursive[-1].test3.test4
+    4
+    """
+    __slots__ = ()
+    __getattr__ = OrderedDict.__getitem__
+    __setattr__ = OrderedDict.__setitem__
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        for k in self.keys():
+            if isinstance(self[k], dict):
+                self[k] = AttrDict(self[k])
+            elif isinstance(self[k], list):
+                for idx, v in enumerate(self[k]):
+                    if isinstance(v, dict):
+                        self[k][idx] = AttrDict(self[k][idx])
+
+
+class DictList(AttrDict):
+    """AttrDict with initialization with the lists.
+    With additional methods to support.
+    Example:
+    >>> dictlist = DictList('book0', 'book1')
+    >>> dictlist.book0.append(5)
+    >>> dictlist.book0.append(10)
+    >>> dictlist.to_csv('book.csv', 0)
+    """
+    def __init__(self, *args) -> None:
+        [self.update({arg: []}) for arg in args]
+
+    def _fill_dictlist_equal_len(self, filled: int = 0) -> dict:
+        """Make all lists in dict have the same len."""
+        # Get maxlen from all keys.
+        maxlen = -sys.maxsize - 1
+        for k in self.keys():
+            if len(self[k]) > maxlen:
+                maxlen = len(self[k])
+
+        # Fill list in dictlist that len less than maxlen to maxlen.
+        for k in self.keys():
+            if len(self[k]) < maxlen:
+                diff = maxlen - len(self[k])
+                _ = [self[k].append(filled) for _ in range(diff)]
+
+    def to_df(self, filled: float = np.nan) -> pd.DataFrame:
+        """Convert to DataFrame required to filling all missing values
+        in case the lengths of list are not equal.
+        """
+        self._fill_dictlist_equal_len(filled=filled)
+        df = pd.DataFrame(self)
+        return df
+
+    def to_csv(
+        self, file_name: str, filled: float = np.nan, verbose: str = True
+    ) -> None:
+        """Saving the dictlist to csv."""
+        assert isinstance(file_name, str)
+        df = self.to_df(filled=filled)
+        df.to_csv(file_name, index=None)
+        if verbose:
+            logging.info(f"Save csv@{file_name}.")
+
+    def append_kwargs(self, **kwargs) -> None:
+        """Append multiple lists in dict at the same time using kwargs."""
+        _ = [self[key].append(kwargs[key]) for key in kwargs.keys()]
+
+    def to_dict(self) -> dict:
+        for k in self.keys():
+            if isinstance(self[k], list) or isinstance(self[k], tuple):
+                # Not support standard datatypes.
+                self[k] = torch.as_tensor(self[k])
+        return dict(self)
 
     def to_tensorboard(self) -> None:
         # TODO: support a tensorboard. Expected idx as epoch.
         raise NotImplementedError("Not supported yet.")
 
+    def to_yaml() -> None:
+        # TODO: support dict to yaml.
+        raise NotImplementedError("Not supported yet.")
+
+
 
 if __name__ == "__main__":
-    dictlist = AttributeOrderedDictList("book0", "book1")
+    dictlist = DictList("book0", "book1")
     dictlist.book0.append(1)
     dictlist.book1.append(2)
     test_dict = dict(dictlist)
-
     print(test_dict)
     print(dictlist.to_dict())
+
+    attrdict = AttrDict({"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
+    print(attrdict.test)
+    print(attrdict.recursive[-1].test3.test4)
+
