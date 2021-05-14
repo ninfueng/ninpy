@@ -5,6 +5,7 @@ import argparse
 import logging
 import os
 import random
+import warnings
 from typing import Callable, List, Optional, Tuple
 
 import numpy as np
@@ -20,6 +21,7 @@ from .experiment import set_experiment
 from .log import set_logger
 from .yaml2 import load_yaml, name_experiment
 
+warnings.warn("torch_utils is duplicated with torch2.")
 
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
     r"""Converting torch format tensor to `numpy` or `tensorflow` format."""

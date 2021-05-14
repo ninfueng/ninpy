@@ -17,7 +17,7 @@ from utils import test, train, warmup
 from ninpy.datasets.camvid import Camvid
 from ninpy.losses import class_weights
 from ninpy.notify import basic_notify
-from ninpy.torch_utils import (
+from ninpy.torch2 import (
     load_model,
     ninpy_setting,
     save_model,
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         pin_memory=True,
     )
 
-    model = SegNet(11, 3, drop_rate=0.0)
+    model = SegNet(11, 3, drop_rate=0.2)
     writer.add_graph(model, torch.zeros(1, 3, 360, 480))
     model = model.to(device)
     cls_w = class_weights(train_dataset).astype(np.float32)

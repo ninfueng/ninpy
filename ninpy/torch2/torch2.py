@@ -15,11 +15,11 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.tensorboard.writer import hparams
 
-from ..common import multilv_getattr
-from ..data import AttributeOrderedDict
-from ..experiment import set_experiment
-from ..log import set_logger
-from ..yaml2 import load_yaml, name_experiment
+from ninpy.common import multilv_getattr
+from ninpy.data import AttributeOrderedDict
+from ninpy.experiment import set_experiment
+from ninpy.log import set_logger
+from ninpy.yaml2 import load_yaml, name_experiment
 
 
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
