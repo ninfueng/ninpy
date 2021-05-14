@@ -18,6 +18,7 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 def get_imagenet_albumentations_transforms(
     crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
 ) -> Tuple[Callable, Callable]:
+    """TODO: find a way to work this with other."""
 
     if isinstance(crop_size, int):
         crop_size = (crop_size, crop_size)
@@ -58,8 +59,8 @@ def get_imagenet_transforms(
     normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
     train_transforms = transforms.Compose(
         [
-            transforms.RandomResizedCrop(resize_size),
-            transforms.RandomHorizontalFlip(crop_size),
+            transforms.RandomResizedCrop(resize_size[0]),
+            transforms.RandomHorizontalFlip(crop_size[0]),
             transforms.ToTensor(),
             normalize
         ]
@@ -67,8 +68,8 @@ def get_imagenet_transforms(
 
     val_transforms = transforms.Compose(
         [
-            transforms.Resize(resize_size),
-            transforms.CenterCrop(crop_size),
+            transforms.Resize(resize_size[0]),
+            transforms.CenterCrop(crop_size[0]),
             transforms.ToTensor(),
             normalize
         ]

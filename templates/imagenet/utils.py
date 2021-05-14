@@ -1,15 +1,12 @@
-#!usr/bin/env python
+#!usr/bin/env python3
 import logging
-from pathlib import Path
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from apex import amp
 from tqdm import tqdm
 
 from ninpy.common import RunningAverage
-from ninpy.torch_utils import set_warmup_lr
+from ninpy.torch2 import set_warmup_lr
 
 
 def warmup(

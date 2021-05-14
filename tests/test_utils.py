@@ -5,7 +5,7 @@ import torch
 from torchvision.models import alexnet, resnet18
 
 from ninpy.datasets import load_toy_dataset
-from ninpy.debug import get_imagenet_img
+from ninpy.debug import get_imagenet_image
 from ninpy.models import resnet20
 from ninpy.torch_utils import get_num_weight_from_name, topk_accuracy
 
@@ -13,7 +13,7 @@ from ninpy.torch_utils import get_num_weight_from_name, topk_accuracy
 def test_get_imagenet_img():
     r"""Checking for an example imagenet link is dead for not."""
     PRETRAINED = False
-    test_img = get_imagenet_img(preprocess=True)
+    test_img = get_imagenet_image(preprocess=True)
     model = alexnet(pretrained=PRETRAINED)
     out = model(test_img)[0]
     if PRETRAINED:
