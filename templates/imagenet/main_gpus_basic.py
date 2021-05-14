@@ -11,7 +11,7 @@ from utils import test, train, trainv2, warmup
 
 from ninpy.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
-from ninpy.torch_utils import (
+from ninpy.torch2 import (
     load_model,
     ninpy_setting,
     save_model,

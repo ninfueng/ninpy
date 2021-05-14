@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.tensorboard.writer import hparams
 
 from ninpy.common import multilv_getattr
 from ninpy.data import AttributeOrderedDict
@@ -61,6 +60,8 @@ def tensorboard_hparams(
     writer: SummaryWriter, hparam_dict: dict, metric_dict: dict
 ) -> None:
     """Modified: https://github.com/lanpa/tensorboardX/issues/479"""
+    # In PyTorch 1.2, this `hparams` is not supported.
+    from torch.utils.tensorboard.writer import hparams
     exp, ssi, sei = hparams(hparam_dict, metric_dict)
     writer.file_writer.add_summary(exp)
     writer.file_writer.add_summary(ssi)
