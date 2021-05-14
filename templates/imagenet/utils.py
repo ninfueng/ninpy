@@ -86,10 +86,10 @@ def trainv2(
 
         # optimizer.zero_grad(set_to_none=True)
         optimizer.zero_grad()
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
+        # with amp.scale_loss(loss, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
             # nn.utils.clip_grad_norm_(model.parameters(), 5)
-
+        loss.backward()
         optimizer.step()
         acc = (output.argmax(-1) == target).float().sum()
         avgloss.update(loss, batch_size)
