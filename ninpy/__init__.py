@@ -13,6 +13,5 @@ from . import (
     losses,
     models,
     resize,
-    torch_utils,
     yaml2,
 )
