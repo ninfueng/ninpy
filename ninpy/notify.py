@@ -4,7 +4,7 @@ import warnings
 
 from knockknock import desktop_sender, slack_sender
 
-from .crypto import decrypt
+from ninpy.crypto import decrypt
 
 ENCRYPTED_SLACK_WEBHOOK = "gAAAAABgbT7--YUvDqt93ONtkIlMHNRRTOx0pXa5RIbGVJqc_7N74mY0erv8VbLKCC020xMIQwlzv4R_RwPBtwdhs7tdZ7-K8e7SmHt7lLZB3MV_JBkTKz6hFpM8eDMCvU5JO7qfykm-gu0M_eINQV_4cXrkBX162f-4wLmDnPti6RhURFz0yvjuG4r9AXueeRt8l_6kcIcG"
 

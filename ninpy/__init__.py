@@ -12,7 +12,6 @@ from . import (
     log,
     losses,
     models,
-    notify,
     resize,
     torch_utils,
     yaml2,

@@ -104,4 +104,5 @@ def assertall(obj, func, *attrs):
 class DuplicationWarning(UserWarning):
     """Warning for Duplicated function or class that considered to be remove
     in future iteration."""
+
     pass

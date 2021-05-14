@@ -4,10 +4,10 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
-from hyperopt import Trials, fmin, hp, tpe
 
 from ninpy.job import launch_job
 from ninpy.yaml2 import dict2str, load_yaml
+
 # from .job import launch_job
 # from .yaml2 import dict2str, load_yaml
 
@@ -59,6 +59,8 @@ def temp_objective(
 
 
 if __name__ == "__main__":
+    from hyperopt import Trials, fmin, hp, tpe
+
     NUM_TUNING = 80
     SEED = 2021
 

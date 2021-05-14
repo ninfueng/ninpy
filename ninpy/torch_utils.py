@@ -23,6 +23,7 @@ from .yaml2 import load_yaml, name_experiment
 
 warnings.warn("torch_utils is duplicated with torch2.")
 
+
 def torch2numpy(x: torch.Tensor) -> np.ndarray:
     r"""Converting torch format tensor to `numpy` or `tensorflow` format."""
     assert isinstance(x, torch.Tensor)

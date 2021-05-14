@@ -3,8 +3,10 @@ import logging
 import os
 from functools import reduce
 from multiprocessing import Pool, cpu_count
-from typing import List
+from typing import List, Tuple
 
+import albumentations as A
+import torch
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
@@ -111,6 +113,19 @@ class BurstImageFolder(ImageFolder):
     @staticmethod
     def _identity(x):
         return x
+
+
+class WrappedCompose(A.Compose):
+    """Designed to make albumentations operate with Dataset provided by PyTorch
+    >>> compose = WrappedCompose([ToTensorV2()])
+    >>> output = compose(np.zeros((32, 32, 3)))
+    """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, image, **kwargs) -> Tuple[torch.Tensor, ...]:
+        return super().__call__(image=image, **kwargs)
 
 
 if __name__ == "__main__":

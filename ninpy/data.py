@@ -27,6 +27,7 @@ class AttributeDict(dict):
     {'d': 2, 'test': 5}
     ```
     """
+
     __slots__ = ()
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
@@ -137,6 +138,7 @@ class AttrDict(OrderedDict):
     >>> attrdict.recursive[-1].test3.test4
     4
     """
+
     __slots__ = ()
     __getattr__ = OrderedDict.__getitem__
     __setattr__ = OrderedDict.__setitem__
@@ -162,6 +164,7 @@ class DictList(AttrDict):
     >>> dictlist.book0.append(10)
     >>> dictlist.to_csv('book.csv', 0)
     """
+
     def __init__(self, *args) -> None:
         [self.update({arg: []}) for arg in args]
 
@@ -217,7 +220,6 @@ class DictList(AttrDict):
         raise NotImplementedError("Not supported yet.")
 
 
-
 if __name__ == "__main__":
     dictlist = DictList("book0", "book1")
     dictlist.book0.append(1)
@@ -226,7 +228,8 @@ if __name__ == "__main__":
     print(test_dict)
     print(dictlist.to_dict())
 
-    attrdict = AttrDict({"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
+    attrdict = AttrDict(
+        {"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]}
+    )
     print(attrdict.test)
     print(attrdict.recursive[-1].test3.test4)
-

@@ -5,6 +5,7 @@ from typing import Callable, Optional, Tuple
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from ninpy.datasets import WrappedCompose
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import ImageFolder
@@ -36,9 +37,9 @@ def get_imagenet_loaders(
     valdir = os.path.join(root, "val")
 
     if train_transforms is None:
-        train_transforms = A.Compose(
+        train_transforms = WrappedCompose(
             [
-                A.RandomResizedCrop(resize_size),
+                A.RandomResizedCrop(resize_size, resize_size),
                 A.HorizontalFlip(),
                 A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                 ToTensorV2(),
@@ -46,14 +47,15 @@ def get_imagenet_loaders(
         )
 
     if val_transforms is None:
-        val_transforms = A.Compose(
+        val_transforms = WrappedCompose(
             [
-                A.Resize(crop_size),
-                A.CenterCrop(resize_size),
+                A.Resize(crop_size, crop_size),
+                A.CenterCrop(resize_size, resize_size),
                 A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                 ToTensorV2(),
             ]
         )
+
     train_dataset = ImageFolder(traindir, train_transforms)
     val_dataset = ImageFolder(valdir, val_transforms)
 
@@ -78,7 +80,6 @@ def get_imagenet_loaders(
         num_workers=num_workers,
         pin_memory=True,
     )
-
     return train_loader, val_loader
 
 
