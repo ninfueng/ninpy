@@ -31,8 +31,9 @@ def warmup(
             batch_size = target.shape[0]
             loss = criterion(output, target)
 
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+            # with amp.scale_loss(loss, optimizer) as scaled_loss:
+                #scaled_loss.backward()
+            loss.backward()
                 # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
             optimizer.step()
@@ -54,10 +55,11 @@ def train(
         loss = criterion(output, target)
 
         optimizer.zero_grad(set_to_none=True)
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
-            # nn.utils.clip_grad_norm_(model.parameters(), 5)
+        # with amp.scale_loss(loss, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
+        #     # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
+        loss.backward()
         optimizer.step()
         # TODO: find all metric to check with.
         acc = (output.argmax(-1) == target).float().sum()
