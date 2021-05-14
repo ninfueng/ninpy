@@ -77,7 +77,7 @@ def trainv2(
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
     for data, target in tqdm(train_loader):
-        data, target = data.to(device), target.to(device)
+        data, target = data.to("cuda"), target.to("cuda")
         output = model(data)
         batch_size = target.shape[0]
         loss = criterion(output, target)
@@ -107,7 +107,7 @@ def test(
     model.eval()
     with torch.no_grad():
         for data, target in tqdm(test_loader):
-            data, target = data.to(device), target.to(device)
+            data, target = data.to("cuda"), target.to("cuda")
             batch_size = target.shape[0]
             output = model(data)
 
