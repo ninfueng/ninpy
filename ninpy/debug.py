@@ -3,15 +3,15 @@
 """
 @author: Ninnart Fuengfusin
 """
+import os
 import urllib
 
-import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
 
 
-def get_imagenet_img(preprocess: bool = False) -> torch.Tensor:
+def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:
     """From: https://pytorch.org/hub/pytorch_vision_alexnet/
     https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
     Correct label should be 258 or Samoyed, Samoyede.
@@ -40,4 +40,5 @@ def get_imagenet_img(preprocess: bool = False) -> torch.Tensor:
             ]
         )
         input_image = preprocess(input_image).unsqueeze(0)
+    os.remove(filename)
     return input_image

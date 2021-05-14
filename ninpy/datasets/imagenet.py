@@ -1,21 +1,18 @@
 """Basic imagenet functions."""
 import os
 from multiprocessing import cpu_count
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Union
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from ninpy.datasets import WrappedCompose
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
+from torchvision import transforms
 from torchvision.datasets import ImageFolder
-
-from ninpy.datasets import WrappedCompose
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
-
-
-from typing import Callable, Tuple, Union
 
 
 def get_imagenet_albumentations_transforms(
@@ -48,16 +45,48 @@ def get_imagenet_albumentations_transforms(
     return train_transforms, val_transforms
 
 
+def get_imagenet_transforms(
+    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
+) -> Tuple[Callable, Callable]:
+
+    if isinstance(crop_size, int):
+        crop_size = (crop_size, crop_size)
+    if isinstance(resize_size, int):
+        resize_size = (resize_size, resize_size)
+    assert len(crop_size) == 2
+    assert len(resize_size) == 2
+    normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
+    train_transforms = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(resize_size),
+            transforms.RandomHorizontalFlip(crop_size),
+            transforms.ToTensor(),
+            normalize
+        ]
+    )
+
+    val_transforms = transforms.Compose(
+        [
+            transforms.Resize(resize_size),
+            transforms.CenterCrop(crop_size),
+            transforms.ToTensor(),
+            normalize
+        ]
+    )
+    return train_transforms, val_transforms
+
+
 def get_imagenet_loaders(
     root: str,
     batch_size: int,
     num_workers: int = cpu_count(),
-    crop_size: Union[int, Tuple[int, int]]= 256,
+    crop_size: Union[int, Tuple[int, int]] = 256,
     resize_size: Union[int, Tuple[int, int]] = 224,
     distributed: bool = False,
     train_transforms: Optional[Callable] = None,
     val_transforms: Optional[Callable] = None,
 ) -> Tuple[DataLoader, DataLoader]:
+
     """Get ImageNet loaders by using ImageFolder."""
     assert isinstance(root, str)
     assert isinstance(batch_size, int)
@@ -69,11 +98,11 @@ def get_imagenet_loaders(
     root = os.path.expanduser(root)
     traindir = os.path.join(root, "train")
     valdir = os.path.join(root, "val")
-
     (
         default_train_transforms,
         default_val_transforms,
-    ) = get_imagenet_albumentations_transforms(crop_size, resize_size)
+    ) = get_imagenet_transforms(crop_size, resize_size)
+
     if train_transforms is None:
         train_transforms = default_train_transforms
     if val_transforms is None:
@@ -117,5 +146,11 @@ if __name__ == "__main__":
     # for x, y in tqdm(dataset):
     #     pass
     # print(x, y)
-    pass
 
+    from ninpy.debug import get_imagenet_img
+
+    img = get_imagenet_img(preprocess=False)
+    print(img)
+    train_transforms, val_transforms = get_imagenet_albumentations_transforms(256, 224)
+    output = train_transforms(img)
+    print(output)
