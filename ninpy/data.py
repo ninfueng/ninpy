@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from ninpy.common import DuplicationWarning
+from ninpy.error import DuplicationWarning
 
 
 class AttributeDict(dict):
@@ -213,6 +213,7 @@ class DictList(AttrDict):
 
     def to_tensorboard(self) -> None:
         # TODO: support a tensorboard. Expected idx as epoch.
+        # Using idx of list with add scalar with for loop.
         raise NotImplementedError("Not supported yet.")
 
     def to_yaml() -> None:

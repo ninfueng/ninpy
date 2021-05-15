@@ -1,3 +1,4 @@
+#!usr/bin/env python3
 """Basic cryptography to encode or decode a string with a key.
 Modified: https://stackoverflow.com/questions/2490334/simple-way-to-encode-a-string-according-to-a-password
 """

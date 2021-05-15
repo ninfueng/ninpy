@@ -6,10 +6,11 @@
 import argparse
 import logging
 import time
+from typing import Callable
 
 
 def str2bool(v: str) -> bool:
-    r"""From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    """From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     Put str2bool as a type of argparse to able to receive true or false as input.
     """
     if isinstance(v, bool):
@@ -24,12 +25,12 @@ def str2bool(v: str) -> bool:
         raise argparse.ArgumentTypeError(f"Boolean value is expected. Your input: {v}")
 
 
-def timewrap(func):
-    r"""Wrapper of function to printing out the running of the wrapped function."""
+def timewraper(fn: Callable) -> Callable:
+    """Wrapper of function to printing out the running of the wrapped function."""
 
     def wrapped(*args, **kwargs):
         t1 = time.time()
-        func = func(*args, **kwargs)
+        func = fn(*args, **kwargs)
         t2 = time.time() - t1
         logging.info(
             f'Wrapper of {func.__name__}: Run with timer: \
@@ -99,10 +100,3 @@ def assertall(obj, func, *attrs):
     """
     assert callable(func)
     return all([func(obj, attr) for attr in attrs])
-
-
-class DuplicationWarning(UserWarning):
-    """Warning for Duplicated function or class that considered to be remove
-    in future iteration."""
-
-    pass

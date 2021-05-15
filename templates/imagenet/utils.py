@@ -32,9 +32,9 @@ def warmup(
             loss = criterion(output, target)
 
             # with amp.scale_loss(loss, optimizer) as scaled_loss:
-                #scaled_loss.backward()
+            # scaled_loss.backward()
             loss.backward()
-                # nn.utils.clip_grad_norm_(model.parameters(), 5)
+            # nn.utils.clip_grad_norm_(model.parameters(), 5)
 
             optimizer.step()
             acc = (output.argmax(-1) == target).float().sum()
@@ -88,7 +88,7 @@ def trainv2(
         optimizer.zero_grad()
         # with amp.scale_loss(loss, optimizer) as scaled_loss:
         #     scaled_loss.backward()
-            # nn.utils.clip_grad_norm_(model.parameters(), 5)
+        # nn.utils.clip_grad_norm_(model.parameters(), 5)
         loss.backward()
         optimizer.step()
         acc = (output.argmax(-1) == target).float().sum()

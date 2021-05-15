@@ -6,12 +6,13 @@ import argparse
 import logging
 import os
 import random
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.modules.batchnorm import _BatchNorm
+from torch.nn.modules.batchnorm import _BatchNorm, _NormBase
+from torch.nn.modules.conv import _ConvNd
 from torch.utils.tensorboard import SummaryWriter
 
 from ninpy.common import multilv_getattr
@@ -62,7 +63,9 @@ def tensorboard_hparams(
 ) -> None:
     """Modified: https://github.com/lanpa/tensorboardX/issues/479"""
     # In PyTorch 1.2, this `hparams` is not supported.
+    # This should not affect a performance because this function should be applied only once.
     from torch.utils.tensorboard.writer import hparams
+
     exp, ssi, sei = hparams(hparam_dict, metric_dict)
     writer.file_writer.add_summary(exp)
     writer.file_writer.add_summary(ssi)
@@ -328,35 +331,55 @@ def load_model(
 
 
 def add_weight_decay(
-    model: nn.Module, weight_decay: float, skip_list=(), verbose: bool = True
-) -> None:
-    r"""Adding weight decay by avoiding batch norm and all bias.
-    From:
-        https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/3
-        https://www.dlology.com/blog/bag-of-tricks-for-image-classification-with-convolutional-neural-networks-in-keras/
-        https://github.com/pytorch/pytorch/issues/1402
-    Example:
-    >>> add_weight_decay(model, 4e-5, (''))
-    """
-    assert isinstance(weight_decay, float)
+    model: nn.Module, weight_decay: float
+) -> List[Dict[str, torch.Tensor]]:
+    """Adding weight decay by avoiding batch norm and all bias."""
 
-    decay, no_decay = [], []
-    for name, param in model.named_parameters():
-        if not param.requires_grad:
-            # Skip frozen weights or not require grad variables.
-            continue
-        if len(param.shape) == 1 or name.endswith(".bias") or name in skip_list:
-            no_decay.append(param)
-            if verbose:
-                logging.info(f"Skipping the weight decay on: {name}.")
+    decay_group, not_decay_group, skip_group = [], [], []
+    for m in model.modules():
+        if isinstance(m, (nn.Linear, _ConvNd)):
+            decay_group.append(m.weight)
+            if m.bias is not None:
+                not_decay_group.append(m.bias)
+        elif isinstance(m, _NormBase):
+            if m.weight is not None:
+                not_decay_group.append(m.weight)
+            if m.bias is not None:
+                not_decay_group.append(m.bias)
         else:
-            decay.append(param)
+            skip_group.append(m)
+    assert len(list(model.parameters())) == len(decay_group) + len(
+        not_decay_group
+    ), "Number of detected parameters are not equal,"
+    f"maybe in some of these parameters in this list: {m}"
 
-    assert len(list(model.parameters())) == len(decay) + len(no_decay)
     return [
-        {"params": no_decay, "weight_decay": 0.0},
-        {"params": decay, "weight_decay": weight_decay},
+        {"params": not_decay_group, "weight_decay": 0.0},
+        {"params": decay_group, "weight_decay": weight_decay},
     ]
+
+
+def init_weights(model: nn.Module) -> None:
+    """Initialize weights and biases depending on the type of layer.
+    https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenetv2.py
+    https://github.com/aliyun/alibabacloud-quantization-networks/blob/master/models/alexnet_all.py
+    """
+    for m in model.modules():
+        if isinstance(m, _ConvNd):
+            # a = 0, in case of leaky relu consider change this.
+            nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0.0)
+        elif isinstance(m, _NormBase):
+            nn.init.ones_(m.weight)
+            nn.init.zeros_(m.bias)
+            # Same as PyTorch hyper-parameters.
+            m.eps = 1e-5
+            m.momentum = 0.1
+        elif isinstance(m, nn.Linear):
+            nn.init.normal_(m.weight, 0, 0.01)
+            if m.bias is not None:
+                nn.init.zeros_(m.bias)
 
 
 def set_warmup_lr(
@@ -442,20 +465,8 @@ def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None
                 logging.info(f"Layer: {name} was freeze.")
 
 
-def normal_init(m):
-    r"""From: https://github.com/pytorch/examples/blob/master/dcgan/main.py
-    >>> model.apply(normal_init)
-    """
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
-        torch.nn.init.normal_(m.weight, 0.0, 0.02)
-    elif classname.find("BatchNorm") != -1:
-        torch.nn.init.normal_(m.weight, 1.0, 0.02)
-        torch.nn.init.zeros_(m.bias)
-
-
 def get_num_weight_from_name(model: nn.Module, name: str, verbose: bool = True) -> list:
-    r"""Get a number of weight from a name of module.
+    """Get a number of weight from a name of module.
     >>> model = resnet18(pretrained=False)
     >>> num_weight = get_num_weight_from_name(model, 'fc')
     """
@@ -467,13 +478,8 @@ def get_num_weight_from_name(model: nn.Module, name: str, verbose: bool = True) 
     return num_weights
 
 
-class EarlyStoppingException(Exception):
-    r"""Exception for catching early stopping. For exiting out of loop."""
-    pass
-
-
 class CheckPointer(object):
-    r"""TODO: Adding with optimizer, model save, and unittest."""
+    """TODO: Adding with optimizer, model save, and unittest."""
 
     def __init__(
         self, task: str = "max", patience: int = 10, verbose: bool = True
@@ -530,6 +536,7 @@ class CheckPointer(object):
 
 class SummaryWriterDictList(SummaryWriter):
     """SummaryWriter with support the adding multiple scalers to dictlist."""
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 

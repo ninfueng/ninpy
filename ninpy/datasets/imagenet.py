@@ -5,11 +5,12 @@ from typing import Callable, Optional, Tuple, Union
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from ninpy.datasets import WrappedCompose
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
+
+from ninpy.datasets import WrappedCompose
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -62,7 +63,7 @@ def get_imagenet_transforms(
             transforms.RandomResizedCrop(resize_size[0]),
             transforms.RandomHorizontalFlip(crop_size[0]),
             transforms.ToTensor(),
-            normalize
+            normalize,
         ]
     )
 
@@ -71,7 +72,7 @@ def get_imagenet_transforms(
             transforms.Resize(resize_size[0]),
             transforms.CenterCrop(crop_size[0]),
             transforms.ToTensor(),
-            normalize
+            normalize,
         ]
     )
     return train_transforms, val_transforms
@@ -99,10 +100,9 @@ def get_imagenet_loaders(
     root = os.path.expanduser(root)
     traindir = os.path.join(root, "train")
     valdir = os.path.join(root, "val")
-    (
-        default_train_transforms,
-        default_val_transforms,
-    ) = get_imagenet_transforms(crop_size, resize_size)
+    (default_train_transforms, default_val_transforms,) = get_imagenet_transforms(
+        crop_size, resize_size
+    )
 
     if train_transforms is None:
         train_transforms = default_train_transforms
