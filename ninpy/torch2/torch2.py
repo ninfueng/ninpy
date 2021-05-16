@@ -14,6 +14,7 @@ import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm, _NormBase
 from torch.nn.modules.conv import _ConvNd
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import _LRScheduler
 
 from ninpy.common import multilv_getattr
 from ninpy.data import AttributeOrderedDict
@@ -124,16 +125,6 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
         torch.backends.cudnn.deterministic = True
     if verbose:
         logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
-
-
-def speed_torch():
-    """For speed training without using any random seeds.
-
-    Example:
-    >>> speed_torch()
-    """
-    torch.backends.cudnn.deterministic = False
-    torch.backends.cudnn.benchmark = True
 
 
 def ninpy_setting(
@@ -425,16 +416,6 @@ def make_onehot(input, num_classes: int):
     return result
 
 
-def get_batchnorm_names(module: nn.Module) -> List[str]:
-    r"""Designed for using with `add_weight_decay` as `skip_list`."""
-    name_bn_modules = []
-    for n, m in module.named_modules():
-        if isinstance(m, _BatchNorm):
-            name_bn_modules.append(n + ".bias")
-            name_bn_modules.append(n + ".weight")
-    return name_bn_modules
-
-
 def set_batchnorm_eval(m) -> None:
     r"""From: https://discuss.pytorch.org/t/cannot-freeze-batch-normalization-parameters/38696
     Ex:
@@ -445,10 +426,8 @@ def set_batchnorm_eval(m) -> None:
         m.eval()
 
 
-def freeze_batchnorm(m) -> None:
-    r"""
-    Ex:
-    >>> model.apply(freeze_batchnorm)
+def freeze_batchnorm(m: nn.Module) -> None:
+    """>>> model.apply(freeze_batchnorm)
     """
     classname = m.__class__.__name__
     if classname.find("BatchNorm") != -1:
@@ -555,3 +534,28 @@ class SummaryWriterDictList(SummaryWriter):
                 self.add_scalar(str(key), kwargs[key], counter)
             else:
                 self.add_scalar(str(key), kwargs[key])
+
+
+class BatchWarmupScheduler(_LRScheduler):
+    """Batch-wise warmup learning rate.
+    Use this after another scheduler, otherwise the learning rate may be weird.
+    """
+    def __init__(self, optimizer: torch.optim, train_loader: torch.utils.data.DataLoader, warmup_epochs: int, last_epoch: int=-1, verbose=False) -> None:
+        self.warmup_batchs = self._get_warmup_batchs(train_loader, warmup_epochs)
+        super().__init__(optimizer, last_epoch, verbose)
+
+    def get_lr(self) -> None:
+        assert self.warmup_batchs >= self.last_epoch, f"Number of step is more than number of warmup_steps: {self.warmup_steps}"
+        if self.last_epoch == 0:
+            # Settings for initial learning rate.
+            return [0.0 for _ in self.optimizer.param_groups]
+        elif self.last_epoch == 1:
+            # Make sure that initial learning rate is correct with other schedulers.
+            # This if cause can protect only a scheduler only!
+            return [0.0 + 1/self.warmup_steps for _ in self.optimizer.param_groups]
+        # After each step adding 1/self.warmup_steps.
+        return [1/self.warmup_steps + group["lr"] for group in self.optimizer.param_groups]
+
+    def _get_warmup_batchs(self, train_loader: torch.utils.data.DataLoader , warmup_epochs: int) -> int:
+        warmup_batchs = len(train_loader) * warmup_epochs
+        return warmup_batchs
