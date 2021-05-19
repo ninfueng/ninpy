@@ -1,17 +1,20 @@
 # Ninpy #
 
-My collection of reuse-able Python scripts and others.
+My collection of reuse-able Python functions, classes and scripts.
 
 ## Install ##
 
+### Using pip install ###
+
 ```bash
 pip install ninpy
-
 ```
-Or,
+
+### Local install ###
+
 ```bash
 git clone https://github.com/ninfueng/ninpy
-cd ninpy
+cd ninpy/
 python setup.py develop
 ```
 
