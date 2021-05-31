@@ -15,7 +15,6 @@ def str2bool(v: str) -> bool:
     """
     if isinstance(v, bool):
         return v
-
     lower = v.lower()
     if lower in ("yes", "true", "t", "y", "1"):
         return True

@@ -5,8 +5,9 @@ import torch.nn as nn
 
 
 class DataParallel(nn.DataParallel):
-    """Allows DataParallel to access attributes.
-    Modified: https://github.com/pytorch/pytorch/issues/16885"""
+    """This DataParallel allows to access any attributes from the module.
+    This class is not necessary for a newer version of DataParallel.
+    """
 
     def __getattr__(self, name: str) -> Callable:
         try:

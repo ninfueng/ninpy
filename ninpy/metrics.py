@@ -1,4 +1,4 @@
-# miou and dice coefficient confustion matrix.
+"""Miou and Dice coefficient confusion matrix."""
 import numpy as np
 
 
@@ -9,12 +9,12 @@ class ConfusionMatrix:
         https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/utils/metrics.py
     """
 
-    def __init__(self, num_classes):
+    def __init__(self, num_classes: int) -> None:
         self.num_classes = num_classes
         # Row predict, Column true.
         self.confusion_matrix = np.zeros((self.num_classes, self.num_classes))
 
-    def update(self, pred, true):
+    def update(self, pred, true) -> None:
         assert pred.shape == true.shape
         mask = (true >= 0) & (true < self.num_classes)
         pred, true = pred[mask], true[mask]
@@ -40,5 +40,5 @@ class ConfusionMatrix:
         iou = correct / (pred_numel + true_numel - correct)
         return np.nanmean(iou)
 
-    def reset(self):
+    def reset(self) -> None:
         self.confusion_matrix = np.zeros(self.num_classes, self.num_classes)

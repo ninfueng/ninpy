@@ -1,6 +1,7 @@
 """Basic Notify script."""
 import os
 import warnings
+from typing import Any, Dict
 
 from knockknock import desktop_sender, slack_sender
 
@@ -13,10 +14,10 @@ try:
     SLACK_WEBHOOK = decrypt(ENCRYPTED_SLACK_WEBHOOK.encode(), key.encode())
 except KeyError:
     warnings.warn(
-        f"Environment variable `SLACK_KEY` is not found."
-        f'Please put `export SLACK_KEY="KEY_VALUE".'
+        "Environment variable `SLACK_KEY` is not found."
+        "Please put `export SLACK_KEY='KEY_VALUE'."
     )
-    SLACK_WEBHOOK = ""
+    SLACK_WEBHOOK = "UNKNOWN"
 
 
 @desktop_sender(title="Training was done!!!")
@@ -25,7 +26,7 @@ except KeyError:
     channel="tracking-training",
     user_mentions=["@binmanager"],
 )
-def basic_notify(results_dict: dict) -> dict:
+def basic_notify(results_dict: Dict[Any]) -> Dict[Any]:
     """Basic wrapper function to notify to both slack and desktop."""
     assert isinstance(results_dict, dict)
     return results_dict

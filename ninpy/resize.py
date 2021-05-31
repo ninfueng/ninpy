@@ -19,7 +19,7 @@ class ImageResizer:
     >>> img_resize.gen_resize_imgs((256, 256))
     """
 
-    def __init__(self, filetype: str = "*.png"):
+    def __init__(self, filetype: str = "*.png") -> None:
         assert isinstance(filetype, str)
         assert filetype.find("*") > -1, "Need to have a wildcard to find images."
 

@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-@author: Ninnart Fuengfusin
-"""
+"""@author: Ninnart Fuengfusin"""
 import sys
 import time
+from typing import Any, Dict
 
 import yaml
 
-from .data import AttributeOrderedDict
+from ninpy.data import AttrDict
 
 
-def load_yaml(yaml_file: str, with_attribute: bool = False) -> dict:
-    """Refer: https://stackabuse.com/reading-and-writing-yaml-to-a-file-in-python/
+def load_yaml(yaml_file: str, with_attrdict: bool = True) -> dict:
+    """Load a yaml file with an option to load into AttrDict or not.
     Example:
-    ```
     >>> load_yaml('./config.yaml')
-    ```
     """
     assert isinstance(yaml_file, str)
+    assert isinstance(with_attrdict, bool)
     with open(yaml_file, "r") as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
-    if with_attribute:
-        # TODO: recursive find dict and convert it into Attribute type.
-        # Not work with dict in dict.
-        data = AttributeOrderedDict(data)
+    if with_attrdict:
+        data = AttrDict(data)
     return data
 
 
@@ -33,10 +28,8 @@ def dump_yaml(input: dict, save_loc: str) -> None:
     Designed to dump hyper parameters or results as yaml file.
     TODO: update to support automatically convert object type to python type.
     Example:
-    ```
     >>> input = load_yaml('./config.yaml')
     >>> dump_yaml(input, './config2.yaml')
-    ```
     """
     assert isinstance(save_loc, str)
     assert isinstance(input, dict)
@@ -44,14 +37,12 @@ def dump_yaml(input: dict, save_loc: str) -> None:
         yaml.dump(input, f)
 
 
-def dict2str(input: dict) -> str:
-    r"""Given a dict recursively includes all parameters into a string.
+def dict2str(input: Dict[str, Any]) -> str:
+    """Given a dict recursively includes all parameters into a string.
     `::` subdict, `:` dict, and - next var.
     Example:
-    ```
     >>> v = dict2str({1:2, 3:4, 5:{6:7}, 8:{9:{10:11}}})
     '1:2-3:4-5::6:7-8::9::10:11-'
-    ```
     Args:
         input (dict): dict to reduce to a string.
     Return:
@@ -101,26 +92,3 @@ def name_experiment(hparams: dict) -> str:
     if len(exp_pth) > 255:
         exp_pth = exp_pth[0:254]
     return exp_pth
-
-
-if __name__ == "__main__":
-    import argparse
-    import os
-
-    test_dict = {1: 2, 3: 4, 5: {6: 7}, 8: {9: {10: 11}}}
-    LOAD_CONFIG = "test_dumped.yaml"
-
-    dump_yaml(test_dict, LOAD_CONFIG)
-    loaded_dict = load_yaml(LOAD_CONFIG)
-    assert test_dict == loaded_dict
-    print(dict2str(test_dict))
-
-    parser = argparse.ArgumentParser(description="Test config.")
-    parser.add_argument("--var0", type=int, default=1)
-    parser.add_argument("--var1", type=int, default=2)
-    args = parser.parse_args()
-
-    args_str = args2str(args)
-    print(args_str)
-
-    os.remove(LOAD_CONFIG)

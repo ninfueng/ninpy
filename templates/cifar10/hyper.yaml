@@ -1,0 +1,28 @@
+epochs: 150
+init_lr: 1e-3
+weight_decay: 1e-4
+train_batch: 256
+test_batch: 256
+num_workers: 10 # 20
+step_size:
+  - 50
+  - 100
+seed: 2021
+opt_lv: "O0"
+save_epoch: 100
+step_down_rate: 0.1
+num_classes: 10
+load: false
+# dataset_dir: "/groups/gcc50527/ninnart/datasets/imagenet256"
+dataset_dir: "/home/tm_ninnart16/datasets/imagenet"
+load_dir: ""
+
+distributed: false
+# Total number of GPU
+world_size: 4
+backend: "nccl"
+# Trying with arbitary tcp not work!
+init_method: "tcp://127.0.0.1:2021"
+
+resume: false
+resume_path: ""

@@ -5,7 +5,7 @@ clean:
 	rm -rf *.egg-info
 
 	find . -iname "__pycache__" | xargs rm -rf
-	find . -iname "pytest_cache" | xargs rm -rf
+	find . -iname ".pytest_cache" | xargs rm -rf
 	find . -iname ".mypy_cache" | xargs rm -rf
 
 format:

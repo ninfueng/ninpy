@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """@author: Ninnart Fuengfusin"""
 # TODO: remove torch_utils.py after code-base stable.
 import argparse
@@ -11,13 +10,13 @@ from typing import Callable, Dict, List, Optional, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.modules.batchnorm import _BatchNorm, _NormBase
+from torch.nn.modules.batchnorm import _NormBase
 from torch.nn.modules.conv import _ConvNd
-from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import _LRScheduler
+from torch.utils.tensorboard import SummaryWriter
 
 from ninpy.common import multilv_getattr
-from ninpy.data import AttributeOrderedDict
+from ninpy.data import AttrDict
 from ninpy.experiment import set_experiment
 from ninpy.log import set_logger
 from ninpy.yaml2 import load_yaml, name_experiment
@@ -144,7 +143,7 @@ def ninpy_setting(
     parser.add_argument("--exp_pth", type=str, default=exp_pth)
     args = parser.parse_args()
 
-    hparams = AttributeOrderedDict(load_yaml(args.yaml))
+    hparams = AttrDict(load_yaml(args.yaml))
     assert hasattr(hparams, "seed"), "yaml file should contain a seed attribute."
 
     if args.exp_pth == None:
@@ -540,22 +539,36 @@ class BatchWarmupScheduler(_LRScheduler):
     """Batch-wise warmup learning rate.
     Use this after another scheduler, otherwise the learning rate may be weird.
     """
-    def __init__(self, optimizer: torch.optim, train_loader: torch.utils.data.DataLoader, warmup_epochs: int, last_epoch: int=-1, verbose=False) -> None:
+
+    def __init__(
+        self,
+        optimizer: torch.optim,
+        train_loader: torch.utils.data.DataLoader,
+        warmup_epochs: int,
+        last_epoch: int = -1,
+        verbose=False,
+    ) -> None:
         self.warmup_batchs = self._get_warmup_batchs(train_loader, warmup_epochs)
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self) -> None:
-        assert self.warmup_batchs >= self.last_epoch, f"Number of step is more than number of warmup_steps: {self.warmup_steps}"
+        assert (
+            self.warmup_batchs >= self.last_epoch
+        ), f"Number of step is more than number of warmup_steps: {self.warmup_steps}"
         if self.last_epoch == 0:
             # Settings for initial learning rate.
             return [0.0 for _ in self.optimizer.param_groups]
         elif self.last_epoch == 1:
             # Make sure that initial learning rate is correct with other schedulers.
             # This if cause can protect only a scheduler only!
-            return [0.0 + 1/self.warmup_steps for _ in self.optimizer.param_groups]
+            return [0.0 + 1 / self.warmup_steps for _ in self.optimizer.param_groups]
         # After each step adding 1/self.warmup_steps.
-        return [1/self.warmup_steps + group["lr"] for group in self.optimizer.param_groups]
+        return [
+            1 / self.warmup_steps + group["lr"] for group in self.optimizer.param_groups
+        ]
 
-    def _get_warmup_batchs(self, train_loader: torch.utils.data.DataLoader , warmup_epochs: int) -> int:
+    def _get_warmup_batchs(
+        self, train_loader: torch.utils.data.DataLoader, warmup_epochs: int
+    ) -> int:
         warmup_batchs = len(train_loader) * warmup_epochs
         return warmup_batchs
