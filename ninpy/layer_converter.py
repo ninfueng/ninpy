@@ -13,18 +13,19 @@ class LayerConverter:
     Modified from:
         https://www.kaggle.com/c/aptos2019-blindness-detection/discussion/104686
     """
+
     @staticmethod
-    def convert_normalization(
+    def cvt_nor(
         model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None
     ) -> nn.Module:
-        r"""If num_groups is 1, GroupNorm turns into LayerNorm. If num_groups is None, GroupNorm turns into InstanceNorm
+        """If num_groups is 1, GroupNorm turns into LayerNorm. If num_groups is None, GroupNorm turns into InstanceNorm
         Example:
-        >>> LayerConverter.convert_normalization(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
+        >>> LayerConverter.cvt_nor(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.normalization(
+                model._modules[name] = LayerConverter.cvt_nor(
                     module,
                     old_layer_type,
                     new_layer_type,
@@ -47,10 +48,10 @@ class LayerConverter:
         return model
 
     @staticmethod
-    def convert_convolution(
+    def cvt_conv(
         model, old_layer_type, new_layer_type, convert_weights=False, **kwargs
     ) -> nn.Module:
-        r"""Example:
+        """Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
         >>> LayerConverter.convert_convolution(m, nn.Conv2d, nn.Conv1d)
@@ -58,7 +59,7 @@ class LayerConverter:
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_convolution(
+                model._modules[name] = LayerConverter.cvt_conv(
                     module, old_layer_type, new_layer_type, convert_weights, **kwargs
                 )
             # single module
@@ -86,10 +87,10 @@ class LayerConverter:
         return model
 
     @staticmethod
-    def convert_linear(
+    def cvt_linear(
         model, old_layer_type, new_layer_type, convert_weights=False, **kwargs
     ) -> nn.Module:
-        r"""Example:
+        """Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
         >>> LayerConverter.convert_linear(m, nn.Linear, BinLinear)
@@ -97,7 +98,7 @@ class LayerConverter:
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_linear(
+                model._modules[name] = LayerConverter.cvt_linear(
                     module, old_layer_type, new_layer_type, convert_weights, **kwargs
                 )
             # single module
@@ -121,19 +122,16 @@ class LayerConverter:
         return model
 
     @staticmethod
-    def convert_activation(
-        model, old_layer_type, new_layer_type, **kwargs
-    ) -> nn.Module:
-        r"""
-        Example:
+    def cvt_acti(model, old_layer_type, new_layer_type, **kwargs) -> nn.Module:
+        """Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
-        >>> LayerConverter.convert_activation(m, nn.ReLU, nn.ReLU6)
+        >>> LayerConverter.cvt_acti(m, nn.ReLU, nn.ReLU6)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.convert_activation(
+                model._modules[name] = LayerConverter.cvt_acti(
                     module, old_layer_type, new_layer_type, **kwargs
                 )
             # single module

@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Common functions.
-@author: Ninnart Fuengfusin
-"""
+"""@author: Ninnart Fuengfusin"""
 import argparse
-import logging
-import time
-from typing import Callable
 
 
 def str2bool(v: str) -> bool:
@@ -25,7 +20,7 @@ def str2bool(v: str) -> bool:
 
 
 def multilv_getattr(obj, multi_lv: str):
-    r"""Get multi-levels attribute.
+    """Get multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
@@ -39,7 +34,7 @@ def multilv_getattr(obj, multi_lv: str):
 
 
 def multilv_setattr(obj, multi_lv: str, set_with: object):
-    r"""Set multi-levels attribute.
+    """Set multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
@@ -75,7 +70,7 @@ class RunningAverage(object):
 
 
 def assertall(obj, func, *attrs):
-    r"""Created for `hasattr`, and etc.
+    """Created for `hasattr`, and etc.
     Not work with func with two arguments upper.
     """
     assert callable(func)

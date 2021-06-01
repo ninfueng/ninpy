@@ -27,7 +27,13 @@ lint:
 	pydocstyle .
 
 test:
-	cd tests
+	# TODO: support doctest.
+	@echo "Perform doctest"
+	# cd ninpy/
+	# find . -iname "*.py" | xargs python -m doctest -v
+	# cd -
+	@echo "Perform pytest."
+	cd tests/
 	pytest
 	cd -
 

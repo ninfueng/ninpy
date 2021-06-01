@@ -26,7 +26,7 @@ except KeyError:
     channel="tracking-training",
     user_mentions=["@binmanager"],
 )
-def basic_notify(results_dict: Dict[Any]) -> Dict[Any]:
+def basic_notify(results_dict: Dict[Any, Any]) -> Dict[Any, Any]:
     """Basic wrapper function to notify to both slack and desktop."""
     assert isinstance(results_dict, dict)
     return results_dict

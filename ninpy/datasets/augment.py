@@ -1,6 +1,7 @@
 from typing import Callable, Tuple, Union
 
 import albumentations as A
+import numpy as np
 import torch
 import torchvision.transforms as transforms
 from albumentations.pytorch import ToTensorV2
@@ -24,7 +25,7 @@ class ClassifyCompose(A.Compose):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def __call__(self, image, **kwargs) -> torch.Tensor:
+    def __call__(self, image: np.ndarray, **kwargs) -> torch.Tensor:
         aug = super().__call__(image=image, **kwargs)
         return aug["image"]
 
@@ -32,14 +33,16 @@ class ClassifyCompose(A.Compose):
 class SegmentCompose(A.Compose):
     """Designed to make albumentations operate with template Dataset provided by PyTorch
     >>> compose = SegmentCompose([ToTensorV2()])
-    >>> output, mask = compose(np.zeros((32, 32, 3)))
+    >>> output, mask = compose(np.zeros((32, 32, 3)), np.zeros((32, 32, 20)))
     TODO: Test case and check that can be used.
     """
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def __call__(self, image, mask, **kwargs) -> Tuple[torch.Tensor]:
+    def __call__(
+        self, image: np.ndarray, mask: np.ndarray, **kwargs
+    ) -> Tuple[torch.Tensor]:
         aug = super().__call__(image=image, mask=mask, **kwargs)
         return aug["image"], aug["mask"]
 
@@ -140,4 +143,3 @@ def get_imagenet_transforms(
         ]
     )
     return train_transforms, val_transforms
-

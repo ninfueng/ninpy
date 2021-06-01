@@ -37,7 +37,6 @@ class KITTIRoadDataset(Dataset):
         assert len(self.images) == len(self.masks)
 
     def __getitem__(self, index: int):
-        print(self.images[index])
         image = cv2.imread(self.images[index], cv2.IMREAD_COLOR)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(self.masks[index], cv2.IMREAD_COLOR)
