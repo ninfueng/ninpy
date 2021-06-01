@@ -14,20 +14,21 @@ from tqdm import tqdm
 
 
 def reduce_sum(x, y):
-    """Use instead of lambda for pickle-able."""
+    """Cannot use a lambda function for multi-thread processing.
+    This function is required for pickle-able functions."""
     return x + y
 
 
-def load_img_from_list(imgdirs: List[str]) -> List[str]:
-    """Load images from list of directories."""
-    imglist = []
+def load_images(imgdirs: List[str]) -> List[str]:
+    """Load images from a list of directories."""
+    imgs = []
     for d in tqdm(imgdirs):
         img = pil_loader(d)
-        imglist.append(img)
-    return imglist
+        imgs.append(img)
+    return imgs
 
 
-def mp_load_img_from_list(
+def multithread_load_images(
     imgdirs: List[str], num_workers=cpu_count()
 ) -> List[Image.Image]:
     """Multi-processing load images to list."""
@@ -37,7 +38,7 @@ def mp_load_img_from_list(
     imgdir_per_workers = [
         imgdirs[i : i + img_per_worker] for i in range(0, len(imgdirs), img_per_worker)
     ]
-    imgs = pool.map(load_img_from_list, imgdir_per_workers)
+    imgs = pool.map(load_images, imgdir_per_workers)
     # In case of pickle this function must not be a lambda function.
     imgs = reduce(reduce_sum, imgs)
     return imgs

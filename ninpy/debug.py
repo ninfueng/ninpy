@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-@author: Ninnart Fuengfusin
-"""
+"""@author: Ninnart Fuengfusin"""
 import os
 import urllib
 
 import torch
 from PIL import Image
+import matplotlib.pyplot as plt
 from torchvision import transforms
 
 
 def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:
-    """From: https://pytorch.org/hub/pytorch_vision_alexnet/
-    https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
-    Correct label should be 258 or Samoyed, Samoyede.
-    Download an imagenet image `dog.jpg` from Pytorch repository.
+    """Correct label should be `258` or `Samoyed, Samoyede`.
+    Download an imagenet image `dog.jpg` from PyTorch repository.
     Transform the image into PyTorch format and ready to process in Imagenet trained models.
     """
     url, filename = (
@@ -42,3 +38,23 @@ def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:
         input_image = preprocess(input_image).unsqueeze(0)
     os.remove(filename)
     return input_image
+
+
+def show_image(x: torch.Tensor, denormalize: bool = False) -> None:
+    """Show an image from torch format with an option to denormalize ImageNet normalized image.
+    For example:
+    >>> show_image(torch.zeros(3, 224, 224), False)
+    """
+    assert isinstance(x, torch.Tensor)
+    assert isinstance(denormalize, bool)
+    assert len(x.shape) == 3, f"Expect shape of x is 3, Your: {x.shape}"
+
+    if denormalize:
+        inverse_normalize = transforms.Normalize(
+            mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.255],
+            std=[1 / 0.229, 1 / 0.224, 1 / 0.255],
+        )
+        x = inverse_normalize(x)
+    x = x.transpose(0, 2).detach().cpu().numpy()
+    plt.imshow(x)
+    plt.show()

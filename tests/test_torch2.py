@@ -1,7 +1,37 @@
+import numpy as np
+import torch
 import torch.nn as nn
 from torchvision.models import resnet18
 
-from ninpy.torch2 import add_weight_decay
+from ninpy.torch2 import add_weight_decay, torch2np, np2torch
+
+
+def test_torch2np():
+    x = torch.zeros(1, 3, 32, 32)
+    res = torch2np(x)
+    assert res.shape == (1, 32, 32, 3)
+
+    x = torch.zeros(3, 32, 32)
+    res = torch2np(x)
+    assert res.shape == (32, 32, 3)
+
+    x = torch.zeros(3, 32)
+    res = torch2np(x)
+    assert res.shape == (32, 3)
+
+
+def test_np2torch():
+    x = np.zeros((32, 3))
+    res = np2torch(x)
+    assert tuple(res.shape) == (3, 32)
+
+    x = np.zeros((32, 32, 3))
+    res = np2torch(x)
+    assert tuple(res.shape) == (3, 32, 32)
+
+    x = np.zeros((1, 32, 32, 3))
+    res = np2torch(x)
+    assert tuple(res.shape) == (1, 3, 32, 32)
 
 
 class TestAddWeightDecay:

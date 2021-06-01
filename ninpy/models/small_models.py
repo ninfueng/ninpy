@@ -53,7 +53,8 @@ class MLP(nn.Module):
 
 
 class LeNet5(nn.Module):
-    r"""LeNet5 setting for toy datasets."""
+    """LeNet5 architecture designed for toy datasets."""
+
     # Can use self.ACTI_IDX and self.layers[idx] to manually change the layers.
     ACTI_IDX = [3, 7, 11, 14]
     WEIGHT_IDX = [0, 4, 9, 12, 15]

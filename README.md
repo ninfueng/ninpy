@@ -119,7 +119,6 @@ ninpy
 
 ## TODO ##
 
-* [ ] Reorganize torch2.
 * [ ] Adding base module with tensorboard tracking.
 * [ ] Dataset with tensorboard add_images.
 * [ ] Tensorboard with add_scalars with a dict input.
@@ -127,3 +126,6 @@ ninpy
 * [ ] Base dataset with from_txt and folder.
 * [ ] Burst read for all base dataset.
 * [ ] A script for adding license header to package using Makefile.
+* [ ] Make this tensorboard covers all statistic in each layer of NN.
+* [ ] Cover dry_run and eval_every_batch.
+* [ ] Updating hyperparameter tunning visualization.

@@ -3,15 +3,16 @@ import numpy as np
 
 
 class ConfusionMatrix:
-    """Confusion Matrix for tracking matrix.
+    """Confusion matrix for tracking segmentation metrics.
     TODO: dice loss and other?
     Modified:
         https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/utils/metrics.py
     """
 
     def __init__(self, num_classes: int) -> None:
+        assert isinstance(num_classes, int)
         self.num_classes = num_classes
-        # Row predict, Column true.
+        # Row-wise indicates predict classes, column-wise indicates true classes.
         self.confusion_matrix = np.zeros((self.num_classes, self.num_classes))
 
     def update(self, pred, true) -> None:
@@ -42,3 +43,10 @@ class ConfusionMatrix:
 
     def reset(self) -> None:
         self.confusion_matrix = np.zeros(self.num_classes, self.num_classes)
+
+    def plot(self) -> None:
+        import matplotlib.pyplot as plt
+        from seaborn import sns
+
+        sns.heatmap(self.confusion_matrix)
+        plt.show()

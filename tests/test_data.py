@@ -2,12 +2,12 @@ import os
 
 import pandas as pd
 
-from ninpy.data import AttrDict, AttributeOrderedDictList
+from ninpy.data import AttrDict, AttrDictList
 
 
-def test_attribute_ordered_dictlist():
+def test_attrdictlist():
     """"""
-    dictlist = AttributeOrderedDictList("book0", "book1")
+    dictlist = AttrDictList("book0", "book1")
     dictlist.book0.append(5)
     dictlist.book0.append(10)
 

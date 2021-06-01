@@ -8,6 +8,10 @@ clean:
 	find . -iname ".pytest_cache" | xargs rm -rf
 	find . -iname ".mypy_cache" | xargs rm -rf
 
+cleanexp:
+	@echo "Remove all experiment results"
+	find . -iname "2021:*" | xargs rm -rf
+
 format:
 	# TODO: consider autopep8, yapf and others.
 	@echo "Formatting Python files with black and isort."
@@ -28,6 +32,7 @@ test:
 	cd -
 
 publish:
+	@echo "Start publish to Pip."
 	python setup.py sdist
 	twine upload dist/*
 

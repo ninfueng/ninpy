@@ -1,3 +1,4 @@
+"""Hyper parameters search."""
 import glob
 import time
 from typing import Callable
@@ -7,9 +8,6 @@ import pandas as pd
 
 from ninpy.job import launch_job
 from ninpy.yaml2 import dict2str, load_yaml
-
-# from .job import launch_job
-# from .yaml2 import dict2str, load_yaml
 
 
 def suggest_hparams(input):
@@ -89,6 +87,3 @@ if __name__ == "__main__":
     df.to_csv(df_name, index=None)
     print(df)
     print(f"save this dataframe@{df_name}")
-
-if __name__ == "__main__":
-    pass

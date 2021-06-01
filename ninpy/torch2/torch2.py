@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """@author: Ninnart Fuengfusin"""
-# TODO: remove torch_utils.py after code-base stable.
 import argparse
 import logging
 import os
@@ -22,29 +21,34 @@ from ninpy.log import set_logger
 from ninpy.yaml2 import load_yaml, name_experiment
 
 
-def torch2numpy(x: torch.Tensor) -> np.ndarray:
-    r"""Converting torch format tensor to `numpy` or `tensorflow` format."""
+def torch2np(x: torch.Tensor) -> np.ndarray:
+    """Converting torch tensor format () to `numpy` or `tensorflow` format ()."""
     assert isinstance(x, torch.Tensor)
-    x = x.detach().cpu().numpy()
-    # TODO: check in case NLP 2 dim.
-    if len(x.shape) == 3:
-        x = np.transpose(x, (1, 2, 0))
-    elif len(x.shape) == 4:
-        x = np.transpose(x, (2, 3, 1, 0))
+    x = x.detach().cpu()
+    shape = x.shape
+    if len(shape) == 2:
+        x = torch.movedim(x, 1, 0)
+    elif len(shape) == 3:
+        x = torch.movedim(x, 0, 2)
+    elif len(shape) == 4:
+        x = x.permute(0, 2, 3, 1)
     else:
-        raise ValueError(
-            f"Not supporting with shape of {len(x.shape)},"
-            "please update this function to support it."
-        )
+        raise ValueError(f"Not supporting with shape of {len(shape)}.")
+    x = x.numpy()
     return x
 
-
-def numpy2torch(x: np.ndarray) -> torch.Tensor:
-    # TODO:
-    if len(x.shape) == 3:
-        x = np.moveaxis(x, -1, 0)
-    elif len(x.shape) == 4:
-        raise NotImplementedError()
+def np2torch(x: np.ndarray) -> torch.Tensor:
+    """"""
+    shape = x.shape
+    x = torch.as_tensor(x)
+    if len(shape) == 2:
+        x = torch.movedim(x, -1, 0)
+    elif len(shape) == 3:
+        x = torch.movedim(x, -1, 0)
+    elif len(shape) == 4:
+        x = x.permute(0, 3, 1, 2)
+    else:
+        raise ValueError(f"Not supporting with shape of {len(shape)}.")
     return x
 
 
@@ -70,7 +74,6 @@ def tensorboard_hparams(
     writer.file_writer.add_summary(exp)
     writer.file_writer.add_summary(ssi)
     writer.file_writer.add_summary(sei)
-
     for k, v in metric_dict.items():
         writer.add_scalar(os.path.join("hyperparameters", k), v)
 
@@ -117,11 +120,13 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
     torch.backends.cudnn.enabled = True
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
     if benchmark:
         # There is some optimized algorithm in case fixed size data.
         torch.backends.cudnn.benchmark = True
     else:
         torch.backends.cudnn.deterministic = True
+
     if verbose:
         logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
 
@@ -134,7 +139,7 @@ def ninpy_setting(
     benchmark: bool = False,
     verbose: bool = True,
 ) -> Tuple[dict, str, Callable]:
-    r"""Basic setting to utilize all features from ninpy.
+    """Basic initial setting to utilize all features from ninpy.
     Get args, path to experiment folder, and, SummaryWriter.
     """
     assert isinstance(name_parser, str)
@@ -145,7 +150,6 @@ def ninpy_setting(
 
     hparams = AttrDict(load_yaml(args.yaml))
     assert hasattr(hparams, "seed"), "yaml file should contain a seed attribute."
-
     if args.exp_pth == None:
         exp_pth = name_experiment(hparams)
     else:
@@ -156,7 +160,7 @@ def ninpy_setting(
     seed_torch(hparams.seed, benchmark=benchmark)
     writer = SummaryWriter(exp_pth)
     if verbose:
-        logging.info(f"Ninpy settings: hparams {hparams}@ {exp_pth}")
+        logging.info("Initial ninpy setting")
     return hparams, exp_pth, writer
 
 
@@ -546,7 +550,7 @@ class BatchWarmupScheduler(_LRScheduler):
         train_loader: torch.utils.data.DataLoader,
         warmup_epochs: int,
         last_epoch: int = -1,
-        verbose=False,
+        verbose: bool = False,
     ) -> None:
         self.warmup_batchs = self._get_warmup_batchs(train_loader, warmup_epochs)
         super().__init__(optimizer, last_epoch, verbose)

@@ -1,4 +1,3 @@
-torch-tb-profiler
 albumentations
 seaborn
 knockknock

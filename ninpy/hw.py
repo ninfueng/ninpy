@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 
-def measure_sparse(*ws) -> float:
+def measure_sparse(*ws) -> torch.Tensor:
     """Measure the sparsity of input tensors.
     TODO: unittest this function.
     Example:
@@ -14,8 +14,8 @@ def measure_sparse(*ws) -> float:
     ```
     """
     if not ws:
-        # Detecting in case, empty tuple of ws (max pooling or others).
-        # If able to detect assign the sparsity as zero.
+        # Detect in case, empty tuple of ws (max pooling or others).
+        # If cannot detect weights, then assign a sparsity as zero.
         sparse = torch.tensor(0.0)
     else:
         # In case, not empty tuple.
@@ -41,7 +41,7 @@ def measure_sparse(*ws) -> float:
     return sparse.item()
 
 
-def numpy2cpp(
+def np2cpp(
     array: np.ndarray,
     type_var: str,
     name_var: str,
@@ -77,7 +77,6 @@ def numpy2cpp(
     # Get stem and suffix from name_file.
     name_stem = Path(name_file)
     name_stem = name_stem.stem + name_stem.suffix
-
     with open(name_file, mode) as file:
         if header_guard:
             # Generate guard band for cpp header file.

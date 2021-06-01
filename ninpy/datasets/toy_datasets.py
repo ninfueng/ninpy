@@ -22,36 +22,16 @@ from torch.utils.data.dataset import Dataset
 
 MNIST_MEAN = 0.1307
 MNIST_STD = 0.3081
-# From: https://github.com/quark0/darts/blob/master/cnn/utils.py
-CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124)  # (0.4914, 0.4822, 0.4465)
-CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768)  # (0.2023, 0.1994, 0.2010)
+CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124)
+CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768)
 CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
 CIFAR100_STD = (0.2675, 0.2565, 0.2761)
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
-def show_img_torch(x: torch.Tensor, denormalize: bool = False) -> None:
-    r"""Show an image from torch format with an option to denormalize imagenet normalized image.
-    Refer: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/4
-    For example:
-    >>> show_img_torch(torch.zeros(3, 224, 224), False)
-    """
-    assert isinstance(denormalize, bool)
-    assert len(x.shape) == 3
-    if denormalize:
-        inv_normalize = transforms.Normalize(
-            mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.255],
-            std=[1 / 0.229, 1 / 0.224, 1 / 0.255],
-        )
-        x = inv_normalize(x)
-    x = x.transpose(0, 2).detach().cpu().numpy()
-    plt.imshow(x)
-    plt.show()
-
 
 def get_mnist_transforms() -> Tuple[Callable]:
-    r"""Modified: https://github.com/itayhubara/BinaryNet.pytorch/blob/master/main_mnist.py"""
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
     )

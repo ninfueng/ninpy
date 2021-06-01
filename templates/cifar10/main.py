@@ -33,7 +33,7 @@ if __name__ == "__main__":
         train_transforms=train_transforms,
         test_transforms=test_transforms,
     )
-    model = MLPMixer(image_size=32, patch_size=4, dim=512, depth=12, num_classes=10)
+    model = MLPMixer(image_size=32, patch_size=8, dim=512, depth=12, num_classes=10)
     writer.add_graph(model, torch.zeros(1, 3, 32, 32))
     model = model.to(device)
 
@@ -71,6 +71,6 @@ if __name__ == "__main__":
 
     logging.info(f"Best test accuracy: {best_acc}")
     metric_dict = {"best_acc": best_acc}
-    # tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
-    metric_dict.update(hparams.to_dict())
+    tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
+    metric_dict.update(hparams)
     # basic_notify(metric_dict)

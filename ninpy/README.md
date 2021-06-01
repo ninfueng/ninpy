@@ -29,9 +29,3 @@ acstime-hypers
     |            |_________log
     |_________results.yaml
 ```
-
-## TODO
-
-[ ] Make this tensorboard covers all statistic in each layer of NN.
-[ ] Cover dry_run and eval_every_batch.
-[ ] Updating hyperparameter tunning visualization.

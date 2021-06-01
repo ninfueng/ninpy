@@ -24,22 +24,6 @@ def str2bool(v: str) -> bool:
         raise argparse.ArgumentTypeError(f"Boolean value is expected. Your input: {v}")
 
 
-def timewraper(fn: Callable) -> Callable:
-    """Wrapper of function to printing out the running of the wrapped function."""
-
-    def wrapped(*args, **kwargs):
-        t1 = time.time()
-        func = fn(*args, **kwargs)
-        t2 = time.time() - t1
-        logging.info(
-            f'Wrapper of {func.__name__}: Run with timer: \
-            {time.strftime("%H:%M:%S", time.gmtime(t2))}'
-        )
-        return func
-
-    return wrapped
-
-
 def multilv_getattr(obj, multi_lv: str):
     r"""Get multi-levels attribute.
     Example:
@@ -69,14 +53,11 @@ def multilv_setattr(obj, multi_lv: str, set_with: object):
 
 
 class RunningAverage(object):
-    r"""From: https://github.com/cs230-stanford/cs230-code-examples
-    A simple class that maintains the running average of a quantity
+    """A simple class that maintains the running average of a quantity
     Example:
-    ```
     >>> loss_avg = RunningAverage()
     >>> loss_avg.update(loss, batch_size)
     >>> loss_avg()
-    ```
     """
 
     def __init__(self):
