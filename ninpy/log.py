@@ -23,8 +23,8 @@ def set_logger(
     assert isinstance(to_console, bool)
     assert isinstance(rm_exist, bool)
     assert isinstance(verbose, bool)
-    log_pth = os.path.expanduser(log_pth)
 
+    log_pth = os.path.expanduser(log_pth)
     path = Path(log_pth)
     if not os.path.isdir(path.parent):
         os.makedirs(path.parent, exist_ok=True)
