@@ -3,79 +3,11 @@ import os
 from multiprocessing import cpu_count
 from typing import Callable, Optional, Tuple, Union
 
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
-from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
-from ninpy.datasets import WrappedCompose
-
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD = (0.229, 0.224, 0.225)
-
-
-def get_imagenet_albumentations_transforms(
-    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
-) -> Tuple[Callable, Callable]:
-    """TODO: find a way to work this with other."""
-
-    if isinstance(crop_size, int):
-        crop_size = (crop_size, crop_size)
-    if isinstance(resize_size, int):
-        resize_size = (resize_size, resize_size)
-    assert len(crop_size) == 2
-    assert len(resize_size) == 2
-
-    train_transforms = WrappedCompose(
-        [
-            A.RandomResizedCrop(crop_size[0], crop_size[1]),
-            A.HorizontalFlip(),
-            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-            ToTensorV2(),
-        ]
-    )
-    val_transforms = WrappedCompose(
-        [
-            A.Resize(crop_size[0], crop_size[1]),
-            A.CenterCrop(resize_size[0], resize_size[1]),
-            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-            ToTensorV2(),
-        ]
-    )
-    return train_transforms, val_transforms
-
-
-def get_imagenet_transforms(
-    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
-) -> Tuple[Callable, Callable]:
-
-    if isinstance(crop_size, int):
-        crop_size = (crop_size, crop_size)
-    if isinstance(resize_size, int):
-        resize_size = (resize_size, resize_size)
-    assert len(crop_size) == 2
-    assert len(resize_size) == 2
-    normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
-    train_transforms = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(resize_size[0]),
-            transforms.RandomHorizontalFlip(crop_size[0]),
-            transforms.ToTensor(),
-            normalize,
-        ]
-    )
-
-    val_transforms = transforms.Compose(
-        [
-            transforms.Resize(resize_size[0]),
-            transforms.CenterCrop(crop_size[0]),
-            transforms.ToTensor(),
-            normalize,
-        ]
-    )
-    return train_transforms, val_transforms
+from ninpy.datasets.augment import get_imagenet_transforms
 
 
 def get_imagenet_loaders(
@@ -148,6 +80,7 @@ if __name__ == "__main__":
     #     pass
     # print(x, y)
 
+    from ninpy.datasets.augment import get_imagenet_albumentations_transforms
     from ninpy.debug import get_imagenet_img
 
     img = get_imagenet_img(preprocess=False)

@@ -3,10 +3,9 @@ import logging
 import os
 from functools import reduce
 from multiprocessing import Pool, cpu_count
-from typing import List, Tuple
+from typing import Callable, List
 
 import albumentations as A
-import torch
 from PIL import Image
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
@@ -19,10 +18,10 @@ def reduce_sum(x, y):
     return x + y
 
 
-def load_images(imgdirs: List[str]) -> List[str]:
+def load_images(imgdirs: List[str]) -> List[Callable]:
     """Load images from a list of directories."""
     imgs = []
-    for d in tqdm(imgdirs):
+    for d in imgdirs:
         img = pil_loader(d)
         imgs.append(img)
     return imgs
@@ -116,28 +115,17 @@ class BurstImageFolder(ImageFolder):
         return x
 
 
-class WrappedCompose(A.Compose):
-    """Designed to make albumentations operate with Dataset provided by PyTorch
-    >>> compose = WrappedCompose([ToTensorV2()])
-    >>> output = compose(np.zeros((32, 32, 3)))
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-    def __call__(self, image, **kwargs) -> Tuple[torch.Tensor, ...]:
-        return super().__call__(image=image, **kwargs)
-
-
 if __name__ == "__main__":
     root = os.path.expanduser("~/datasets/CINIC10/train")
     list_classes = sorted(os.listdir(root))
     root = os.path.expanduser(root)
 
     imgdirs = []
-    for idx, c in enumerate(tqdm(list_classes)):
+    for idx, c in enumerate(list_classes):
         classdir = os.path.join(root, c)
         imgdirs += glob.glob(os.path.join(classdir, "*.png"))
 
-    listimgs = load_img_from_list(imgdirs)
-    listimgs = mp_load_img_from_list(imgdirs)
+    listimgs = load_images(imgdirs)
+    print(listimgs.__len__())
+    listimgs = multithread_load_images(imgdirs)
+    print(listimgs.__len__())

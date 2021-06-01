@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import resnet18
 
-from ninpy.torch2 import add_weight_decay, torch2np, np2torch
+from ninpy.torch2 import add_weight_decay, np2torch, torch2np
 
 
 def test_torch2np():

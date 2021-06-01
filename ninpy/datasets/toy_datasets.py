@@ -7,73 +7,18 @@ TODO: supporting the parallel computing.
 """
 import os
 from multiprocessing import cpu_count
-from typing import Any, Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 import albumentations as A
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
 import torchvision
 import torchvision.transforms as transforms
 from albumentations.pytorch.transforms import ToTensorV2
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 
-MNIST_MEAN = 0.1307
-MNIST_STD = 0.3081
-CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124)
-CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768)
-CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
-CIFAR100_STD = (0.2675, 0.2565, 0.2761)
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD = (0.229, 0.224, 0.225)
-
-
-
-def get_mnist_transforms() -> Tuple[Callable]:
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
-    )
-    return transform
-
-
-def get_cifar10_transforms() -> Tuple[Callable, Callable]:
-    r"""
-    Modified:
-        https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
-    """
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD)]
-    )
-    return transform_train, transform_test
-
-
-def get_cifar100_transforms() -> Tuple[Callable, Callable]:
-    r"""
-    Modified:
-        https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
-    """
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD),
-        ]
-    )
-    transform_test = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD)]
-    )
-    return transform_train, transform_test
+from ninpy.datasets.augment import IMAGENET_MEAN, IMAGENET_STD
 
 
 def load_toy_dataset(
@@ -87,7 +32,7 @@ def load_toy_dataset(
     test_transforms: Optional[Callable] = None,
 ) -> Tuple[Callable, Callable]:
 
-    r"""Using torchvision to load the provided dataset online.
+    """Using torchvision to load the provided dataset online.
     Can using with pre-defined transform function with the predefind mean and std.
     Using transform_list=normalize_transforms(CIFAR10_MEAN, CIFAR10_STD)
     Args:
@@ -101,6 +46,7 @@ def load_toy_dataset(
     assert isinstance(data_path, str)
     assert isinstance(drop_last, bool)
 
+    data_path = os.path.expanduser(data_path)
     if not os.path.exists(data_path):
         os.makedirs(data_path, exist_ok=True)
     if train_transforms is None:
@@ -150,7 +96,7 @@ def load_toy_dataset(
         )
 
     elif dataset_name == "svhn":
-        # The extra-section or extra_set is exist in this dataset.
+        # The extra dataset does not include in this dataset.
         train_set = torchvision.datasets.SVHN(
             root=data_path, split="train", download=True, transform=train_transforms
         )
@@ -185,11 +131,12 @@ def load_toy_dataset(
 
 # TODO: VOCAugSegmentationDataset BASE_AUG = 'benchmark_RELEASE/dataset'
 class VOCSegmentationDataset(Dataset):
-    r"""TODO: downloading dataset and aug dataset.
+    """TODO: downloading dataset and aug dataset.
     Modified:
         https://albumentations.ai/docs/autoalbument/examples/pascal_voc/
         https://github.com/zhanghang1989/PyTorch-Encoding/blob/master/scripts/prepare_pascal.py
     """
+
     VOC_CLASSES = [
         "background",
         "aeroplane",
@@ -244,7 +191,7 @@ class VOCSegmentationDataset(Dataset):
         assert isinstance(train, bool)
 
         super().__init__()
-        self.root = root
+        self.root = os.path.expanduser(root)
         self.train = train
         self.transform = transform
 
@@ -268,7 +215,6 @@ class VOCSegmentationDataset(Dataset):
             self.mask = None
 
     def __getitem__(self, index: int):
-        print(self.images[index])
         image = cv2.imread(self.images[index], cv2.IMREAD_COLOR)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -330,6 +276,8 @@ class VOCSegmentationDataset(Dataset):
 
 
 if __name__ == "__main__":
+    from ninpy.debug import show_torch_image
+
     # train_loader, val_loader = get_voc2012_loader(
     #     '/home/ninnart/datasets/VOC',
     #     False, None, 128, 8, False, None, None)
@@ -354,4 +302,4 @@ if __name__ == "__main__":
     )
 
     img, mask = next(iter(train_dataset))
-    show_img_torch(img, True)
+    show_torch_image(img, True)

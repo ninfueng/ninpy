@@ -13,7 +13,6 @@ class LayerConverter:
     Modified from:
         https://www.kaggle.com/c/aptos2019-blindness-detection/discussion/104686
     """
-
     @staticmethod
     def convert_normalization(
         model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None

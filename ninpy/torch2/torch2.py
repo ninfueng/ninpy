@@ -37,6 +37,7 @@ def torch2np(x: torch.Tensor) -> np.ndarray:
     x = x.numpy()
     return x
 
+
 def np2torch(x: np.ndarray) -> torch.Tensor:
     """"""
     shape = x.shape

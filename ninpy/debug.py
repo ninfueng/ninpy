@@ -3,10 +3,12 @@
 import os
 import urllib
 
+import matplotlib.pyplot as plt
 import torch
 from PIL import Image
-import matplotlib.pyplot as plt
 from torchvision import transforms
+
+from ninpy.datasets.augment import get_imagenet_transforms
 
 
 def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:
@@ -25,22 +27,13 @@ def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:
 
     input_image = Image.open(filename)
     if preprocess:
-        preprocess = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
-        input_image = preprocess(input_image).unsqueeze(0)
+        preprocess_fn = get_imagenet_transforms(256, 224)[1]
+        input_image = preprocess_fn(input_image).unsqueeze(0)
     os.remove(filename)
     return input_image
 
 
-def show_image(x: torch.Tensor, denormalize: bool = False) -> None:
+def show_torch_image(x: torch.Tensor, denormalize: bool = False) -> None:
     """Show an image from torch format with an option to denormalize ImageNet normalized image.
     For example:
     >>> show_image(torch.zeros(3, 224, 224), False)

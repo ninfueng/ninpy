@@ -10,7 +10,8 @@ from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, trainv2, warmup
 
-from ninpy.datasets import get_cifar10_transforms, load_toy_dataset
+from ninpy.datasets import load_toy_dataset
+from ninpy.datasets.augment import get_cifar10_transforms
 
 # from ninpy.notify import basic_notify
 from ninpy.torch2 import (
