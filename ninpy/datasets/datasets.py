@@ -11,7 +11,7 @@ from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
 
-from ninpy.datasets.utils import IMG_EXTENSIONS, multithread_load_images
+from ninpy.datasets.utils import IMG_EXTENSIONS, cv2_loader, multithread_load_images
 
 
 class BaseDataset(Dataset):
@@ -38,10 +38,9 @@ class BaseDataset(Dataset):
         self.target_transform = (
             (lambda x: x) if target_transform is None else target_transform
         )
-        self.data_dirs = self.get_data_dirs()
-        self.labels = self.get_labels()
         self.loader = (lambda x: x) if loader is None else loader
         self.target_loader = (lambda x: x) if target_loader is None else target_loader
+        self.data_dirs, self.labels = self.get_data_dirs_labels()
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         data, label = self.data_dirs[idx], self.labels[idx]
@@ -52,12 +51,8 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data_dirs)
 
-    def get_data_dirs(self) -> None:
-        """Get all data locations."""
-        raise NotImplementedError()
-
-    def get_labels(self) -> None:
-        """Get all label locations."""
+    def get_data_dirs_labels(self) -> None:
+        """Get all data locations and labels. Can inputs more data to further processing."""
         raise NotImplementedError()
 
 
@@ -72,7 +67,7 @@ class BurstDataset(BaseDataset):
         self,
         root: str,
         loader: Callable,
-        target_loader: Callable,
+        target_loader: Callable = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ) -> None:
@@ -148,9 +143,67 @@ class BurstImageFolder(ImageFolder):
 
 if __name__ == "__main__":
 
-    dataset = BurstImageFolder("~/datasets/CINIC10/train")
-    dataset.load_images()
-    img, label = next(iter(dataset))
-    assert img.size == (32, 32)
+    # dataset = BurstImageFolder("~/datasets/CINIC10/train")
+    # dataset.load_images()
+    # img, label = next(iter(dataset))
+    # assert img.size == (32, 32)
 
-    print(os.getcwd())
+    class BurstCINIC10(BurstDataset):
+        CLASSES = {
+            "airplane": 0,
+            "automobile": 1,
+            "bird": 2,
+            "cat": 3,
+            "deer": 4,
+            "dog": 5,
+            "frog": 6,
+            "horse": 7,
+            "ship": 8,
+            "truck": 9,
+        }
+        def __init__(
+            self,
+            root: str,
+            loader: Callable,
+            target_loader: Optional[Callable] = None,
+            transform: Optional[Callable] = None,
+            target_transform: Optional[Callable] = None,
+            mode: str = "train",
+            ) -> None:
+            mode = mode.lower()
+            assert mode in ["train", "test", "valid"]
+            self.mode = mode
+            super().__init__(root, loader, target_loader, transform, target_transform)
+
+        def get_data_dirs_labels(self) -> Tuple[List[str], List[int]]:
+            data_dir = os.path.join(self.root, self.mode)
+            data_dirs, labels = [], []
+
+            for k, v in self.CLASSES.items():
+                tmp_dir = glob.glob(os.path.join(data_dir, k, "*.png"))
+                data_dirs += tmp_dir
+                tmp_label = [v for _ in tmp_dir]
+                labels += tmp_label
+            assert len(data_dirs) == 90_000 == len(labels) == 90_000
+            return data_dirs, labels
+
+
+
+    from ninpy.datasets.utils import cv2_load_images
+    from ninpy.datasets.augment import get_cinic10_albumentations_transforms
+    from ninpy.torch2 import torch2np
+    import matplotlib.pyplot as plt
+
+    train_transform, valid_transform =get_cinic10_albumentations_transforms()
+    dataset = BurstCINIC10("~/datasets/CINIC10", cv2_loader, transform=train_transform)
+    dataset.load_images(cv2_load_images)
+    dataset.load_labels()
+    img, label = next(iter(dataset))
+    print(label)
+
+    img = torch2np(img)
+
+    plt.imshow(img)
+    plt.show()
+
+

@@ -1,6 +1,7 @@
 from typing import Callable, Tuple, Union
 
 import albumentations as A
+from albumentations.augmentations.transforms import PadIfNeeded
 import numpy as np
 import torch
 import torchvision.transforms as transforms
@@ -160,8 +161,9 @@ def get_cinic10_albumentations_transforms() -> Tuple[Callable, Callable]:
     """With `ClassifyCompose`, not need for aug['mask']."""
     train_transforms = ClassifyCompose(
         [
-            A.RandomCrop(32, padding=4),
-            A.RandomHorizontalFlip(),
+            A.PadIfNeeded(34, 34),
+            A.RandomCrop(32, 32),
+            A.HorizontalFlip(),
             A.Normalize(CINIC10_MEAN, CINIC10_STD),
             ToTensorV2(),
         ]

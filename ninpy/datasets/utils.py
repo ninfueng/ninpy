@@ -33,7 +33,7 @@ def cv2_loader(imgdir: str) -> np.ndarray:
     return img
 
 
-def load_images(imgdirs: List[str], load_fn: Callable = pil_loader) -> List[Callable]:
+def pil_load_images(imgdirs: List[str], load_fn: Callable = pil_loader) -> List[Callable]:
     """Load images from a list of directories.
     This is created as a base function for `multithread_load_images`"""
     imgs = []
@@ -43,13 +43,21 @@ def load_images(imgdirs: List[str], load_fn: Callable = pil_loader) -> List[Call
     return imgs
 
 
-load_images_cv2 = lambda x: load_images(x, cv2_loader)
-load_images_pil = lambda x: load_images(x, pil_loader)
+def cv2_load_images(imgdirs: List[str], load_fn: Callable = cv2_loader) -> List[Callable]:
+    """Load images from a list of directories.
+    This is created as a base function for `multithread_load_images`
+    Need to do this way otherwise cannot multi-processing.
+    """
+    imgs = []
+    for d in imgdirs:
+        img = load_fn(d)
+        imgs.append(img)
+    return imgs
 
 
 def multithread_load_images(
     imgdirs: List[str],
-    load_images_fn: Callable = load_images,
+    load_images_fn: Callable = pil_load_images,
     num_workers: int = cpu_count(),
 ) -> List[Image.Image]:
     """Multi-processing to load all images to list.
