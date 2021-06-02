@@ -12,21 +12,9 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 
+from ninpy.datasets.augment import CINIC10_MEAN, CINIC10_STD, get_cinic10_transforms
+
 __all__ = ["get_cinic10_basic", "Cinic10", "get_cinic10_loaders"]
-CINIC_MEAN = (0.47889522, 0.47227842, 0.43047404)
-CINIC_STD = (0.24205776, 0.23828046, 0.25874835)
-CLASSES = {
-    "airplane": 0,
-    "automobile": 1,
-    "bird": 2,
-    "cat": 3,
-    "deer": 4,
-    "dog": 5,
-    "frog": 6,
-    "horse": 7,
-    "ship": 8,
-    "truck": 9,
-}
 
 
 def get_cinic10_basic(
@@ -47,12 +35,11 @@ def get_cinic10_basic(
     train_dir = os.path.join(root, "train")
     val_dir = os.path.join(root, "valid")
     test_dir = os.path.join(root, "test")
-    basic_transforms = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(mean=CINIC_MEAN, std=CINIC_STD)]
-    )
-    train_dataset = ImageFolder(train_dir, transform=basic_transforms)
-    val_dataset = ImageFolder(val_dir, transform=basic_transforms)
-    test_dataset = ImageFolder(test_dir, transform=basic_transforms)
+    transforms = get_cinic10_transforms()
+
+    train_dataset = ImageFolder(train_dir, transform=transforms)
+    val_dataset = ImageFolder(val_dir, transform=transforms)
+    test_dataset = ImageFolder(test_dir, transform=transforms)
     return train_dataset, val_dataset, test_dataset
 
 
@@ -61,6 +48,19 @@ class Cinic10(Dataset):
     Note that supports only transforms from torchvision only.
     >>> Cinic10('~/datasets/CINIC10', mode='train', transforms=basic_transform)
     """
+
+    CLASSES = {
+        "airplane": 0,
+        "automobile": 1,
+        "bird": 2,
+        "cat": 3,
+        "deer": 4,
+        "dog": 5,
+        "frog": 6,
+        "horse": 7,
+        "ship": 8,
+        "truck": 9,
+    }
 
     def __init__(self, root: str, mode: str, transforms=None) -> None:
         super().__init__()
@@ -80,7 +80,7 @@ class Cinic10(Dataset):
                 f"mode should be in `train`, `valid`, or `test`, your mode: {self.mode}"
             )
 
-        for k in CLASSES.keys():
+        for k in self.CLASSES.keys():
             search_glob = os.path.join(img_dir, k, "*.png")
             img_dirs = glob.glob(search_glob)
 
@@ -91,7 +91,7 @@ class Cinic10(Dataset):
 
                 # Keep every image to RAM for faster access.
                 self.images.append(img)
-            self.labels += [CLASSES[k] for _ in img_dirs]
+            self.labels += [self.CLASSES[k] for _ in img_dirs]
 
         assert (
             len(self.images) == 90_000
@@ -101,9 +101,7 @@ class Cinic10(Dataset):
         ), f"Some labels are missing. Found {len(self.labels)} images."
 
     def __getitem__(self, idx: int):
-        img = self.images[idx]
-        # img = Image.fromarray(img, mode="RGB")
-        label = self.labels[idx]
+        img, label = self.images[idx], self.labels[idx]
 
         if self.transforms is not None:
             img = transforms(image=img)["image"]
@@ -113,14 +111,14 @@ class Cinic10(Dataset):
                     [
                         A.RandomCrop(32, padding=4),
                         A.RandomHorizontalFlip(),
-                        A.Normalize(CINIC_MEAN, CINIC_STD),
+                        A.Normalize(CINIC10_MEAN, CINIC10_STD),
                         ToTensorV2(),
                     ]
                 )
 
             else:
                 transform = A.Compose(
-                    [A.Normalize(CINIC_MEAN, CINIC_STD), ToTensorV2()]
+                    [A.Normalize(CINIC10_MEAN, CINIC10_STD), ToTensorV2()]
                 )
             img = transform(image=img)["image"]
         return img, label

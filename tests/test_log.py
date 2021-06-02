@@ -5,10 +5,10 @@ from ninpy.log import set_logger
 
 
 def test_set_logger():
-    set_logger("./test_set_logger/test.log", False)
+    curdir = os.path.dirname(os.path.abspath(__file__))
+    logdir = os.path.join(curdir, "test_set_logger", "test.log")
+    set_logger(logdir, False)
     logging.info("This is a testing log.")
-    logging.info("This is a testing log2.")
-    logging.shutdown()
-    # assert os.path.isfile("./test_set_logger/test.log")
-    # os.remove("./test_set_logger/test.log")
-    # os.rmdir("./test_set_logger")
+    os.rmdir(os.path.join(curdir, "test_set_logger"))
+    #assert os.path.isfile(logdir)
+    #os.remove(logdir)

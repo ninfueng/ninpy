@@ -14,6 +14,8 @@ CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
 CIFAR100_STD = (0.2675, 0.2565, 0.2761)
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+CINIC10_MEAN = (0.47889522, 0.47227842, 0.43047404)
+CINIC10_STD = (0.24205776, 0.23828046, 0.25874835)
 
 
 class ClassifyCompose(A.Compose):
@@ -85,10 +87,40 @@ def get_cifar100_transforms() -> Tuple[Callable, Callable]:
     return train_transform, test_transform
 
 
+def get_imagenet_transforms(
+    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
+) -> Tuple[Callable, Callable]:
+    if isinstance(crop_size, int):
+        crop_size = (crop_size, crop_size)
+    if isinstance(resize_size, int):
+        resize_size = (resize_size, resize_size)
+    assert len(crop_size) == 2 and len(resize_size) == 2
+
+    normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
+    train_transforms = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(resize_size[0]),
+            transforms.RandomHorizontalFlip(crop_size[0]),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
+
+    val_transforms = transforms.Compose(
+        [
+            transforms.Resize(resize_size[0]),
+            transforms.CenterCrop(crop_size[0]),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
+    return train_transforms, val_transforms
+
+
 def get_imagenet_albumentations_transforms(
     crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
 ) -> Tuple[Callable, Callable]:
-    """With `ClassifyCompose`, not need for aug['mask']."""
+
     if isinstance(crop_size, int):
         crop_size = (crop_size, crop_size)
     if isinstance(resize_size, int):
@@ -114,32 +146,27 @@ def get_imagenet_albumentations_transforms(
     return train_transforms, val_transforms
 
 
-def get_imagenet_transforms(
-    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
-) -> Tuple[Callable, Callable]:
-
-    if isinstance(crop_size, int):
-        crop_size = (crop_size, crop_size)
-    if isinstance(resize_size, int):
-        resize_size = (resize_size, resize_size)
-    assert len(crop_size) == 2 and len(resize_size) == 2
-
-    normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
-    train_transforms = transforms.Compose(
+def get_cinic10_transforms():
+    transform = transforms.Compose(
         [
-            transforms.RandomResizedCrop(resize_size[0]),
-            transforms.RandomHorizontalFlip(crop_size[0]),
             transforms.ToTensor(),
-            normalize,
+            transforms.Normalize(mean=CINIC10_MEAN, std=CINIC10_STD),
         ]
     )
+    return transform
 
-    val_transforms = transforms.Compose(
+
+def get_cinic10_albumentations_transforms() -> Tuple[Callable, Callable]:
+    """With `ClassifyCompose`, not need for aug['mask']."""
+    train_transforms = ClassifyCompose(
         [
-            transforms.Resize(resize_size[0]),
-            transforms.CenterCrop(crop_size[0]),
-            transforms.ToTensor(),
-            normalize,
+            A.RandomCrop(32, padding=4),
+            A.RandomHorizontalFlip(),
+            A.Normalize(CINIC10_MEAN, CINIC10_STD),
+            ToTensorV2(),
         ]
+    )
+    val_transforms = transforms.Compose(
+        [A.Normalize(CIFAR100_MEAN, CINIC10_STD), ToTensorV2()]
     )
     return train_transforms, val_transforms

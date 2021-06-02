@@ -1,7 +1,7 @@
 """Metrics"""
 import matplotlib.pyplot as plt
 import numpy as np
-from seaborn import sns
+import seaborn as sns
 
 
 class ConfusionMatrix:

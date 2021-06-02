@@ -29,6 +29,7 @@ def reduce_sum(x: Any, y: Any) -> Any:
 def cv2_loader(imgdir: str) -> np.ndarray:
     img = cv2.imread(imgdir, cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    assert img is not None
     return img
 
 
@@ -42,18 +43,24 @@ def load_images(imgdirs: List[str], load_fn: Callable = pil_loader) -> List[Call
     return imgs
 
 
+load_images_cv2 = lambda x: load_images(x, cv2_loader)
+load_images_pil = lambda x: load_images(x, pil_loader)
+
+
 def multithread_load_images(
-    imgdirs: List[str], num_workers: int = cpu_count()
+    imgdirs: List[str],
+    load_images_fn: Callable = load_images,
+    num_workers: int = cpu_count(),
 ) -> List[Image.Image]:
     """Multi-processing to load all images to list.
     This created for BurstDataset when loads a large-size dataset."""
     assert isinstance(num_workers, int)
     pool = Pool(num_workers)
     img_per_worker = int(len(imgdirs) / num_workers)
-    imgdir_per_workers = [
+    img_dir_per_workers = [
         imgdirs[i : i + img_per_worker] for i in range(0, len(imgdirs), img_per_worker)
     ]
-    imgs = pool.map(load_images, imgdir_per_workers)
+    imgs = pool.map(load_images_fn, img_dir_per_workers)
     # In case of pickle this function must not be a lambda function.
     imgs = reduce(reduce_sum, imgs)
     return imgs

@@ -1,4 +1,3 @@
-from .base import *
 from .cinic10 import *
 from .datasets import *
 from .imagenet import *
