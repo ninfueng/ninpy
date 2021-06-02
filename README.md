@@ -1,6 +1,6 @@
 # Ninpy #
 
-My collection of reuse-able Python functions, classes and scripts. <br>
+Ninnart's collection of reuse-able Python functions, classes and scripts. <br>
 **Note that this repository is very very unstable. The update that may break this module occurs oftenly.**
 
 ## Install ##
