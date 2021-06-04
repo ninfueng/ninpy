@@ -1,8 +1,8 @@
 from collections import OrderedDict
 from typing import Any, Dict, List, OrderedDict
 
-import numpy as np
 import cv2
+import numpy as np
 
 # Pipeline cvt colormap -> save with processed classes to location files (not need to process second time).
 
