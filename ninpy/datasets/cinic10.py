@@ -2,7 +2,6 @@ import glob
 import os
 from typing import Callable, List, Optional, Tuple
 
-from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 from ninpy.datasets import BurstDataset

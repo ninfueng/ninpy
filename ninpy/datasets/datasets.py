@@ -11,7 +11,7 @@ from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
 
-from ninpy.datasets.utils import IMG_EXTENSIONS, multithread_load_images
+from ninpy.datasets.utils import IMG_EXTENSIONS, cv2_loader, multithread_load_images
 
 __all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
 
