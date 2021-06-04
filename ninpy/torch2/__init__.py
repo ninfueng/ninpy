@@ -1,2 +1,2 @@
-from .module import *
+from . import module
 from .torch2 import *

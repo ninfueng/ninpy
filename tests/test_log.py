@@ -10,5 +10,5 @@ def test_set_logger():
     set_logger(logdir, False)
     logging.info("This is a testing log.")
     os.rmdir(os.path.join(curdir, "test_set_logger"))
-    #assert os.path.isfile(logdir)
-    #os.remove(logdir)
+    # assert os.path.isfile(logdir)
+    # os.remove(logdir)

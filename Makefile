@@ -26,20 +26,28 @@ lint:
 	flake8
 	pydocstyle .
 
-test:
-	# TODO: support doctest.
-	@echo "Perform doctest"
-	# cd ninpy/
-	# find . -iname "*.py" | xargs python -m doctest -v
-	# cd -
-	@echo "Perform pytest."
+pytest:
+	@echo "Test with pytest."
 	cd tests/
 	pytest
 	cd -
 
+doctest:
+	@echo "Test with doctest"
+	cd ninpy/
+	find . -iname "*.py" | xargs python -m doctest -v
+	cd -
+
+mypy:
+	@echo "Test with mypy."
+	cd ninpy/
+	# TODO: use this? find . -iname "*.py" | xargs python -m mypy --ignore-missing-imports
+	find . -iname "*.py" | xargs -n 1 mypy --ignore-missing-imports
+	cd -
+
 publish:
-	@echo "Start publish to Pip."
+	@echo "Start publish to pip."
 	python setup.py sdist
 	twine upload dist/*
 
-.PHONY: clean format lint test publish
+.PHONY: clean format lint test publish mypy doctest

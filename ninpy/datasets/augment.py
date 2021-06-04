@@ -1,3 +1,4 @@
+"""Collection of online augmentation functions and objects."""
 from typing import Callable, Tuple, Union
 
 import albumentations as A
@@ -12,10 +13,10 @@ CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124)
 CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768)
 CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
 CIFAR100_STD = (0.2675, 0.2565, 0.2761)
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD = (0.229, 0.224, 0.225)
 CINIC10_MEAN = (0.47889522, 0.47227842, 0.43047404)
 CINIC10_STD = (0.24205776, 0.23828046, 0.25874835)
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
 class ClassifyCompose(A.Compose):
@@ -44,7 +45,7 @@ class SegmentCompose(A.Compose):
 
     def __call__(
         self, image: np.ndarray, mask: np.ndarray, **kwargs
-    ) -> Tuple[torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         aug = super().__call__(image=image, mask=mask, **kwargs)
         return aug["image"], aug["mask"]
 
@@ -126,10 +127,11 @@ def get_imagenet_albumentations_transforms(
     if isinstance(resize_size, int):
         resize_size = (resize_size, resize_size)
     assert len(crop_size) == 2 and len(resize_size) == 2
+    assert crop_size[0] > resize_size[0]
 
     train_transforms = ClassifyCompose(
         [
-            A.RandomResizedCrop(crop_size[0], crop_size[1]),
+            A.RandomResizedCrop(resize_size[0], resize_size[1]),
             A.HorizontalFlip(),
             A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
             ToTensorV2(),
@@ -146,7 +148,7 @@ def get_imagenet_albumentations_transforms(
     return train_transforms, val_transforms
 
 
-def get_cinic10_transforms():
+def get_cinic10_transforms() -> Callable:
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
@@ -160,8 +162,9 @@ def get_cinic10_albumentations_transforms() -> Tuple[Callable, Callable]:
     """With `ClassifyCompose`, not need for aug['mask']."""
     train_transforms = ClassifyCompose(
         [
-            A.RandomCrop(32, padding=4),
-            A.RandomHorizontalFlip(),
+            A.PadIfNeeded(34, 34),
+            A.RandomCrop(32, 32),
+            A.HorizontalFlip(),
             A.Normalize(CINIC10_MEAN, CINIC10_STD),
             ToTensorV2(),
         ]

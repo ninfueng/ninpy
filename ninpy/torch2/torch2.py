@@ -22,7 +22,7 @@ from ninpy.yaml2 import load_yaml, name_experiment
 
 
 def torch2np(x: torch.Tensor) -> np.ndarray:
-    """Converting torch tensor format () to `numpy` or `tensorflow` format ()."""
+    """Convert PyTorch tensor format (NCHW) to Numpy or TensorFlow format (NHWC)."""
     assert isinstance(x, torch.Tensor)
     x = x.detach().cpu()
     shape = x.shape
@@ -39,7 +39,7 @@ def torch2np(x: torch.Tensor) -> np.ndarray:
 
 
 def np2torch(x: np.ndarray) -> torch.Tensor:
-    """"""
+    """Convert Numpy tensor format (NHWC) to PyTorch format (NCHW)."""
     shape = x.shape
     x = torch.as_tensor(x)
     if len(shape) == 2:

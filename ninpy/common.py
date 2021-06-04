@@ -33,7 +33,7 @@ def multilv_getattr(obj, multi_lv: str):
     return obj
 
 
-def multilv_setattr(obj, multi_lv: str, set_with: object):
+def multilv_setattr(obj, multi_lv: str, set_with: object) -> None:
     """Set multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
@@ -44,7 +44,7 @@ def multilv_setattr(obj, multi_lv: str, set_with: object):
     lvs = multi_lv.split(".")
     for l in lvs[:-1]:
         obj = getattr(obj, l)
-    obj = setattr(obj, lvs[-1], set_with)
+    setattr(obj, lvs[-1], set_with)
 
 
 class RunningAverage(object):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch.nn as nn
 
-from ninpy.torch2 import DataParallel
+from ninpy.torch2.module import DataParallel
 
 
 def test_dataparallel():
@@ -15,5 +15,7 @@ def test_dataparallel():
     base = Base()
     out = base.test_case()
     baseparallel = DataParallel(base)
+
+    # Can access an attribute or not.
     out0 = baseparallel.test_case()
     assert out == out0

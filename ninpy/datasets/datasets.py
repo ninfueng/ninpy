@@ -13,6 +13,8 @@ from torchvision.datasets.folder import pil_loader
 
 from ninpy.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 
+__all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
+
 
 class BaseDataset(Dataset):
     """BaseDataset for using as a template for other Dataset.
@@ -38,10 +40,9 @@ class BaseDataset(Dataset):
         self.target_transform = (
             (lambda x: x) if target_transform is None else target_transform
         )
-        self.data_dirs = self.get_data_dirs()
-        self.labels = self.get_labels()
         self.loader = (lambda x: x) if loader is None else loader
         self.target_loader = (lambda x: x) if target_loader is None else target_loader
+        self.data_dirs, self.labels = self.get_data_dirs_labels()
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         data, label = self.data_dirs[idx], self.labels[idx]
@@ -52,12 +53,8 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data_dirs)
 
-    def get_data_dirs(self) -> None:
-        """Get all data locations."""
-        raise NotImplementedError()
-
-    def get_labels(self) -> None:
-        """Get all label locations."""
+    def get_data_dirs_labels(self) -> None:
+        """Get all data locations and labels. Can inputs more data to further processing."""
         raise NotImplementedError()
 
 
@@ -72,7 +69,7 @@ class BurstDataset(BaseDataset):
         self,
         root: str,
         loader: Callable,
-        target_loader: Callable,
+        target_loader: Callable = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ) -> None:
@@ -147,10 +144,7 @@ class BurstImageFolder(ImageFolder):
 
 
 if __name__ == "__main__":
-
     dataset = BurstImageFolder("~/datasets/CINIC10/train")
     dataset.load_images()
     img, label = next(iter(dataset))
     assert img.size == (32, 32)
-
-    print(os.getcwd())

@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
+from ninpy.datasets.utils import cv2_loader
+
 # class Camvid(Dataset):
 #     """CamVid dataset. Support only burst mode. Using `color_map` same as SegNet.
 #     Labels that are not included in `COLOR_MAP` is assumed to be `11`.
@@ -386,7 +388,7 @@ def save_imgs_masks(
 
     load_imgdirs = [os.path.join(load_path, "images", n) for n in names]
     load_maskdirs = [os.path.join(load_path, "labels", n) for n in names]
-    imgs = [load_img(i) for i in load_imgdirs]
+    imgs = [cv2_loader(i) for i in load_imgdirs]
     masks = [load_mask(i) for i in load_maskdirs]
 
     resized_imgdirs = [os.path.join(save_path, "images", i) for i in names]
