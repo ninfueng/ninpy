@@ -1,6 +1,6 @@
 from functools import reduce
 from multiprocessing import Pool, cpu_count
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, List
 
 import cv2
 import numpy as np

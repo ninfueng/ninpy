@@ -10,7 +10,6 @@ from typing import Callable, Optional, Tuple
 import torchvision
 import torchvision.transforms as transforms
 
-from ninpy.datasets.augment import IMAGENET_MEAN, IMAGENET_STD
 from ninpy.datasets.utils import get_basic_loader
 
 __all__ = ["load_toy_datasets"]

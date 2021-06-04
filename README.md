@@ -5,18 +5,18 @@ Ninnart's collection of reuse-able Python functions, classes and scripts. <br>
 
 ## Install ##
 
-### Using pip install ###
-
-```bash
-pip install ninpy
-```
-
-### Local install ###
+### Recommend!: Local install ###
 
 ```bash
 git clone https://github.com/ninfueng/ninpy
 cd ninpy/
 python setup.py develop
+```
+
+### Using pip install ###
+
+```bash
+pip install ninpy
 ```
 
 ## Unittest ##

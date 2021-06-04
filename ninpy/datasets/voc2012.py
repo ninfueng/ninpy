@@ -159,28 +159,76 @@ class VOCSegmentationDataset(Dataset):
 
 
 if __name__ == "__main__":
-    from ninpy.debug import show_torch_image
+    # from ninpy.debug import show_torch_image
 
-    # train_loader, val_loader = get_voc2012_loader(
-    #     '/home/ninnart/datasets/VOC',
-    #     False, None, 128, 8, False, None, None)
+    # # train_loader, val_loader = get_voc2012_loader(
+    # #     '/home/ninnart/datasets/VOC',
+    # #     False, None, 128, 8, False, None, None)
 
-    # test_batch = next(iter(train_loader))
-    # print(test_batch)
+    # # test_batch = next(iter(train_loader))
+    # # print(test_batch)
 
-    train_transforms = A.Compose(
-        [
-            A.RandomResizedCrop(480, 480),
-            A.HorizontalFlip(),
-            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-            ToTensorV2(),
-        ]
-    )
+    # train_transforms = A.Compose(
+    #     [
+    #         A.RandomResizedCrop(480, 480),
+    #         A.HorizontalFlip(),
+    #         A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    #         ToTensorV2(),
+    #     ]
+    # )
 
-    root = "~/datasets/VOC"
-    root = os.path.expanduser(root)
-    train_dataset = VOCSegmentationDataset(
-        root=root, train=True, transform=train_transforms
-    )
-    img, mask = next(iter(train_dataset))
-    show_torch_image(img, True)
+    # root = "~/datasets/VOC"
+    # root = os.path.expanduser(root)
+    # train_dataset = VOCSegmentationDataset(
+    #     root=root, train=True, transform=train_transforms
+    # )
+    # img, mask = next(iter(train_dataset))
+    # show_torch_image(img, True)
+    VOC_CLASSES = [
+        "background",
+        "aeroplane",
+        "bicycle",
+        "bird",
+        "boat",
+        "bottle",
+        "bus",
+        "car",
+        "cat",
+        "chair",
+        "cow",
+        "diningtable",
+        "dog",
+        "horse",
+        "motorbike",
+        "person",
+        "potted-plant",
+        "sheep",
+        "sofa",
+        "train",
+        "tv/monitor",
+        "ambigious",
+    ]
+
+    VOC_COLORMAP = [
+        [0, 0, 0],
+        [128, 0, 0],
+        [0, 128, 0],
+        [128, 128, 0],
+        [0, 0, 128],
+        [128, 0, 128],
+        [0, 128, 128],
+        [128, 128, 128],
+        [64, 0, 0],
+        [192, 0, 0],
+        [64, 128, 0],
+        [192, 128, 0],
+        [64, 0, 128],
+        [192, 0, 128],
+        [64, 128, 128],
+        [192, 128, 128],
+        [0, 64, 0],
+        [128, 64, 0],
+        [0, 192, 0],
+        [128, 192, 0],
+        [0, 64, 128],
+    ]
