@@ -62,19 +62,21 @@ class CINIC10(BurstDataset):
     def __init__(
         self,
         root: str,
+        mode: str,
         loader: Callable,
         target_loader: Optional[Callable] = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
-        mode: str = "train",
     ) -> None:
+        super().__init__(loader, target_loader, transform, target_transform)
+        self.root = os.path.expanduser(root)
+        assert os.path.isdir(self.root)
         mode = mode.lower()
         assert mode in ["train", "test", "valid"]
         self.mode = mode
-        # Need to add all child-attributes before initializes super-class.
-        super().__init__(root, loader, target_loader, transform, target_transform)
+        self.data_dirs, self.label_dirs = self.get_data_label_dirs()
 
-    def get_data_dirs_labels(self) -> Tuple[List[str], List[int]]:
+    def get_data_label_dirs(self) -> Tuple[List[str], List[int]]:
         data_dir = os.path.join(self.root, self.mode)
         data_dirs, labels = [], []
 
@@ -92,14 +94,14 @@ if __name__ == "__main__":
     from ninpy.datasets.utils import cv2_load_images, cv2_loader
     from ninpy.torch2 import torch2np
 
-    train_dataset, val_dataset, test_dataset = get_cinic10_basic()
-    print("Load using a default ImageFolder.")
-    for img, label in train_dataset:
-        pass
+    # train_dataset, val_dataset, test_dataset = get_cinic10_basic()
+    # print("Load using a default ImageFolder.")
+    # for img, label in train_dataset:
+    #     pass
 
     train_transform, valid_transform = get_cinic10_albumentations_transforms()
     dataset = CINIC10(
-        "~/datasets/CINIC10", cv2_loader, transform=train_transform, mode="train"
+        "~/datasets/CINIC10", "train", cv2_loader, transform=train_transform,
     )
     print("Load using a CINIC10.")
     for img, label in dataset:

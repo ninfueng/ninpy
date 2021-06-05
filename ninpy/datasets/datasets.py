@@ -2,9 +2,10 @@
 """Base datasets"""
 import glob
 import os
+import warnings
 from functools import reduce
 from multiprocessing import cpu_count
-from typing import Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 import psutil
 import torch
@@ -12,13 +13,14 @@ from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
 
-from ninpy.datasets.utils import IMG_EXTENSIONS, cv2_loader, multithread_load_images
+from ninpy.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 
 __all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
 
 
 class BaseDataset(Dataset):
     """BaseDataset for using as a template for other Dataset.
+    Two ways to
     Arguments:
         loader (Callable): a function to load images.
         target_loader (Callable): a function to load labels and preprocess in
@@ -27,26 +29,29 @@ class BaseDataset(Dataset):
 
     def __init__(
         self,
-        root: str,
         loader: Callable,
         target_loader: Optional[Callable] = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ) -> None:
         super().__init__()
-        self.root = os.path.expanduser(root)
-        assert os.path.isdir(self.root)
-
         self.transform = (lambda x: x) if transform is None else transform
         self.target_transform = (
             (lambda x: x) if target_transform is None else target_transform
         )
         self.loader = (lambda x: x) if loader is None else loader
         self.target_loader = (lambda x: x) if target_loader is None else target_loader
-        self.data_dirs, self.labels = self.get_data_dirs_labels()
+        self.data_dirs, self.label_dirs = None, None
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        data, label = self.data_dirs[idx], self.labels[idx]
+        assert (
+            self.data_dirs is not None
+        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
+        assert (
+            self.label_dirs is not None
+        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
+
+        data, label = self.data_dirs[idx], self.label_dirs[idx]
         data, label = self.loader(data), self.target_loader(label)
         data, label = self.transform(data), self.target_transform(label)
         return data, label
@@ -54,13 +59,16 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data_dirs)
 
-    def get_data_dirs_labels(self) -> None:
+    def get_data_label_dirs(self) -> None:
         """Get all data locations and labels. Can inputs more data to further processing."""
         raise NotImplementedError()
 
+    def set_data_label_dirs(self, data_dirs: List[str], label_dirs: List[str]) -> None:
+        self.data_dirs, self.label_dirs = data_dirs, label_dirs
+
 
 class BurstDataset(BaseDataset):
-    """Loading all images and labels to RAM for faster access.
+    """Allows for loading all images and labels to RAM for faster access.
     >>> dataset = BurstDataset()
     >>> dataset.load_images()
     >>> dataset.load_labels()
@@ -68,40 +76,55 @@ class BurstDataset(BaseDataset):
 
     def __init__(
         self,
-        root: str,
         loader: Callable,
         target_loader: Callable = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ) -> None:
-        super().__init__(root, loader, target_loader, transform, target_transform)
-        self.init_ram_usage = psutil.virtual_memory().percent
-        self.RAM_WARNING_THRESHOLD = 80.0
+        super().__init__(loader, target_loader, transform, target_transform)
+        self.init_ram = psutil.virtual_memory().percent
+
+    def load_images_fn(self, data_dirs: List[str]) -> List[Any]:
+        assert self.loader is not None
+        return [self.loader(d) for d in data_dirs]
 
     def load_images(
-        self, load_images_fn: Callable, num_workers: int = cpu_count()
+        self, load_images_fn: Optional[Callable] = None, num_workers: int = cpu_count()
     ) -> None:
         """Load images and assign identify function to self.loader."""
-        images = multithread_load_images(self.data_dirs, load_images_fn, num_workers)
+        if load_images_fn is None:
+            # If not define load_images_fn, using for-loop version of loader.
+            load_images_fn = self.load_images_fn
+        try:
+            images = multithread_load_images(
+                self.data_dirs, load_images_fn, num_workers
+            )
+        except AttributeError as e:
+            warnings.warn(
+                "Cannot use multithread, use only a single thread instead. Error message: {e}.",
+                UserWarning,
+            )
+            images = load_images_fn(self.data_dirs)
+
         self.data_dirs = images
         self.loader = lambda x: x
         ram_usage = psutil.virtual_memory().percent
-        delta = ram_usage - self.init_ram_usage
+        delta = ram_usage - self.init_ram
         # TODO: decise to include this part or not for load_labels.
-        self.init_ram_usage = ram_usage
-        import warnings
+        self.init_ram = ram_usage
 
-        if ram_usage > self.RAM_WARNING_THRESHOLD:
+        WARNING_THRESHOLD = 80.0
+        if ram_usage > WARNING_THRESHOLD:
             warnings.warn(
                 UserWarning,
-                f"RAM usages over {self.RAM_WARNING_THRESHOLD}%"
-                f"Expected `load_images` consumes {delta}%.",
+                f"RAM usages over {WARNING_THRESHOLD}%"
+                f"This BurstDataset should consumes {delta}%.",
             )
 
     def load_labels(self) -> None:
         """Load labels and preprocess labels, Ex: prepare labels for object detection."""
         # TODO: support multi-thread load and process labels?
-        self.labels = [self.target_loader(i) for i in self.labels]
+        self.label_dirs = [self.target_loader(i) for i in self.label_dirs]
         self.target_loader = lambda x: x
 
 
