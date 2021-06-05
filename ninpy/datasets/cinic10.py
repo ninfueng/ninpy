@@ -83,7 +83,7 @@ class CINIC10(BurstDataset):
             data_dirs += tmp_dir
             tmp_label = [v for _ in tmp_dir]
             labels += tmp_label
-        assert len(data_dirs) == 90_000 == len(labels) == 90_000
+        assert len(data_dirs) == len(labels) == 90_000
         return data_dirs, labels
 
 

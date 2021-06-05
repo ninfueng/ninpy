@@ -6,6 +6,7 @@ from functools import reduce
 from multiprocessing import cpu_count
 from typing import Callable, List, Optional, Tuple
 
+import psutil
 import torch
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
@@ -74,6 +75,8 @@ class BurstDataset(BaseDataset):
         target_transform: Optional[Callable] = None,
     ) -> None:
         super().__init__(root, loader, target_loader, transform, target_transform)
+        self.init_ram_usage = psutil.virtual_memory().percent
+        self.RAM_WARNING_THRESHOLD = 80.0
 
     def load_images(
         self, load_images_fn: Callable, num_workers: int = cpu_count()
@@ -82,6 +85,18 @@ class BurstDataset(BaseDataset):
         images = multithread_load_images(self.data_dirs, load_images_fn, num_workers)
         self.data_dirs = images
         self.loader = lambda x: x
+        ram_usage = psutil.virtual_memory().percent
+        delta = ram_usage - self.init_ram_usage
+        # TODO: decise to include this part or not for load_labels.
+        self.init_ram_usage = ram_usage
+        import warnings
+
+        if ram_usage > self.RAM_WARNING_THRESHOLD:
+            warnings.warn(
+                UserWarning,
+                f"RAM usages over {self.RAM_WARNING_THRESHOLD}%"
+                f"Expected `load_images` consumes {delta}%.",
+            )
 
     def load_labels(self) -> None:
         """Load labels and preprocess labels, Ex: prepare labels for object detection."""

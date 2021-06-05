@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """@author: Ninnart Fuengfusin"""
 import argparse
+import pickle
+from typing import Any
 
 
 def str2bool(v: str) -> bool:
@@ -45,6 +47,16 @@ def multilv_setattr(obj, multi_lv: str, set_with: object) -> None:
     for l in lvs[:-1]:
         obj = getattr(obj, l)
     setattr(obj, lvs[-1], set_with)
+
+
+def pickle_dump(name: str, obj: Any) -> None:
+    with open(name, "wb") as p:
+        pickle.dump(obj, p, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def pickle_load(name: str) -> Any:
+    with open(name, "rb") as f:
+        return pickle.load(f)
 
 
 class RunningAverage(object):
