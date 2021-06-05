@@ -117,8 +117,8 @@ class BurstDataset(BaseDataset):
         if ram_usage > WARNING_THRESHOLD:
             warnings.warn(
                 UserWarning,
-                f"RAM usages over {WARNING_THRESHOLD}%"
-                f"This BurstDataset should consumes {delta}%.",
+                f"RAM usages over {WARNING_THRESHOLD}% "
+                f"This BurstDataset consumes around {delta}%.",
             )
 
     def load_labels(self) -> None:
