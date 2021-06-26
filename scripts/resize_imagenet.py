@@ -32,29 +32,28 @@ def resize_save_img(path: str, resized_path: str, resize: int) -> None:
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     assert img is not None, f"Cannot find an image {path}"
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (resize, resize))
+    # NEAREST -> INTER_LINEAR https://github.com/mlcommons/inference/issues/201
+    img = cv2.resize(img, (resize, resize), interpolation=cv2.INTER_LINEAR)
     cv2.imwrite(os.path.join(resized_path, basename), img)
 
 
 if __name__ == "__main__":
     path = os.path.expanduser(args.path)
-    # In case of `imagenet/`, get only `imagenet` from this.
+    # `imagenet/` -> `imagenet`.
     if path[-1] == "/":
         path = path[:-1]
     basename = os.path.basename(path)
     dirname = os.path.dirname(path)
 
-    # Resized folder name = imagenet256.
+    # Save resized images to a folder `imagenet` -> `imagenet256`.
     resized_path = os.path.join(dirname, basename + str(args.resize))
     datasets = ["train", "val"]
-
     for dataset in datasets:
         class_folders = glob(os.path.join(path, f"{dataset}/n*"))
-
         for f in tqdm(class_folders):
             class_folder = os.path.basename(f)
-            img_paths = glob(os.path.join(f, "*.JPEG"))
-            for i in img_paths:
+            img_dirs = glob(os.path.join(f, "*.JPEG"))
+            for i in img_dirs:
                 resized_class_folder = os.path.join(resized_path, dataset, class_folder)
                 os.makedirs(resized_class_folder, exist_ok=True)
                 resize_save_img(i, resized_class_folder, args.resize)

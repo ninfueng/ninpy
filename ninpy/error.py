@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Collections of all warnings and errors in ninpy."""
 
 
 class DuplicationWarning(UserWarning):

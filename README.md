@@ -125,8 +125,8 @@ ninpy
 * [ ] Tensorboard with add_scalars with a dict input.
 * [ ] Base dataset with mode "RGB" and "BGR".
 * [ ] Base dataset with from_txt and folder.
-* [ ] Burst read for all base dataset.
 * [ ] A script for adding license header to package using Makefile.
 * [ ] Make this tensorboard covers all statistic in each layer of NN.
 * [ ] Cover dry_run and eval_every_batch.
 * [ ] Updating hyperparameter tunning visualization.
+

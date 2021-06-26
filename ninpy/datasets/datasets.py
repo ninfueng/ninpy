@@ -110,14 +110,12 @@ class BurstDataset(BaseDataset):
         self.loader = lambda x: x
         ram_usage = psutil.virtual_memory().percent
         delta = ram_usage - self.init_ram
-        # TODO: decise to include this part or not for load_labels.
-        self.init_ram = ram_usage
 
         WARNING_THRESHOLD = 80.0
         if ram_usage > WARNING_THRESHOLD:
             warnings.warn(
                 UserWarning,
-                f"RAM usages over {WARNING_THRESHOLD}% "
+                f"RAM usages over {WARNING_THRESHOLD}%. Current around {ram_usage}. "
                 f"This BurstDataset consumes around {delta}%.",
             )
 
@@ -179,6 +177,34 @@ class BurstImageFolder(ImageFolder):
             img_dirs += glob.glob(os.path.join(path, "*" + e))
             img_dirs += glob.glob(os.path.join(path, "*" + e.upper()))
         return img_dirs
+
+
+def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
+    """Get a mean and standard deviation from a dataset.
+    Args:
+        burst (bool): If True load all data to RAM and calculates a mean and standard deviation.
+        Else accumulate all one by one elements to calculate a mean and standard deviation.
+    """
+    sample, _ = next(iter(dataset))
+    assert True if isinstance(sample, torch.Tensor) else False, "Support only PyTorch format."
+    assert isinstance(burst, bool)
+    if burst:
+        dataset = torch.stack([i[0] for i in list(dataset)], dim=0)
+        mean = torch.mean(dataset, dim=(0, 2, 3))
+        std = torch.std(dataset, dim=(0, 2, 3))
+    else:
+        # TODO: Fix this.
+        raise NotImplementedError("Currently support only burst=True.")
+        # size = len(dataset)
+        # mean = std = 0.0
+        # for d, _ in dataset:
+        #     mean += d.mean(dim=(1, 2))
+        # mean /= size
+        # for d, _ in dataset:
+        #     std += (d.mean(dim=(1, 2)) - mean).pow(2)
+        # std /= size
+        # std = std.sqrt()
+    return mean, std
 
 
 if __name__ == "__main__":

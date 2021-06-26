@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-
 from setuptools import find_packages, setup
 
 
@@ -31,3 +30,4 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
+

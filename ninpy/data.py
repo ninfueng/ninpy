@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """A collection of data structure functions.
-@author: Ninnart Fuengfusin
+@author: ninfueng
 """
 import logging
 import sys
@@ -15,8 +15,7 @@ import torch
 class AttrDict(OrderedDict):
     """Recusive attribute OrderedDict.
     Example:
-    >>> attrdict = AttrDict(
-        {"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
+    >>> attrdict = AttrDict({"test": {"test2": 1}, "recursive": [1, 2, 3, {"test3": {"test4": 4}}]})
     >>> attrdict.test
     AttrDict([('test2', 1)])
     >>> attrdict.recursive[-1].test3.test4
@@ -39,10 +38,11 @@ class AttrDict(OrderedDict):
                         self[k][idx] = AttrDict(self[k][idx])
 
     def to_dict(self) -> dict:
-        """Convert to a dict """
+        """Convert to a dict."""
         for k in self.keys():
             if isinstance(self[k], list) or isinstance(self[k], tuple):
                 # Not support standard datatypes.
+                # TODO: investigate why using torch.as_tensor?
                 self[k] = torch.as_tensor(self[k])
         return dict(self)
 
@@ -111,3 +111,4 @@ class AttrDictList(AttrDict):
     def to_yaml() -> None:
         # TODO: support dict to yaml.
         raise NotImplementedError("Not supported yet.")
+

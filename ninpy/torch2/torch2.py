@@ -12,8 +12,10 @@ import torch.nn as nn
 from torch.nn.modules.batchnorm import _NormBase
 from torch.nn.modules.conv import _ConvNd
 from torch.optim.lr_scheduler import _LRScheduler
-from torch.utils.tensorboard import SummaryWriter
-
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ModuleNotFoundError:
+    from tensorboardX import SummaryWriter
 from ninpy.common import multilv_getattr
 from ninpy.data import AttrDict
 from ninpy.experiment import set_experiment
@@ -51,6 +53,33 @@ def np2torch(x: np.ndarray) -> torch.Tensor:
     else:
         raise ValueError(f"Not supporting with shape of {len(shape)}.")
     return x
+
+
+def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
+    """Get a mean and standard deviation from a dataset.
+    Args:
+        burst (bool): If True load all data to RAM and calculates a mean and standard deviation.
+        Else accumulate all information into a
+    """
+    sample, _ = next(iter(dataset))
+    assert True if isinstance(sample, torch.Tensor) else False, "Support only PyTorch format."
+    if burst:
+        dataset = torch.stack([i[0] for i in list(dataset)], dim=0)
+        mean = torch.mean(dataset, dim=(0, 2, 3))
+        std = torch.std(dataset, dim=(0, 2, 3))
+    else:
+        # TODO: Fix this incremental of std.
+        raise NotImplementedError("Currently support only burst=True.")
+        # size = len(dataset)
+        # mean = std = 0.0
+        # for d, _ in dataset:
+        #     mean += d.mean(dim=(1, 2))
+        # mean /= size
+        # for d, _ in dataset:
+        #     std += (d.mean(dim=(1, 2)) - mean).pow(2)
+        # std /= size
+        # std = std.sqrt()
+    return mean, std
 
 
 def tensorboard_models(
@@ -96,11 +125,11 @@ def topk_accuracy(
     _, pred = output.topk(maxk, 1, True, True)
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
-    res = []
+    corrects = []
     for k in topk:
         correct_k = correct[:k].reshape(-1).float().sum(0)
-        res.append(correct_k)
-    return res, batch_size
+        corrects.append(correct_k)
+    return corrects, batch_size
 
 
 def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) -> None:

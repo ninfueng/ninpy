@@ -90,7 +90,6 @@ def get_basic_loader(
     """Get a loader with two different sets of `kwargs` for train or valid (test)."""
     # TODO: support distributed dataparallel.
     mode = mode.lower()
-    assert mode in ["train", "valid", "test"]
     if mode == "train":
         train_kwargs = {
             "batch_size": batch_size,
@@ -100,7 +99,7 @@ def get_basic_loader(
             "drop_last": True,
         }
         loader = DataLoader(dataset, **train_kwargs)
-    else:
+    elif mode in ["valid", "test"]:
         valid_kwargs = {
             "batch_size": batch_size,
             "shuffle": False,
@@ -109,6 +108,8 @@ def get_basic_loader(
             "drop_last": False,
         }
         loader = DataLoader(dataset, **valid_kwargs)
+    else:
+        raise ValueError(f"{mode} is not `train`, `valid`, or `test`.")
     return loader
 
 
@@ -120,12 +121,12 @@ if __name__ == "__main__":
     list_classes = sorted(os.listdir(root))
     root = os.path.expanduser(root)
 
-    imgdirs = []
+    img_dirs = []
     for idx, c in enumerate(list_classes):
         classdir = os.path.join(root, c)
-        imgdirs += glob.glob(os.path.join(classdir, "*.png"))
+        img_dirs += glob.glob(os.path.join(classdir, "*.png"))
 
-    listimgs = pil_load_images(imgdirs)
-    print(listimgs.__len__())
-    listimgs = multithread_load_images(imgdirs)
-    print(listimgs.__len__())
+    list_imgs = pil_load_images(img_dirs)
+    print(list_imgs.__len__())
+    list_imgs = multithread_load_images(img_dirs)
+    print(list_imgs.__len__())

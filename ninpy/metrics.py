@@ -1,13 +1,13 @@
-"""Metrics"""
+"""Collection of metrics (not loss!)."""
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
 class ConfusionMatrix:
-    """Confusion matrix for  tracking segmentation metrics.
-    Unused classes should be negative.
-    Modified:
+    """Confusion matrix for metrics (MioU, Dice, pixel accuracy).
+    Unused classes should be negative, otherwise this may include as one of scores.
+    Modified from:
         https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/utils/metrics.py
     """
 
@@ -25,6 +25,7 @@ class ConfusionMatrix:
         # Add with `true` to shift to the column.
         # This comes with properties `row + classes` = diag (correct).
         confusion = pred * self.num_classes + true
+        # self.num_classes ** 2 = size of a confusion matrix.
         bincount = np.bincount(confusion, minlength=self.num_classes ** 2)
         self._confusion_matrix += bincount.reshape(self.num_classes, self.num_classes)
 
