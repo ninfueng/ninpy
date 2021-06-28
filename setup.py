@@ -17,7 +17,8 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     packages=find_packages(),
-    python_requires=">=3",
+    # Using f-string, it supports from Python 3.6.
+    python_requires=">=3.6",
     classifier=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",

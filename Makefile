@@ -1,16 +1,13 @@
 clean:
-	@echo "Remove build, dist, pytest_cache, pycache, and mypy_cache."
+	@echo "Remove build, dist, pytest_cache, pycache, mypy_cache, and experiment results."
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info
-
 	find . -iname "__pycache__" | xargs rm -rf
 	find . -iname ".pytest_cache" | xargs rm -rf
 	find . -iname ".mypy_cache" | xargs rm -rf
-
-cleanexp:
-	@echo "Remove all experiment results"
 	find . -iname "2021:*" | xargs rm -rf
+	find ./templates/*  -iname "dataset" | xargs rm -rf
 
 format:
 	# TODO: consider autopep8, yapf and others.
