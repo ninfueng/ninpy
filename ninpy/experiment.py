@@ -18,7 +18,7 @@ def set_experiment(
         https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/darts_utils.py
     Create a folder with the name f'{datetime}-{experiment_path}' format.
     With scripts folder into it and copy all scripts within `list_types` into this folder.
-    MUST NOT APPLY THIS FUNCTION WITH LOGGING!!!!!.
+    WARNING: MUST NOT APPLY THIS FUNCTION WITH LOGGING!.
     Example:
     >>> set_experiment(experiment_path)
     """
