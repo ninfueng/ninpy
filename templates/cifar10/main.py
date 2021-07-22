@@ -23,7 +23,9 @@ from ninpy.torch2 import (
 )
 
 if __name__ == "__main__":
-    hparams, exp_pth, writer = ninpy_setting("cifar10", "hyper.yaml", benchmark=True)
+    hparams, exp_pth, writer = ninpy_setting(
+        "cifar10", "hyper.yaml", benchmark=True
+    )
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_transforms, test_transforms = get_cifar10_transforms()
     train_loader, test_loader = load_toy_dataset(
@@ -34,7 +36,9 @@ if __name__ == "__main__":
         train_transforms=train_transforms,
         test_transforms=test_transforms,
     )
-    model = MLPMixer(image_size=32, patch_size=8, dim=512, depth=12, num_classes=10)
+    model = MLPMixer(
+        image_size=32, patch_size=8, dim=512, depth=12, num_classes=10
+    )
     writer.add_graph(model, torch.zeros(1, 3, 32, 32))
     model = model.to(device)
 
@@ -54,7 +58,13 @@ if __name__ == "__main__":
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         trainv2(
-            model, device, train_loader, optimizer, criterion, epoch, writer,
+            model,
+            device,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
@@ -62,7 +72,9 @@ if __name__ == "__main__":
         if test_acc > best_acc:
             best_acc = test_acc
             save_model(
-                os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
+                os.path.join(
+                    exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"
+                ),
                 model,
                 optimizer,
                 save_epoch=hparams.save_epoch,
@@ -72,6 +84,8 @@ if __name__ == "__main__":
 
     logging.info(f"Best test accuracy: {best_acc}")
     metric_dict = {"best_acc": best_acc}
-    tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
+    tensorboard_hparams(
+        writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict
+    )
     metric_dict.update(hparams)
     # basic_notify(metric_dict)

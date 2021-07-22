@@ -7,7 +7,12 @@ from torchvision.datasets import ImageFolder
 from ninpy.datasets import BurstDataset
 from ninpy.datasets.augment import get_cinic10_transforms
 
-__all__ = ["get_cinic10_basic", "get_cinic10_loaders", "CINIC10", "BurstCINIC10"]
+__all__ = [
+    "get_cinic10_basic",
+    "get_cinic10_loaders",
+    "CINIC10",
+    "BurstCINIC10",
+]
 
 
 def get_cinic10_basic(
@@ -101,7 +106,10 @@ if __name__ == "__main__":
 
     train_transform, valid_transform = get_cinic10_albumentations_transforms()
     dataset = CINIC10(
-        "~/datasets/CINIC10", "train", cv2_loader, transform=train_transform,
+        "~/datasets/CINIC10",
+        "train",
+        cv2_loader,
+        transform=train_transform,
     )
     print("Load using a CINIC10.")
     for img, label in dataset:

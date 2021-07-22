@@ -28,7 +28,9 @@ def measure_sparse(*ws) -> float:
             device = w.device
             num_params += w.numel()
             total_sparsity += torch.where(
-                w == 0.0, torch.tensor(1.0).to(device), torch.tensor(0.0).to(device)
+                w == 0.0,
+                torch.tensor(1.0).to(device),
+                torch.tensor(0.0).to(device),
             ).sum()
         if num_params == 0:
             # Protecting in case, all parameters is zeros. 0/0 = ZeroDivisionError.
@@ -91,16 +93,25 @@ class TerQuant(torch.autograd.Function):
         ctx.save_for_backward(w, threshold)
         device = w.device
         w_ter = torch.where(
-            w > threshold, torch.tensor(1.0).to(device), torch.tensor(0.0).to(device)
+            w > threshold,
+            torch.tensor(1.0).to(device),
+            torch.tensor(0.0).to(device),
         )
-        w_ter = torch.where(w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter)
-        w_ter = torch.where(w < -threshold, torch.tensor(-1.0).to(device), w_ter)
+        w_ter = torch.where(
+            w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter
+        )
+        w_ter = torch.where(
+            w < -threshold, torch.tensor(-1.0).to(device), w_ter
+        )
         return w_ter
 
     @staticmethod
     def backward(ctx, grad_o):
         r"""Back propagation using same as an identity function."""
-        (w, thre,) = ctx.saved_tensors
+        (
+            w,
+            thre,
+        ) = ctx.saved_tensors
         grad_i = grad_o.clone()
         return grad_i, None
 
@@ -282,11 +293,21 @@ class QuantModule(nn.Module):
                 bias = l.bias is not None
 
                 if w == "f":
-                    setattr(self, n, Linear(in_features, out_features, bias=bias))
+                    setattr(
+                        self, n, Linear(in_features, out_features, bias=bias)
+                    )
                 elif w == "t":
-                    setattr(self, n, ModTerLinear(in_features, out_features, bias=bias))
+                    setattr(
+                        self,
+                        n,
+                        ModTerLinear(in_features, out_features, bias=bias),
+                    )
                 elif w == "b":
-                    setattr(self, n, BinLinear(in_features, out_features, bias=bias))
+                    setattr(
+                        self,
+                        n,
+                        BinLinear(in_features, out_features, bias=bias),
+                    )
                 else:
                     raise NotImplementedError(
                         f"type_ws should be in [f, t, b], your {w}"
@@ -297,7 +318,9 @@ class QuantModule(nn.Module):
 
             else:
                 if verbose:
-                    logging.info(f"Skipping {n} layer with quantization type {w}.")
+                    logging.info(
+                        f"Skipping {n} layer with quantization type {w}."
+                    )
 
     def sparse_all(self) -> float:
         """Get all sparse from all layers that has attribute, weight_q."""
@@ -324,7 +347,12 @@ class ResNet18(QuantModule):
         assert isinstance(in_channels, int)
         # First conv layer.
         self.l0 = nn.Conv2d(
-            3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            3,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l1 = nn.BatchNorm2d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -333,7 +361,12 @@ class ResNet18(QuantModule):
 
         # Layer 1
         self.l3 = nn.Conv2d(
-            64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            64,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l4 = nn.BatchNorm2d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -341,7 +374,12 @@ class ResNet18(QuantModule):
         self.l5 = nn.ReLU(inplace=True)
 
         self.l6 = nn.Conv2d(
-            64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            64,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l7 = nn.BatchNorm2d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -351,14 +389,24 @@ class ResNet18(QuantModule):
         self.l8 = nn.ReLU(inplace=True)
 
         self.l9 = nn.Conv2d(
-            64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            64,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l10 = nn.BatchNorm2d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l11 = nn.ReLU(inplace=True)
         self.l12 = nn.Conv2d(
-            64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            64,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l13 = nn.BatchNorm2d(
             64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -369,34 +417,56 @@ class ResNet18(QuantModule):
 
         # Layer 2
         self.l15 = nn.Conv2d(
-            64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False
+            64,
+            128,
+            kernel_size=(3, 3),
+            stride=(2, 2),
+            padding=(1, 1),
+            bias=False,
         )
         self.l16 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l17 = nn.ReLU(inplace=True)
         self.l18 = nn.Conv2d(
-            128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            128,
+            128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l19 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s2 = nn.Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s2 = nn.Conv2d(
+            64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s3 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l20 = nn.ReLU(inplace=True)
 
         self.l21 = nn.Conv2d(
-            128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            128,
+            128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l22 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l23 = nn.ReLU(inplace=True)
         self.l24 = nn.Conv2d(
-            128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            128,
+            128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l25 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -407,34 +477,56 @@ class ResNet18(QuantModule):
 
         # Layer 3
         self.l27 = nn.Conv2d(
-            128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False
+            128,
+            256,
+            kernel_size=(3, 3),
+            stride=(2, 2),
+            padding=(1, 1),
+            bias=False,
         )
         self.l28 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l29 = nn.ReLU(inplace=True)
         self.l30 = nn.Conv2d(
-            256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            256,
+            256,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l31 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s5 = nn.Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s5 = nn.Conv2d(
+            128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s6 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l32 = nn.ReLU(inplace=True)
 
         self.l33 = nn.Conv2d(
-            256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            256,
+            256,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l34 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l35 = nn.ReLU(inplace=True)
         self.l36 = nn.Conv2d(
-            256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            256,
+            256,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l37 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -445,34 +537,56 @@ class ResNet18(QuantModule):
 
         # Layer 4
         self.l39 = nn.Conv2d(
-            256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False
+            256,
+            512,
+            kernel_size=(3, 3),
+            stride=(2, 2),
+            padding=(1, 1),
+            bias=False,
         )
         self.l40 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l41 = nn.ReLU(inplace=True)
         self.l42 = nn.Conv2d(
-            512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            512,
+            512,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l43 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s8 = nn.Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s8 = nn.Conv2d(
+            256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s9 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l44 = nn.ReLU(inplace=True)
 
         self.l45 = nn.Conv2d(
-            512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            512,
+            512,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l46 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         self.l47 = nn.ReLU(inplace=True)
         self.l48 = nn.Conv2d(
-            512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            512,
+            512,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l49 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
@@ -649,9 +763,13 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
             if w == "f":
                 setattr(model, n, Linear(in_features, out_features, bias=bias))
             elif w == "t":
-                setattr(model, n, TerLinear(in_features, out_features, bias=bias))
+                setattr(
+                    model, n, TerLinear(in_features, out_features, bias=bias)
+                )
             elif w == "b":
-                setattr(model, n, BinLinear(in_features, out_features, bias=bias))
+                setattr(
+                    model, n, BinLinear(in_features, out_features, bias=bias)
+                )
             else:
                 raise NotImplementedError(
                     f"type_ws should be in [f, t, b], your {type_ws}"
@@ -662,20 +780,37 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
 
         else:
             if verbose:
-                logging.info(f"Skipping {n} layer with quantization type {type_ws}.")
+                logging.info(
+                    f"Skipping {n} layer with quantization type {type_ws}."
+                )
 
 
 class TestNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.l0 = nn.Conv2d(
-            3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            3,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l1 = nn.Conv2d(
-            64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+            64,
+            64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=False,
         )
         self.l2 = nn.Conv2d(
-            128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=True
+            128,
+            128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+            bias=True,
         )
 
     def forward(self, x):

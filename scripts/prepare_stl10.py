@@ -121,11 +121,16 @@ def download_and_extract():
         def _progress(count, block_size, total_size):
             sys.stdout.write(
                 "\rDownloading %s %.2f%%"
-                % (filename, float(count * block_size) / float(total_size) * 100.0)
+                % (
+                    filename,
+                    float(count * block_size) / float(total_size) * 100.0,
+                )
             )
             sys.stdout.flush()
 
-        filepath, _ = urllib.urlretrieve(DATA_URL, filepath, reporthook=_progress)
+        filepath, _ = urllib.urlretrieve(
+            DATA_URL, filepath, reporthook=_progress
+        )
         print("Downloaded", filename)
         tarfile.open(filepath, "r:gz").extractall(dest_directory)
 

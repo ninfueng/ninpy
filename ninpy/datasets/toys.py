@@ -51,57 +51,97 @@ def load_toy_dataset(
     dataset_name = dataset_name.lower()
     if dataset_name == "mnist":
         train_set = torchvision.datasets.MNIST(
-            root=data_path, train=True, download=True, transform=train_transforms
+            root=data_path,
+            train=True,
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.MNIST(
-            root=data_path, train=False, download=True, transform=test_transforms
+            root=data_path,
+            train=False,
+            download=True,
+            transform=test_transforms,
         )
 
     elif dataset_name == "fmnist":
         train_set = torchvision.datasets.FashionMNIST(
-            root=data_path, train=True, download=True, transform=train_transforms
+            root=data_path,
+            train=True,
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.FashionMNIST(
-            root=data_path, train=False, download=True, transform=test_transforms
+            root=data_path,
+            train=False,
+            download=True,
+            transform=test_transforms,
         )
 
     elif dataset_name == "emnist":
         train_set = torchvision.datasets.EMNIST(
-            root=data_path, train=True, download=True, transform=train_transforms
+            root=data_path,
+            train=True,
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.FashionMNIST(
-            root=data_path, train=False, download=True, transform=test_transforms
+            root=data_path,
+            train=False,
+            download=True,
+            transform=test_transforms,
         )
 
     elif dataset_name == "cifar10":
         train_set = torchvision.datasets.CIFAR10(
-            root=data_path, train=True, download=True, transform=train_transforms
+            root=data_path,
+            train=True,
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.CIFAR10(
-            root=data_path, train=False, download=True, transform=test_transforms
+            root=data_path,
+            train=False,
+            download=True,
+            transform=test_transforms,
         )
 
     elif dataset_name == "cifar100":
         train_set = torchvision.datasets.CIFAR100(
-            root=data_path, train=True, download=True, transform=train_transforms
+            root=data_path,
+            train=True,
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.CIFAR100(
-            root=data_path, train=False, download=True, transform=test_transforms
+            root=data_path,
+            train=False,
+            download=True,
+            transform=test_transforms,
         )
 
     elif dataset_name == "svhn":
         # The extra dataset does not include in this dataset.
         train_set = torchvision.datasets.SVHN(
-            root=data_path, split="train", download=True, transform=train_transforms
+            root=data_path,
+            split="train",
+            download=True,
+            transform=train_transforms,
         )
         test_set = torchvision.datasets.SVHN(
-            root=data_path, split="test", download=True, transform=test_transforms
+            root=data_path,
+            split="test",
+            download=True,
+            transform=test_transforms,
         )
     else:
         raise NotImplementedError(
             "dataset must be in [mnist, fmnist, kmnist, "
             f"emnist, cifar10, cifar100, svhn] only, your input: {dataset_name}"
         )
-    train_loader = get_basic_loader(train_set, num_train_batch, "train", num_workers)
-    test_loader = get_basic_loader(test_set, num_test_batch, "test", num_workers)
+    train_loader = get_basic_loader(
+        train_set, num_train_batch, "train", num_workers
+    )
+    test_loader = get_basic_loader(
+        test_set, num_test_batch, "test", num_workers
+    )
     return train_loader, test_loader

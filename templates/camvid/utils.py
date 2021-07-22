@@ -27,7 +27,13 @@ def warmup(
     for w in range(warmup_epochs):
         for idx, (data, target) in enumerate(train_loader):
             set_warmup_lr(
-                initial_lr, warmup_epochs, train_loader, optimizer, idx, w, False
+                initial_lr,
+                warmup_epochs,
+                train_loader,
+                optimizer,
+                idx,
+                w,
+                False,
             )
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad(set_to_none=True)
@@ -43,11 +49,20 @@ def warmup(
             acc = (output.argmax(-1) == target).float().sum()
             avgloss.update(loss, batch_size)
             avgacc.update(acc, batch_size)
-        logging.info(f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
+        )
 
 
 def train(
-    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
+    model,
+    device,
+    train_loader,
+    optimizer,
+    criterion,
+    epoch,
+    writer=None,
+    verbose=True,
 ):
     NUM_CLASSES = 11
     confusion_matrix = ConfusionMatrix(NUM_CLASSES)
@@ -73,14 +88,22 @@ def train(
 
     if verbose:
         miou = confusion_matrix.miou_score()
-        logging.info(f"Train epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Train epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}"
+        )
         if writer is not None:
             writer.add_scalar("train/loss", avgloss(), epoch)
             writer.add_scalar("train/miou", miou, epoch)
 
 
 def test(
-    model, device, test_loader, criterion, epoch: int, writer=None, verbose=True
+    model,
+    device,
+    test_loader,
+    criterion,
+    epoch: int,
+    writer=None,
+    verbose=True,
 ) -> float:
     NUM_CLASSES = 11
     confusion_matrix = ConfusionMatrix(NUM_CLASSES)
@@ -101,7 +124,9 @@ def test(
 
     if verbose:
         miou = confusion_matrix.miou_score()
-        logging.info(f"Test epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Test epoch {epoch} mIoU: {miou:.4f} Loss: {avgloss():.4f}"
+        )
         if writer is not None:
             writer.add_scalar("test/loss", avgloss(), epoch)
             writer.add_scalar("test/miou", miou, epoch)

@@ -21,10 +21,15 @@ from ninpy.torch2 import (
 )
 
 if __name__ == "__main__":
-    hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
+    hparams, exp_pth, writer = ninpy_setting(
+        "imagenet", "hyper.yaml", benchmark=True
+    )
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_loader, test_loader = get_imagenet_loaders(
-        hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=False
+        hparams.dataset_dir,
+        hparams.train_batch,
+        hparams.num_workers,
+        distributed=False,
     )
 
     model = resnet18(pretrained=False)
@@ -52,7 +57,13 @@ if __name__ == "__main__":
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         trainv2(
-            model, device, train_loader, optimizer, criterion, epoch, writer,
+            model,
+            device,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
@@ -60,7 +71,9 @@ if __name__ == "__main__":
         if test_acc > best_acc:
             best_acc = test_acc
             save_model(
-                os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
+                os.path.join(
+                    exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"
+                ),
                 model,
                 optimizer,
                 save_epoch=hparams.save_epoch,

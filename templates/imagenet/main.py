@@ -20,10 +20,15 @@ from ninpy.torch2 import (
 )
 
 if __name__ == "__main__":
-    hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
+    hparams, exp_pth, writer = ninpy_setting(
+        "imagenet", "hyper.yaml", benchmark=True
+    )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_imagenet_loaders(
-        hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=False
+        hparams.dataset_dir,
+        hparams.train_batch,
+        hparams.num_workers,
+        distributed=False,
     )
 
     model = resnet18(pretrained=False)
@@ -54,7 +59,13 @@ if __name__ == "__main__":
     pbar = tqdm(range(hparams.epochs))
     for epoch in pbar:
         train(
-            model, device, train_loader, optimizer, criterion, epoch, writer,
+            model,
+            device,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
         )
         test_acc = test(model, device, test_loader, criterion, epoch, writer)
         scheduler.step()
@@ -63,7 +74,9 @@ if __name__ == "__main__":
             best_acc = test_acc
             pbar.set_description(f"Best test acc: {best_acc.item():.4f}.")
             save_model(
-                os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
+                os.path.join(
+                    exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"
+                ),
                 model,
                 optimizer,
                 save_epoch=hparams.save_epoch,
@@ -73,6 +86,8 @@ if __name__ == "__main__":
 
     logging.info(f"Best test accuracy: {best_acc}")
     metric_dict = {"best_acc": best_acc}
-    tensorboard_hparams(writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict)
+    tensorboard_hparams(
+        writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict
+    )
     metric_dict.update(hparams.to_dict())
     basic_notify(metric_dict)

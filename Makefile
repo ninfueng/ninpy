@@ -1,50 +1,54 @@
 clean:
 	@echo "Remove build, dist, pytest_cache, pycache, mypy_cache, and experiment results."
-	rm -rf build/
-	rm -rf dist/
-	rm -rf *.egg-info
-	find . -iname "__pycache__" | xargs rm -rf
-	find . -iname ".pytest_cache" | xargs rm -rf
-	find . -iname ".mypy_cache" | xargs rm -rf
-	find . -iname "2021:*" | xargs rm -rf
-	find ./templates/*  -iname "dataset" | xargs rm -rf
+	@-rm -rf build/
+	@-rm -rf dist/
+	@-rm -rf *.egg-info
+	@-find . -iname "__pycache__" | xargs rm -rf
+	@-find . -iname ".pytest_cache" | xargs rm -rf
+	@-find . -iname ".mypy_cache" | xargs rm -rf
+	@-find . -iname "2021:*" | xargs rm -rf
+	@-find ./templates/*  -iname "dataset" | xargs rm -rf
 
 format:
 	# TODO: consider autopep8, yapf and others.
-	@echo "Formatting Python files with black and isort."
-	find . -iname "*.py" | xargs isort
+	@-echo "Formatting Python files with black and isort."
+	@-find . -iname "*.py" | xargs isort
 	# isort might change format of black. Recommend to isort first then black.
-	find . -iname "*.py" | xargs black
+	@-find . -iname "*.py" | xargs black --line-length 80
 
 lint:
 	@echo "Lint "
-	mypy . --ignore-missing-imports
-	find . -iname "*.py" | xargs pylint
-	flake8
-	pydocstyle .
+	@-mypy . --ignore-missing-imports
+	@-find . -iname "*.py" | xargs pylint
+	@-flake8
+	@-pydocstyle .
 
 pytest:
 	@echo "Test with pytest."
-	cd tests/
-	pytest
-	cd -
+	@cd tests/
+	@pytest
+	@cd -
 
 doctest:
 	@echo "Test with doctest"
-	cd ninpy/
-	find . -iname "*.py" | xargs python -m doctest -v
-	cd -
+	@cd ninpy/
+	@find . -iname "*.py" | xargs python -m doctest -v
+	@cd -
 
 mypy:
 	@echo "Test with mypy."
-	cd ninpy/
+	@cd ninpy/
 	# TODO: use this? find . -iname "*.py" | xargs python -m mypy --ignore-missing-imports
-	find . -iname "*.py" | xargs -n 1 mypy --ignore-missing-imports
-	cd -
+	@find . -iname "*.py" | xargs -n 1 mypy --ignore-missing-imports
+	@cd -
 
 publish:
 	@echo "Start publish to pip."
-	python setup.py sdist
-	twine upload dist/*
+	@python setup.py sdist
+	@twine upload dist/*
+
+install:
+	@python setup.py develop
 
 .PHONY: clean format lint test publish mypy doctest
+

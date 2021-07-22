@@ -31,7 +31,9 @@ def measure_sparse(*ws) -> torch.Tensor:
             num_params += w.numel()
 
             total_sparsity += torch.where(
-                w == 0.0, torch.tensor(1.0).to(device), torch.tensor(0.0).to(device)
+                w == 0.0,
+                torch.tensor(1.0).to(device),
+                torch.tensor(0.0).to(device),
             ).sum()
         if num_params == 0:
             # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
@@ -86,7 +88,9 @@ def np2cpp(
         file.write("\n")
 
         if len(array.shape) == 1:
-            file.write(type_var + " " + name_var + str([array.shape[0]]) + " {")
+            file.write(
+                type_var + " " + name_var + str([array.shape[0]]) + " {"
+            )
             for i in range(array.shape[0]):
                 file.write(str(array[i]))
                 file.write(",")
@@ -165,5 +169,6 @@ def np2cpp(
 
         if verbose:
             logging.info(
-                f"Generate header file: {name_file}" f"with guard band {header_guard}."
+                f"Generate header file: {name_file}"
+                f"with guard band {header_guard}."
             )

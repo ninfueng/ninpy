@@ -236,9 +236,7 @@ from ninpy.datasets.utils import cv2_loader
 #     dataset.save_imgs_masks(save_root, resize_size)
 
 
-SEGNET_CAMVID_URL = (
-    "https://raw.githubusercontent.com/alexgkendall/SegNet-Tutorial/master/CamVid/"
-)
+SEGNET_CAMVID_URL = "https://raw.githubusercontent.com/alexgkendall/SegNet-Tutorial/master/CamVid/"
 
 CAMVID_COLORMAP = {
     # Sky
@@ -362,13 +360,18 @@ def load_mask(path: str) -> np.ndarray:
         if i in [1, 2, 3, 4, 5, 6, 8, 9, 10]:
             for j in range(len(CAMVID_COLORMAP[i])):
                 cls_mask = (
-                    cv2.inRange(mask, CAMVID_COLORMAP[i][j], CAMVID_COLORMAP[i][j])
+                    cv2.inRange(
+                        mask, CAMVID_COLORMAP[i][j], CAMVID_COLORMAP[i][j]
+                    )
                     / 255.0
                 )
                 cls_masks[cls_mask.astype(bool)] = i
         else:
             # Class without sub-class.
-            cls_mask = cv2.inRange(mask, CAMVID_COLORMAP[i], CAMVID_COLORMAP[i]) / 255.0
+            cls_mask = (
+                cv2.inRange(mask, CAMVID_COLORMAP[i], CAMVID_COLORMAP[i])
+                / 255.0
+            )
             cls_masks[cls_mask.astype(bool)] = i
     return cls_masks.astype(np.uint8)
 
@@ -397,21 +400,26 @@ def save_imgs_masks(
 
     # For mask
     resized_maskdirs = [
-        os.path.join(save_path, "labels", i + "_L" + "." + j) for i, j in zip(x, y)
+        os.path.join(save_path, "labels", i + "_L" + "." + j)
+        for i, j in zip(x, y)
     ]
 
     pbar = tqdm(zip(resized_imgdirs, imgs), total=len(imgs))
     pbar.set_description("Save images")
     for p, i in pbar:
         # https://github.com/VITA-Group/FasterSeg/blob/master/tools/utils/img_utils.py#L109
-        resized_img = cv2.resize(i, resize_size, interpolation=cv2.INTER_LINEAR)
+        resized_img = cv2.resize(
+            i, resize_size, interpolation=cv2.INTER_LINEAR
+        )
         cv2.imwrite(p, resized_img)
 
     pbar = tqdm(zip(resized_maskdirs, masks), total=len(masks))
     pbar.set_description("Save masks")
     for p, i in pbar:
         # INTER_NEARST = not change RGB values of images.
-        resized_mask = cv2.resize(i, resize_size, interpolation=cv2.INTER_NEAREST)
+        resized_mask = cv2.resize(
+            i, resize_size, interpolation=cv2.INTER_NEAREST
+        )
         cv2.imwrite(p, resized_mask)
 
 
@@ -431,7 +439,9 @@ class Camvid(Dataset):
 
     NUM_CLASSES = 11
 
-    def __init__(self, root, mode, process_mask, transforms=None, img_mode="RGB"):
+    def __init__(
+        self, root, mode, process_mask, transforms=None, img_mode="RGB"
+    ):
         img_mode = img_mode.upper()
         mode = mode.lower()
         assert mode in ["train", "val", "test"]

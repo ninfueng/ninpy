@@ -40,7 +40,9 @@ class BaseDataset(Dataset):
             (lambda x: x) if target_transform is None else target_transform
         )
         self.loader = (lambda x: x) if loader is None else loader
-        self.target_loader = (lambda x: x) if target_loader is None else target_loader
+        self.target_loader = (
+            (lambda x: x) if target_loader is None else target_loader
+        )
         self.data_dirs, self.label_dirs = None, None
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -63,7 +65,9 @@ class BaseDataset(Dataset):
         """Get all data locations and labels. Can inputs more data to further processing."""
         raise NotImplementedError()
 
-    def set_data_label_dirs(self, data_dirs: List[str], label_dirs: List[str]) -> None:
+    def set_data_label_dirs(
+        self, data_dirs: List[str], label_dirs: List[str]
+    ) -> None:
         self.data_dirs, self.label_dirs = data_dirs, label_dirs
 
 
@@ -89,7 +93,9 @@ class BurstDataset(BaseDataset):
         return [self.loader(d) for d in data_dirs]
 
     def load_images(
-        self, load_images_fn: Optional[Callable] = None, num_workers: int = cpu_count()
+        self,
+        load_images_fn: Optional[Callable] = None,
+        num_workers: int = cpu_count(),
     ) -> None:
         """Load images and assign identify function to self.loader."""
         if load_images_fn is None:
@@ -160,7 +166,9 @@ class BurstImageFolder(ImageFolder):
         self.loader = lambda x: x
 
     def load_images(self) -> None:
-        img_dirs = [self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes]
+        img_dirs = [
+            self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes
+        ]
         num_labels = [len(i) for i in img_dirs]
         labels = []
         for idx, n in enumerate(num_labels):
@@ -186,7 +194,9 @@ def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
         Else accumulate all one by one elements to calculate a mean and standard deviation.
     """
     sample, _ = next(iter(dataset))
-    assert True if isinstance(sample, torch.Tensor) else False, "Support only PyTorch format."
+    assert (
+        True if isinstance(sample, torch.Tensor) else False
+    ), "Support only PyTorch format."
     assert isinstance(burst, bool)
     if burst:
         dataset = torch.stack([i[0] for i in list(dataset)], dim=0)

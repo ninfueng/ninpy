@@ -12,10 +12,12 @@ import torch.nn as nn
 from torch.nn.modules.batchnorm import _NormBase
 from torch.nn.modules.conv import _ConvNd
 from torch.optim.lr_scheduler import _LRScheduler
+
 try:
     from torch.utils.tensorboard import SummaryWriter
 except ModuleNotFoundError:
     from tensorboardX import SummaryWriter
+
 from ninpy.common import multilv_getattr
 from ninpy.data import AttrDict
 from ninpy.experiment import set_experiment
@@ -62,7 +64,9 @@ def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
         Else accumulate all information into a
     """
     sample, _ = next(iter(dataset))
-    assert True if isinstance(sample, torch.Tensor) else False, "Support only PyTorch format."
+    assert (
+        True if isinstance(sample, torch.Tensor) else False
+    ), "Support only PyTorch format."
     if burst:
         dataset = torch.stack([i[0] for i in list(dataset)], dim=0)
         mean = torch.mean(dataset, dim=(0, 2, 3))
@@ -80,6 +84,18 @@ def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
         # std /= size
         # std = std.sqrt()
     return mean, std
+
+
+def set_fastmode():
+    """
+    Refer:
+        https://betterprogramming.pub/how-to-make-your-pytorch-code-run-faster-93079f3c1f7b
+        https://spell.ml/blog/pytorch-training-tricks-YAnJqBEAACkARhgD
+    """
+    torch.backends.cudnn.benchmark = True
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(False)
+    torch.autograd.profiler.emit_nvtx(False)
 
 
 def tensorboard_models(
@@ -132,7 +148,9 @@ def topk_accuracy(
     return corrects, batch_size
 
 
-def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) -> None:
+def seed_torch(
+    seed: int = 2021, benchmark: bool = False, verbose: bool = True
+) -> None:
     """Seed the random seed to all possible modules.
 
     From: https://github.com/pytorch/pytorch/issues/11278
@@ -158,7 +176,9 @@ def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) 
         torch.backends.cudnn.deterministic = True
 
     if verbose:
-        logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
+        logging.info(
+            f"Plant a random seed: {seed} with benchmark mode: {benchmark}."
+        )
 
 
 def ninpy_setting(
@@ -179,7 +199,9 @@ def ninpy_setting(
     args = parser.parse_args()
 
     hparams = AttrDict(load_yaml(args.yaml))
-    assert hasattr(hparams, "seed"), "yaml file should contain a seed attribute."
+    assert hasattr(
+        hparams, "seed"
+    ), "yaml file should contain a seed attribute."
     if args.exp_pth == None:
         exp_pth = name_experiment(hparams)
     else:
@@ -344,7 +366,9 @@ def load_model(
             for _ in range(epoch):
                 scheduler.step()
         except TypeError:
-            raise TypeError("{scheduler.__class__.__name__()}: requires input metrics.")
+            raise TypeError(
+                "{scheduler.__class__.__name__()}: requires input metrics."
+            )
 
     if verbose:
         logging.info(
@@ -391,7 +415,9 @@ def init_weights(model: nn.Module) -> None:
     for m in model.modules():
         if isinstance(m, _ConvNd):
             # a = 0, in case of leaky relu consider change this.
-            nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            nn.init.kaiming_normal_(
+                m.weight, mode="fan_out", nonlinearity="relu"
+            )
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0.0)
         elif isinstance(m, _NormBase):
@@ -460,15 +486,16 @@ def set_batchnorm_eval(m) -> None:
 
 
 def freeze_batchnorm(m: nn.Module) -> None:
-    """>>> model.apply(freeze_batchnorm)
-    """
+    """>>> model.apply(freeze_batchnorm)"""
     classname = m.__class__.__name__
     if classname.find("BatchNorm") != -1:
         for param in m.parameters():
             param.requires_grad = False
 
 
-def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None:
+def freeze_param_given_name(
+    m, freeze_names: list, verbose: bool = True
+) -> None:
     for name, param in m.named_parameters():
         if name in freeze_names:
             param.requires_grad = False
@@ -477,7 +504,9 @@ def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None
                 logging.info(f"Layer: {name} was freeze.")
 
 
-def get_num_weight_from_name(model: nn.Module, name: str, verbose: bool = True) -> list:
+def get_num_weight_from_name(
+    model: nn.Module, name: str, verbose: bool = True
+) -> list:
     """Get a number of weight from a name of module.
     >>> model = resnet18(pretrained=False)
     >>> num_weight = get_num_weight_from_name(model, 'fc')
@@ -502,7 +531,9 @@ class CheckPointer(object):
         elif task.lower() == "min":
             self.var = np.finfo(float).max
         else:
-            raise NotImplementedError(f"var can be only `max` or `min`. Your {verbose}")
+            raise NotImplementedError(
+                f"var can be only `max` or `min`. Your {verbose}"
+            )
         self.task = task.lower()
         self.verbose = verbose
         self.patience = patience
@@ -582,7 +613,9 @@ class BatchWarmupScheduler(_LRScheduler):
         last_epoch: int = -1,
         verbose: bool = False,
     ) -> None:
-        self.warmup_batchs = self._get_warmup_batchs(train_loader, warmup_epochs)
+        self.warmup_batchs = self._get_warmup_batchs(
+            train_loader, warmup_epochs
+        )
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self) -> None:
@@ -595,10 +628,14 @@ class BatchWarmupScheduler(_LRScheduler):
         elif self.last_epoch == 1:
             # Make sure that initial learning rate is correct with other schedulers.
             # This if cause can protect only a scheduler only!
-            return [0.0 + 1 / self.warmup_steps for _ in self.optimizer.param_groups]
+            return [
+                0.0 + 1 / self.warmup_steps
+                for _ in self.optimizer.param_groups
+            ]
         # After each step adding 1/self.warmup_steps.
         return [
-            1 / self.warmup_steps + group["lr"] for group in self.optimizer.param_groups
+            1 / self.warmup_steps + group["lr"]
+            for group in self.optimizer.param_groups
         ]
 
     def _get_warmup_batchs(

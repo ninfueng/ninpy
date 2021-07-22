@@ -2,3 +2,5 @@ albumentations
 seaborn
 knockknock
 pyyaml
+torch
+numpy

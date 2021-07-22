@@ -27,10 +27,14 @@ class ConfusionMatrix:
         confusion = pred * self.num_classes + true
         # self.num_classes ** 2 = size of a confusion matrix.
         bincount = np.bincount(confusion, minlength=self.num_classes ** 2)
-        self._confusion_matrix += bincount.reshape(self.num_classes, self.num_classes)
+        self._confusion_matrix += bincount.reshape(
+            self.num_classes, self.num_classes
+        )
 
     def pixel_accuracy(self) -> np.ndarray:
-        acc = np.diag(self._confusion_matrix) / self._confusion_matrix.sum(axis=0)
+        acc = np.diag(self._confusion_matrix) / self._confusion_matrix.sum(
+            axis=0
+        )
         acc = np.nanmean(acc)
         return acc
 

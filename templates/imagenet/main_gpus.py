@@ -49,7 +49,10 @@ def worker(rank, hparams):
 
     print(f"Hyper parameters: {hparams}")
     train_loader, test_loader = get_imagenet_loaders(
-        hparams.dataset_dir, hparams.train_batch, hparams.num_workers, distributed=True
+        hparams.dataset_dir,
+        hparams.train_batch,
+        hparams.num_workers,
+        distributed=True,
     )
 
     model = resnet18(pretrained=False)
@@ -75,15 +78,28 @@ def worker(rank, hparams):
     best_acc = 0.0
     pbar = range(hparams.epochs)
     for epoch in pbar:
-        train(model, rank, train_loader, optimizer, criterion, epoch, writer, verbose)
-        test_acc = test(model, rank, test_loader, criterion, epoch, writer, verbose)
+        train(
+            model,
+            rank,
+            train_loader,
+            optimizer,
+            criterion,
+            epoch,
+            writer,
+            verbose,
+        )
+        test_acc = test(
+            model, rank, test_loader, criterion, epoch, writer, verbose
+        )
         scheduler.step()
 
         if test_acc > best_acc:
             best_acc = test_acc
             if verbose:
                 save_model(
-                    os.path.join(exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"),
+                    os.path.join(
+                        exp_pth, f"{test_acc:.4f}".replace(".", "_") + ".pth"
+                    ),
                     model,
                     optimizer,
                     save_epoch=hparams.save_epoch,
@@ -103,7 +119,9 @@ def worker(rank, hparams):
 
 if __name__ == "__main__":
     best_acc = 0
-    hparams, exp_pth, writer = ninpy_setting("imagenet", "hyper.yaml", benchmark=True)
+    hparams, exp_pth, writer = ninpy_setting(
+        "imagenet", "hyper.yaml", benchmark=True
+    )
 
     # https://stackoverflow.com/questions/58271635/in-distributed-computing-what-are-world-size-and-rank
     mp.spawn(worker, args=(hparams,), nprocs=hparams.world_size)

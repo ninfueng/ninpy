@@ -32,9 +32,10 @@ def get_imagenet_loaders(
     root = os.path.expanduser(root)
     traindir = os.path.join(root, "train")
     valdir = os.path.join(root, "val")
-    (default_train_transforms, default_val_transforms,) = get_imagenet_transforms(
-        crop_size, resize_size
-    )
+    (
+        default_train_transforms,
+        default_val_transforms,
+    ) = get_imagenet_transforms(crop_size, resize_size)
 
     if train_transforms is None:
         train_transforms = default_train_transforms
@@ -85,6 +86,8 @@ if __name__ == "__main__":
 
     img = get_imagenet_img(preprocess=False)
     print(img)
-    train_transforms, val_transforms = get_imagenet_albumentations_transforms(256, 224)
+    train_transforms, val_transforms = get_imagenet_albumentations_transforms(
+        256, 224
+    )
     output = train_transforms(img)
     print(output)

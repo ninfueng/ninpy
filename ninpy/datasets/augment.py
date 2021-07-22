@@ -68,7 +68,10 @@ def get_cifar10_transforms() -> Tuple[Callable, Callable]:
         ]
     )
     test_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD)]
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+        ]
     )
     return train_transform, test_transform
 
@@ -83,13 +86,17 @@ def get_cifar100_transforms() -> Tuple[Callable, Callable]:
         ]
     )
     test_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD)]
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR100_MEAN, CIFAR100_STD),
+        ]
     )
     return train_transform, test_transform
 
 
 def get_imagenet_transforms(
-    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
+    crop_size: Union[int, Tuple[int, int]],
+    resize_size: Union[int, Tuple[int, int]],
 ) -> Tuple[Callable, Callable]:
     if isinstance(crop_size, int):
         crop_size = (crop_size, crop_size)
@@ -119,7 +126,8 @@ def get_imagenet_transforms(
 
 
 def get_imagenet_albumentations_transforms(
-    crop_size: Union[int, Tuple[int, int]], resize_size: Union[int, Tuple[int, int]]
+    crop_size: Union[int, Tuple[int, int]],
+    resize_size: Union[int, Tuple[int, int]],
 ) -> Tuple[Callable, Callable]:
 
     if isinstance(crop_size, int):

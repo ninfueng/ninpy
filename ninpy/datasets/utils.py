@@ -85,7 +85,10 @@ def multithread_load_images(
 
 
 def get_basic_loader(
-    dataset: Dataset, batch_size: int, mode: str, num_workers: int = cpu_count()
+    dataset: Dataset,
+    batch_size: int,
+    mode: str,
+    num_workers: int = cpu_count(),
 ) -> DataLoader:
     """Get a loader with two different sets of `kwargs` for train or valid (test)."""
     # TODO: support distributed dataparallel.

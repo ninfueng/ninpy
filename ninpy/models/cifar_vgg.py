@@ -8,7 +8,23 @@ import torch.nn.functional as F
 __all__ = ["VGG"]
 cfg = {
     "VGG11": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
-    "VGG13": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "VGG13": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        "M",
+        512,
+        512,
+        "M",
+        512,
+        512,
+        "M",
+    ],
     "VGG16": [
         64,
         64,
@@ -77,7 +93,9 @@ class VGG(nn.Module):
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
             else:
                 layers += [
-                    nn.Conv2d(in_channels, x, kernel_size=3, padding=1, bias=False),
+                    nn.Conv2d(
+                        in_channels, x, kernel_size=3, padding=1, bias=False
+                    ),
                     nn.BatchNorm2d(x),
                     nn.ReLU(inplace=True),
                 ]
@@ -96,7 +114,12 @@ class BasicBlock(nn.Module):
     def __init__(self, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(
-            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+            in_planes,
+            planes,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            bias=False,
         )
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(

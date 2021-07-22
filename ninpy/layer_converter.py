@@ -16,7 +16,11 @@ class LayerConverter:
 
     @staticmethod
     def cvt_nor(
-        model, old_layer_type, new_layer_type, convert_weights=False, num_groups=None
+        model,
+        old_layer_type,
+        new_layer_type,
+        convert_weights=False,
+        num_groups=None,
     ) -> nn.Module:
         """If num_groups is 1, GroupNorm turns into LayerNorm. If num_groups is None, GroupNorm turns into InstanceNorm
         Example:
@@ -60,7 +64,11 @@ class LayerConverter:
             if len(list(module.children())) > 0:
                 # Recurives.
                 model._modules[name] = LayerConverter.cvt_conv(
-                    module, old_layer_type, new_layer_type, convert_weights, **kwargs
+                    module,
+                    old_layer_type,
+                    new_layer_type,
+                    convert_weights,
+                    **kwargs,
                 )
             # single module
             if type(module) == old_layer_type:
@@ -99,7 +107,11 @@ class LayerConverter:
             if len(list(module.children())) > 0:
                 # Recurives.
                 model._modules[name] = LayerConverter.cvt_linear(
-                    module, old_layer_type, new_layer_type, convert_weights, **kwargs
+                    module,
+                    old_layer_type,
+                    new_layer_type,
+                    convert_weights,
+                    **kwargs,
                 )
             # single module
             if type(module) == old_layer_type:
@@ -152,7 +164,9 @@ class LayerConverter:
         return model
 
 
-def convert_module2module(model, module_a, module_b, verbose: bool = True) -> None:
+def convert_module2module(
+    model, module_a, module_b, verbose: bool = True
+) -> None:
     r"""From: https://discuss.pytorch.org/t/how-to-replace-all-relu-activations-in-a-pretrained-network/31591/5
     Example:
     >>> convert_module2module(model, HardSwish, nn.Hardswish())

@@ -18,7 +18,9 @@ def str2bool(v: str) -> bool:
     elif lower in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError(f"Boolean value is expected. Your input: {v}")
+        raise argparse.ArgumentTypeError(
+            f"Boolean value is expected. Your input: {v}"
+        )
 
 
 def multilv_getattr(obj, multi_lv: str):

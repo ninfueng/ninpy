@@ -22,7 +22,13 @@ def warmup(
     for w in range(warmup_epochs):
         for idx, (data, target) in enumerate(train_loader):
             set_warmup_lr(
-                initial_lr, warmup_epochs, train_loader, optimizer, idx, w, False
+                initial_lr,
+                warmup_epochs,
+                train_loader,
+                optimizer,
+                idx,
+                w,
+                False,
             )
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
@@ -39,11 +45,20 @@ def warmup(
             acc = (output.argmax(-1) == target).float().sum()
             avgloss.update(loss, batch_size)
             avgacc.update(acc, batch_size)
-        logging.info(f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Warmup epoch {w} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
+        )
 
 
 def train(
-    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
+    model,
+    device,
+    train_loader,
+    optimizer,
+    criterion,
+    epoch,
+    writer=None,
+    verbose=True,
 ):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
@@ -66,14 +81,23 @@ def train(
         avgacc.update(acc, batch_size)
 
     if verbose:
-        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
+        )
         if writer is not None:
             writer.add_scalar("train_acc", avgacc(), epoch)
             writer.add_scalar("train_loss", avgloss(), epoch)
 
 
 def trainv2(
-    model, device, train_loader, optimizer, criterion, epoch, writer=None, verbose=True
+    model,
+    device,
+    train_loader,
+    optimizer,
+    criterion,
+    epoch,
+    writer=None,
+    verbose=True,
 ):
     avgloss, avgacc = RunningAverage(), RunningAverage()
     model.train()
@@ -95,14 +119,22 @@ def trainv2(
         avgacc.update(acc, batch_size)
 
     if verbose:
-        logging.info(f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Train epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
+        )
         if writer is not None:
             writer.add_scalar("train/acc", avgacc(), epoch)
             writer.add_scalar("train/loss", avgloss(), epoch)
 
 
 def test(
-    model, device, test_loader, criterion, epoch: int, writer=None, verbose=True
+    model,
+    device,
+    test_loader,
+    criterion,
+    epoch: int,
+    writer=None,
+    verbose=True,
 ) -> float:
     avgloss, avgacc = RunningAverage(), RunningAverage()
 
@@ -119,7 +151,9 @@ def test(
             avgacc.update(acc, batch_size)
 
     if verbose:
-        logging.info(f"Test epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}")
+        logging.info(
+            f"Test epoch {epoch} Acc: {avgacc():.4f} Loss: {avgloss():.4f}"
+        )
         if writer is not None:
             writer.add_scalar("test/acc", avgacc(), epoch)
             writer.add_scalar("test/loss", avgloss(), epoch)

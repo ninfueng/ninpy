@@ -151,7 +151,8 @@ def download_aug(path, overwrite=False):
         with tarfile.open(filename) as tar:
             tar.extractall(path=path)
             shutil.move(
-                os.path.join(path, "benchmark_RELEASE"), os.path.join(path, "VOCaug")
+                os.path.join(path, "benchmark_RELEASE"),
+                os.path.join(path, "VOCaug"),
             )
             filenames = ["VOCaug/dataset/train.txt", "VOCaug/dataset/val.txt"]
             # generate trainval.txt

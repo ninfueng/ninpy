@@ -111,4 +111,3 @@ class AttrDictList(AttrDict):
     def to_yaml() -> None:
         # TODO: support dict to yaml.
         raise NotImplementedError("Not supported yet.")
-
