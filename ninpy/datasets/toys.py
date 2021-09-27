@@ -138,10 +138,6 @@ def load_toy_dataset(
             "dataset must be in [mnist, fmnist, kmnist, "
             f"emnist, cifar10, cifar100, svhn] only, your input: {dataset_name}"
         )
-    train_loader = get_basic_loader(
-        train_set, num_train_batch, "train", num_workers
-    )
-    test_loader = get_basic_loader(
-        test_set, num_test_batch, "test", num_workers
-    )
+    train_loader = get_basic_loader(train_set, num_train_batch, "train", num_workers)
+    test_loader = get_basic_loader(test_set, num_test_batch, "test", num_workers)
     return train_loader, test_loader

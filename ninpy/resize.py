@@ -21,24 +21,17 @@ class ImageResizer:
 
     def __init__(self, filetype: str = "*.png") -> None:
         assert isinstance(filetype, str)
-        assert (
-            filetype.find("*") > -1
-        ), "Need to have a wildcard to find images."
+        assert filetype.find("*") > -1, "Need to have a wildcard to find images."
 
         self.list_imgs = glob.glob(filetype)
-        list_name_imgs = [
-            Path(i).stem + Path(i).suffix for i in self.list_imgs
-        ]
+        list_name_imgs = [Path(i).stem + Path(i).suffix for i in self.list_imgs]
         dir_loc = Path(filetype).parent
         self.save_loc = str(dir_loc) + "_resize"
         self.list_save_loc = [
-            os.path.join(self.save_loc, str(img_loc))
-            for img_loc in list_name_imgs
+            os.path.join(self.save_loc, str(img_loc)) for img_loc in list_name_imgs
         ]
 
-    def gen_resize_imgs(
-        self, resize=(), interpolation=cv2.INTER_NEAREST
-    ) -> None:
+    def gen_resize_imgs(self, resize=(), interpolation=cv2.INTER_NEAREST) -> None:
         assert len(resize) == 2
 
         if not os.path.exists(self.save_loc):

@@ -18,9 +18,7 @@ class KITTIRoadDataset(Dataset):
     >>> img, mask = next(iter(road_dataset))
     """
 
-    def __init__(
-        self, root: str, transform: Optional[Callable] = None
-    ) -> None:
+    def __init__(self, root: str, transform: Optional[Callable] = None) -> None:
         assert isinstance(root, str)
 
         super().__init__()
@@ -56,9 +54,7 @@ class KITTIRoadDataset(Dataset):
             transform = A.Compose(
                 [
                     A.Resize(256, 1024),
-                    A.Normalize(
-                        mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
-                    ),
+                    A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
                     ToTensorV2(),
                 ]
             )

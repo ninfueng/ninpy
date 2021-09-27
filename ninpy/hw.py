@@ -88,9 +88,7 @@ def np2cpp(
         file.write("\n")
 
         if len(array.shape) == 1:
-            file.write(
-                type_var + " " + name_var + str([array.shape[0]]) + " {"
-            )
+            file.write(type_var + " " + name_var + str([array.shape[0]]) + " {")
             for i in range(array.shape[0]):
                 file.write(str(array[i]))
                 file.write(",")
@@ -169,6 +167,5 @@ def np2cpp(
 
         if verbose:
             logging.info(
-                f"Generate header file: {name_file}"
-                f"with guard band {header_guard}."
+                f"Generate header file: {name_file}" f"with guard band {header_guard}."
             )

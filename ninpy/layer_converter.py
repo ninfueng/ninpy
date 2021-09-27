@@ -164,9 +164,7 @@ class LayerConverter:
         return model
 
 
-def convert_module2module(
-    model, module_a, module_b, verbose: bool = True
-) -> None:
+def convert_module2module(model, module_a, module_b, verbose: bool = True) -> None:
     r"""From: https://discuss.pytorch.org/t/how-to-replace-all-relu-activations-in-a-pretrained-network/31591/5
     Example:
     >>> convert_module2module(model, HardSwish, nn.Hardswish())

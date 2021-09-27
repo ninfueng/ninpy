@@ -97,12 +97,8 @@ class TerQuant(torch.autograd.Function):
             torch.tensor(1.0).to(device),
             torch.tensor(0.0).to(device),
         )
-        w_ter = torch.where(
-            w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter
-        )
-        w_ter = torch.where(
-            w < -threshold, torch.tensor(-1.0).to(device), w_ter
-        )
+        w_ter = torch.where(w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter)
+        w_ter = torch.where(w < -threshold, torch.tensor(-1.0).to(device), w_ter)
         return w_ter
 
     @staticmethod
@@ -293,9 +289,7 @@ class QuantModule(nn.Module):
                 bias = l.bias is not None
 
                 if w == "f":
-                    setattr(
-                        self, n, Linear(in_features, out_features, bias=bias)
-                    )
+                    setattr(self, n, Linear(in_features, out_features, bias=bias))
                 elif w == "t":
                     setattr(
                         self,
@@ -318,9 +312,7 @@ class QuantModule(nn.Module):
 
             else:
                 if verbose:
-                    logging.info(
-                        f"Skipping {n} layer with quantization type {w}."
-                    )
+                    logging.info(f"Skipping {n} layer with quantization type {w}.")
 
     def sparse_all(self) -> float:
         """Get all sparse from all layers that has attribute, weight_q."""
@@ -440,9 +432,7 @@ class ResNet18(QuantModule):
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s2 = nn.Conv2d(
-            64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False
-        )
+        self.s2 = nn.Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.s3 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -500,9 +490,7 @@ class ResNet18(QuantModule):
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s5 = nn.Conv2d(
-            128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False
-        )
+        self.s5 = nn.Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.s6 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -560,9 +548,7 @@ class ResNet18(QuantModule):
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s8 = nn.Conv2d(
-            256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False
-        )
+        self.s8 = nn.Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
         self.s9 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -763,13 +749,9 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
             if w == "f":
                 setattr(model, n, Linear(in_features, out_features, bias=bias))
             elif w == "t":
-                setattr(
-                    model, n, TerLinear(in_features, out_features, bias=bias)
-                )
+                setattr(model, n, TerLinear(in_features, out_features, bias=bias))
             elif w == "b":
-                setattr(
-                    model, n, BinLinear(in_features, out_features, bias=bias)
-                )
+                setattr(model, n, BinLinear(in_features, out_features, bias=bias))
             else:
                 raise NotImplementedError(
                     f"type_ws should be in [f, t, b], your {type_ws}"
@@ -780,9 +762,7 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
 
         else:
             if verbose:
-                logging.info(
-                    f"Skipping {n} layer with quantization type {type_ws}."
-                )
+                logging.info(f"Skipping {n} layer with quantization type {type_ws}.")
 
 
 class TestNet(nn.Module):

@@ -1,3 +1,4 @@
+from .datasets import *
 from . import (
     cinic10,
     detect,
@@ -8,4 +9,3 @@ from . import (
     utils,
     voc2012,
 )
-from .datasets import *

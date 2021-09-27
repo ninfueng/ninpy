@@ -86,8 +86,6 @@ if __name__ == "__main__":
 
     img = get_imagenet_img(preprocess=False)
     print(img)
-    train_transforms, val_transforms = get_imagenet_albumentations_transforms(
-        256, 224
-    )
+    train_transforms, val_transforms = get_imagenet_albumentations_transforms(256, 224)
     output = train_transforms(img)
     print(output)

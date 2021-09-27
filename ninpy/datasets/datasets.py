@@ -3,11 +3,16 @@
 import glob
 import os
 import warnings
+import requests
+import tarfile
+import shutil
+
 from functools import reduce
 from multiprocessing import cpu_count
 from typing import Any, Callable, List, Optional, Tuple
 
 import psutil
+import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
@@ -40,19 +45,12 @@ class BaseDataset(Dataset):
             (lambda x: x) if target_transform is None else target_transform
         )
         self.loader = (lambda x: x) if loader is None else loader
-        self.target_loader = (
-            (lambda x: x) if target_loader is None else target_loader
-        )
+        self.target_loader = (lambda x: x) if target_loader is None else target_loader
         self.data_dirs, self.label_dirs = None, None
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        assert (
-            self.data_dirs is not None
-        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
-        assert (
-            self.label_dirs is not None
-        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
-
+        """ """
+        self._check_data_label_dirs()
         data, label = self.data_dirs[idx], self.label_dirs[idx]
         data, label = self.loader(data), self.target_loader(label)
         data, label = self.transform(data), self.target_transform(label)
@@ -63,12 +61,27 @@ class BaseDataset(Dataset):
 
     def get_data_label_dirs(self) -> None:
         """Get all data locations and labels. Can inputs more data to further processing."""
-        raise NotImplementedError()
+        raise NotImplementedError("Please define this method.")
 
-    def set_data_label_dirs(
-        self, data_dirs: List[str], label_dirs: List[str]
-    ) -> None:
+    def set_data_label_dirs(self, data_dirs: List[str], label_dirs: List[str]) -> None:
+        """Load data and label to attributes."""
         self.data_dirs, self.label_dirs = data_dirs, label_dirs
+
+    def set_subset(self, p: float) -> None:
+        """Randomly select data and labels."""
+        self._check_data_label_dirs()
+        assert 0.0 < p <= 1.0, "`p` should be in range (0.0, 1.0]."
+        mask = np.random.choice([0, 1], [1 - p, p])
+        self.data_dirs = self.data_dirs[mask]
+        self.label_dirs = self.label_dirs[mask]
+
+    def _check_data_label_dirs(self) -> None:
+        assert (
+            self.data_dirs is not None
+        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
+        assert (
+            self.label_dirs is not None
+        ), "Please set via `get_data_label_dirs` or `set_data_label_dirs`."
 
 
 class BurstDataset(BaseDataset):
@@ -166,9 +179,7 @@ class BurstImageFolder(ImageFolder):
         self.loader = lambda x: x
 
     def load_images(self) -> None:
-        img_dirs = [
-            self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes
-        ]
+        img_dirs = [self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes]
         num_labels = [len(i) for i in img_dirs]
         labels = []
         for idx, n in enumerate(num_labels):
@@ -190,7 +201,7 @@ class BurstImageFolder(ImageFolder):
 def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
     """Get a mean and standard deviation from a dataset.
     Args:
-        burst (bool): If True load all data to RAM and calculates a mean and standard deviation.
+        burst (bool): If True load all data into a RAM and calculates a mean and standard deviation.
         Else accumulate all one by one elements to calculate a mean and standard deviation.
     """
     sample, _ = next(iter(dataset))
@@ -215,6 +226,34 @@ def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
         # std /= size
         # std = std.sqrt()
     return mean, std
+
+
+def download_mnist(save_dir: str = "datasets") -> None:
+    """Download MNIST dataset, untar it, and move into `save_dir`.
+    After that, clean them out."""
+    assert isinstance(save_dir, str)
+    FILE = "MNIST"
+    FILE_TAR = FILE + ".tar.gz"
+
+    print("Downloading MNIST dataset.")
+    r = requests.get(f"http://www.di.ens.fr/~lelarge/{FILE_TAR}")
+    open(FILE_TAR, 'wb').write(r.content)
+
+    print(f"Extracting: {FILE_TAR} to: {FILE} directory.")
+    tar = tarfile.open(FILE_TAR, "r:gz")
+    tar.extractall()
+    tar.close()
+
+    print(f"Removing tar file: {FILE_TAR}.")
+    os.remove(FILE_TAR)
+
+    print(f"Moving MNIST to: {save_dir}.")
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, FILE)
+    if os.path.exists(save_path):
+        print(f"Detect existed {save_path}, removing.")
+        shutil.rmtree(save_path)
+    shutil.move(FILE, save_dir)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,8 @@ from albumentations.pytorch import ToTensorV2
 
 MNIST_MEAN = 0.1307
 MNIST_STD = 0.3081
+FASHION_MNIST_MEAN = 0.2860405969887955
+FASHION_MNIST_STD = 0.3530242445149223
 CIFAR10_MEAN = (0.49139968, 0.48215827, 0.44653124)
 CIFAR10_STD = (0.24703233, 0.24348505, 0.26158768)
 CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
@@ -103,6 +105,7 @@ def get_imagenet_transforms(
     if isinstance(resize_size, int):
         resize_size = (resize_size, resize_size)
     assert len(crop_size) == 2 and len(resize_size) == 2
+    assert crop_size[0] >= resize_size[0] and crop_size[1] >= resize_size[1]
 
     normalize = transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD)
     train_transforms = transforms.Compose(
@@ -135,7 +138,7 @@ def get_imagenet_albumentations_transforms(
     if isinstance(resize_size, int):
         resize_size = (resize_size, resize_size)
     assert len(crop_size) == 2 and len(resize_size) == 2
-    assert crop_size[0] > resize_size[0]
+    assert crop_size[0] >= resize_size[0] and crop_size[1] >= resize_size[1]
 
     train_transforms = ClassifyCompose(
         [
