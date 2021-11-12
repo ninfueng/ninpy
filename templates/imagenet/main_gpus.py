@@ -18,7 +18,7 @@ from apex.parallel import DistributedDataParallel
 from torchvision.models import resnet18
 from utils import test, train, warmup
 
-from ninpy.datasets import get_imagenet_loaders
+from ninpy.torch2.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
 from ninpy.torch_utils import (
     load_model,

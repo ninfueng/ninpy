@@ -6,19 +6,19 @@ from typing import Any, Dict
 
 import yaml
 
-from ninpy.data import AttrDict
+from ninpy import AttrDict
 
 
-def load_yaml(yaml_file: str, with_attrdict: bool = True) -> dict:
+def load_yaml(yaml_file: str, use_attrdict: bool = True) -> dict:
     """Load a yaml file with an option to load into AttrDict or not.
     Example:
     >>> load_yaml('./config.yaml')
     """
     assert isinstance(yaml_file, str)
-    assert isinstance(with_attrdict, bool)
+    assert isinstance(use_attrdict, bool)
     with open(yaml_file, "r") as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
-    if with_attrdict:
+    if use_attrdict:
         data = AttrDict(data)
     return data
 

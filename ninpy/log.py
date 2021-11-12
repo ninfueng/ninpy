@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
-"""@author: Ninnart Fuengfusin"""
+"""IO related functions.
+@author: Ninnart Fuengfusin
+"""
 import logging
 import os
 from pathlib import Path
+
+from termcolor import colored
+
+gprint = lambda x: print(colored(x, "green"))
+rprint = lambda x: print(colored(x, "red"))
+yprint = lambda x: print(colored(x, "yellow"))
+bprint = lambda x: print(colored(x, "blue"))
 
 
 def set_logger(

@@ -1,16 +1,51 @@
 """Quantization tools.
 @author: Ninnart Fuengfusin
 """
-import logging
+import math
 
+import logging
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+log2_quant = lambda x: 2 ** round(math.log2(x))
+log2_quant_num_shift = lambda x: round(math.log2(x))
+int8_quant = lambda x, s, zp: ((x / s) + zp).round().clamp(-128, 127)
+uint8_quant = lambda x, s, zp: ((x / s) + zp).round().clamp(0, 255)
+tqt_int8_quant = lambda x, s: (x / s).round().clamp(-128, 127)
+tqt_uint8_quant = lambda x, s: (x / s).round().clamp(0, 255)
+merge_scale2bn = lambda w_bn, b_bn, s_in, s_out: (
+    s_in * w_bn / s_out,
+    b_bn / s_out,
+)
+
+
+def basic_quant_config():
+    """"""
+    qconfig = torch.quantization.QConfig(
+        activation=torch.quantization.FakeQuantize.with_args(
+            observer=torch.quantization.MinMaxObserver,
+            quant_min=0,
+            quant_max=255,
+            qscheme=torch.per_tensor_symmetric,
+            dtype=torch.quint8,
+            reduce_range=False,
+        ),
+        weight=torch.quantization.FakeQuantize.with_args(
+            observer=torch.quantization.MinMaxObserver,
+            quant_min=-128,
+            quant_max=127,
+            dtype=torch.qint8,
+            qscheme=torch.per_tensor_symmetric,
+            reduce_range=False,
+        ),
+    )
+    return qconfig
+
 
 def measure_sparse(*ws) -> float:
-    r"""Measure the sparsity of input tensors or *tensors.
+    """Measure the sparsity of input tensors or *tensors.
     Example:
     >>> measure_sparse(w0, w1)
     """
@@ -97,8 +132,12 @@ class TerQuant(torch.autograd.Function):
             torch.tensor(1.0).to(device),
             torch.tensor(0.0).to(device),
         )
-        w_ter = torch.where(w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter)
-        w_ter = torch.where(w < -threshold, torch.tensor(-1.0).to(device), w_ter)
+        w_ter = torch.where(
+            w.abs() <= -threshold, torch.tensor(0.0).to(device), w_ter
+        )
+        w_ter = torch.where(
+            w < -threshold, torch.tensor(-1.0).to(device), w_ter
+        )
         return w_ter
 
     @staticmethod
@@ -289,7 +328,9 @@ class QuantModule(nn.Module):
                 bias = l.bias is not None
 
                 if w == "f":
-                    setattr(self, n, Linear(in_features, out_features, bias=bias))
+                    setattr(
+                        self, n, Linear(in_features, out_features, bias=bias)
+                    )
                 elif w == "t":
                     setattr(
                         self,
@@ -312,7 +353,9 @@ class QuantModule(nn.Module):
 
             else:
                 if verbose:
-                    logging.info(f"Skipping {n} layer with quantization type {w}.")
+                    logging.info(
+                        f"Skipping {n} layer with quantization type {w}."
+                    )
 
     def sparse_all(self) -> float:
         """Get all sparse from all layers that has attribute, weight_q."""
@@ -432,7 +475,9 @@ class ResNet18(QuantModule):
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s2 = nn.Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s2 = nn.Conv2d(
+            64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s3 = nn.BatchNorm2d(
             128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -490,7 +535,9 @@ class ResNet18(QuantModule):
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s5 = nn.Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s5 = nn.Conv2d(
+            128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s6 = nn.BatchNorm2d(
             256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -548,7 +595,9 @@ class ResNet18(QuantModule):
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
         # Shortcut
-        self.s8 = nn.Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        self.s8 = nn.Conv2d(
+            256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False
+        )
         self.s9 = nn.BatchNorm2d(
             512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
         )
@@ -749,9 +798,13 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
             if w == "f":
                 setattr(model, n, Linear(in_features, out_features, bias=bias))
             elif w == "t":
-                setattr(model, n, TerLinear(in_features, out_features, bias=bias))
+                setattr(
+                    model, n, TerLinear(in_features, out_features, bias=bias)
+                )
             elif w == "b":
-                setattr(model, n, BinLinear(in_features, out_features, bias=bias))
+                setattr(
+                    model, n, BinLinear(in_features, out_features, bias=bias)
+                )
             else:
                 raise NotImplementedError(
                     f"type_ws should be in [f, t, b], your {type_ws}"
@@ -762,7 +815,9 @@ def cvt2quant(model: nn.Module, type_ws: str, verbose: bool = True) -> None:
 
         else:
             if verbose:
-                logging.info(f"Skipping {n} layer with quantization type {type_ws}.")
+                logging.info(
+                    f"Skipping {n} layer with quantization type {type_ws}."
+                )
 
 
 class TestNet(nn.Module):

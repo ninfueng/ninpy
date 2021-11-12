@@ -3,12 +3,29 @@
 """@author: Ninnart Fuengfusin"""
 import argparse
 import pickle
-from typing import Any
+import datetime
+from typing import Any, Callable
+
+__all__ = [
+    "str2bool",
+    "multi_getattr",
+    "multi_setattr",
+    "pickle_dump",
+    "pickle_load",
+]
+
+
+def get_datetime() -> str:
+    """Return a string of year-month-day hour-minute-second."""
+    return str(datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"))
 
 
 def str2bool(v: str) -> bool:
-    """From: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    """Modified from: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     Put str2bool as a type of argparse to able to receive true or false as input.
+    Example:
+        >>> parser.add_argument("--book", type=str2bool)
+        python main.py --book true
     """
     if isinstance(v, bool):
         return v
@@ -18,35 +35,37 @@ def str2bool(v: str) -> bool:
     elif lower in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError(f"Boolean value is expected. Your input: {v}")
+        raise argparse.ArgumentTypeError(
+            f"Boolean value is expected. Your input: {v}."
+        )
 
 
-def multilv_getattr(obj, multi_lv: str):
+def multi_getattr(obj, multi_attr: str):
     """Get multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
-    >>> multilv_getattr(model, 'trunk.early')
+    >>> multi_getattr(model, 'trunk.early')
     """
-    assert isinstance(multi_lv, str)
-    lvs = multi_lv.split(".")
-    for l in lvs:
-        obj = getattr(obj, l)
+    assert isinstance(multi_attr, str)
+    attrs = multi_attr.split(".")
+    for a in attrs:
+        obj = getattr(obj, a)
     return obj
 
 
-def multilv_setattr(obj, multi_lv: str, set_with: object) -> None:
+def multi_setattr(obj, multi_attr: str, set_with: object) -> None:
     """Set multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
     >>> model = MobileV3Large.from_pretrained()
-    >>> multilv_setattr(model, 'conv_up3.conv', nn.Conv2d(5, 5, 5))
+    >>> multi_setattr(model, 'conv_up3.conv', nn.Conv2d(5, 5, 5))
     """
-    assert isinstance(multi_lv, str)
-    lvs = multi_lv.split(".")
-    for l in lvs[:-1]:
-        obj = getattr(obj, l)
-    setattr(obj, lvs[-1], set_with)
+    assert isinstance(multi_attr, str)
+    attrs = multi_attr.split(".")
+    for a in attrs[:-1]:
+        obj = getattr(obj, a)
+    setattr(obj, attrs[-1], set_with)
 
 
 def pickle_dump(name: str, obj: Any) -> None:
@@ -57,33 +76,3 @@ def pickle_dump(name: str, obj: Any) -> None:
 def pickle_load(name: str) -> Any:
     with open(name, "rb") as f:
         return pickle.load(f)
-
-
-class RunningAverage(object):
-    """A simple class that maintains the running average of a quantity
-    Example:
-    >>> loss_avg = RunningAverage()
-    >>> loss_avg.update(loss, batch_size)
-    >>> loss_avg()
-    """
-
-    def __init__(self):
-        self.numel = 0
-        self.total = 0
-        self.steps = 0
-
-    def update(self, val: int, numel: int):
-        self.total += val
-        self.numel += numel
-        self.steps += 1
-
-    def __call__(self):
-        return self.total / self.numel
-
-
-def assertall(obj, func, *attrs):
-    """Created for `hasattr`, and etc.
-    Not work with func with two arguments upper.
-    """
-    assert callable(func)
-    return all([func(obj, attr) for attr in attrs])

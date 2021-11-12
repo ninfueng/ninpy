@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import torch
 
+__all__ = ["AttrDict", "AttrDictList"]
+
 
 class AttrDict(OrderedDict):
     """Recusive attribute OrderedDict.
@@ -22,6 +24,7 @@ class AttrDict(OrderedDict):
     4
     """
 
+    # TODO: creates a good print representation of AttrDict.
     __slots__ = ()
     __getattr__ = OrderedDict.__getitem__
     __setattr__ = OrderedDict.__setitem__

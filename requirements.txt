@@ -1,6 +1,5 @@
-albumentations
-seaborn
-knockknock
-pyyaml
 torch
 numpy
+albumentations
+seaborn
+pyyaml

@@ -1,3 +1,4 @@
+from typing import Union
 import logging
 from pathlib import Path
 
@@ -5,42 +6,19 @@ import numpy as np
 import torch
 
 
-def measure_sparse(*ws) -> torch.Tensor:
-    """Measure the sparsity of input tensors.
-    TODO: unittest this function.
-    Example:
-    ```
-    >>> measure_sparse(torch.zeros(10, 10), torch.ones(10,10))
-    ```
-    """
-    if not ws:
-        # Detect in case, empty tuple of ws (max pooling or others).
-        # If cannot detect weights, then assign a sparsity as zero.
-        sparse = torch.tensor(0.0)
-    else:
-        # In case, not empty tuple.
-        total_sparsity = 0
-        num_params = 0
-        for w in ws:
-            if w is None:
-                # In case of w is None.
-                continue
+def save_bin(
+    name: str, tensor: Union[torch.Tensor, np.ndarray, float, int]
+) -> None:
+    """Save bin file with a tensor."""
+    assert isinstance(name, str)
+    if isinstance(tensor, torch.Tensor):
+        tensor = tensor.detach().cpu().numpy()
 
-            w = w.data
-            device = w.device
-            num_params += w.numel()
-
-            total_sparsity += torch.where(
-                w == 0.0,
-                torch.tensor(1.0).to(device),
-                torch.tensor(0.0).to(device),
-            ).sum()
-        if num_params == 0:
-            # In case, all parameters is zeros. 0/0 = ZeroDivisionError.
-            sparse = torch.tensor(0.0)
-        else:
-            sparse = total_sparsity / num_params
-    return sparse.item()
+    if isinstance(tensor, float):
+        tensor = np.asarray(tensor, dtype=np.float32)
+    elif isinstance(tensor, int):
+        tensor = np.asarray(tensor, dtype=np.int32)
+    tensor.tofile(name, format="float32")
 
 
 def np2cpp(
@@ -167,5 +145,6 @@ def np2cpp(
 
         if verbose:
             logging.info(
-                f"Generate header file: {name_file}" f"with guard band {header_guard}."
+                f"Generate header file: {name_file}"
+                f"with guard band {header_guard}."
             )

@@ -6,7 +6,6 @@
 import logging
 import os
 import sys
-import time
 from subprocess import check_call
 
 from .yaml2 import dump_yaml, load_yaml

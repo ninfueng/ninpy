@@ -18,7 +18,7 @@ from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
 
-from ninpy.datasets.utils import IMG_EXTENSIONS, multithread_load_images
+from ninpy.torch2.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 
 __all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
 
@@ -45,7 +45,9 @@ class BaseDataset(Dataset):
             (lambda x: x) if target_transform is None else target_transform
         )
         self.loader = (lambda x: x) if loader is None else loader
-        self.target_loader = (lambda x: x) if target_loader is None else target_loader
+        self.target_loader = (
+            (lambda x: x) if target_loader is None else target_loader
+        )
         self.data_dirs, self.label_dirs = None, None
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -63,7 +65,9 @@ class BaseDataset(Dataset):
         """Get all data locations and labels. Can inputs more data to further processing."""
         raise NotImplementedError("Please define this method.")
 
-    def set_data_label_dirs(self, data_dirs: List[str], label_dirs: List[str]) -> None:
+    def set_data_label_dirs(
+        self, data_dirs: List[str], label_dirs: List[str]
+    ) -> None:
         """Load data and label to attributes."""
         self.data_dirs, self.label_dirs = data_dirs, label_dirs
 
@@ -179,7 +183,9 @@ class BurstImageFolder(ImageFolder):
         self.loader = lambda x: x
 
     def load_images(self) -> None:
-        img_dirs = [self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes]
+        img_dirs = [
+            self.get_img_dirs(os.path.join(self.root, c)) for c in self.classes
+        ]
         num_labels = [len(i) for i in img_dirs]
         labels = []
         for idx, n in enumerate(num_labels):
@@ -237,7 +243,7 @@ def download_mnist(save_dir: str = "datasets") -> None:
 
     print("Downloading MNIST dataset.")
     r = requests.get(f"http://www.di.ens.fr/~lelarge/{FILE_TAR}")
-    open(FILE_TAR, 'wb').write(r.content)
+    open(FILE_TAR, "wb").write(r.content)
 
     print(f"Extracting: {FILE_TAR} to: {FILE} directory.")
     tar = tarfile.open(FILE_TAR, "r:gz")

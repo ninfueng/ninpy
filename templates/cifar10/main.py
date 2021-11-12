@@ -5,15 +5,13 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from mlp_mixer_pytorch import MLPMixer
-from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, trainv2, warmup
 
-from ninpy.datasets.augment import get_cifar10_transforms
-from ninpy.datasets.toys import load_toy_dataset
+from ninpy.torch2.models import resnet20
+from ninpy.torch2.datasets.augment import get_cifar10_transforms
+from ninpy.torch2.datasets.toys import load_toy_dataset
 
-# from ninpy.notify import basic_notify
 from ninpy.torch2 import (
     load_model,
     ninpy_setting,
@@ -36,9 +34,7 @@ if __name__ == "__main__":
         train_transforms=train_transforms,
         test_transforms=test_transforms,
     )
-    model = MLPMixer(
-        image_size=32, patch_size=8, dim=512, depth=12, num_classes=10
-    )
+    model = resnet20()
     writer.add_graph(model, torch.zeros(1, 3, 32, 32))
     model = model.to(device)
 

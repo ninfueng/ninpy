@@ -3,10 +3,9 @@
 import logging
 
 import torch.nn as nn
-from torch.nn.modules.module import ModuleAttributeError
 
 
-class LayerConverter:
+class LayerConverter(object):
     """Collection of converter for layer to another type of layer.
     Supports:
         Conv, Linear, Activation, and BatchNorm.
@@ -15,21 +14,22 @@ class LayerConverter:
     """
 
     @staticmethod
-    def cvt_nor(
+    def cvt_batchnorm(
         model,
         old_layer_type,
         new_layer_type,
         convert_weights=False,
         num_groups=None,
     ) -> nn.Module:
-        """If num_groups is 1, GroupNorm turns into LayerNorm. If num_groups is None, GroupNorm turns into InstanceNorm
+        """If `num_groups` is 1, GroupNorm turns into LayerNorm.
+        If `num_groups` is None, GroupNorm turns into InstanceNorm.
         Example:
-        >>> LayerConverter.cvt_nor(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
+        >>> LayerConverter.cvt_batchnorm(model, nn.BatchNorm2d, nn.GroupNorm, True, num_groups=2)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.cvt_nor(
+                model._modules[name] = LayerConverter.cvt_batchnorm(
                     module,
                     old_layer_type,
                     new_layer_type,
@@ -150,12 +150,11 @@ class LayerConverter:
             if type(module) == old_layer_type:
                 try:
                     new_layer = new_layer_type(inplace=module.inplace)
-                except ModuleAttributeError:
+                except TypeError:
                     # Activation without inplace attribute.
                     # Problem with thrid party built activation
                     # without the inplace as the input.
                     new_layer = new_layer_type()
-                except TypeError:
                     # Dealing with inplace  attribute again.
                     # Problem with nn.Tanh?
                     # TypeError: __init__() got an unexpected keyword argument 'inplace'
@@ -164,7 +163,9 @@ class LayerConverter:
         return model
 
 
-def convert_module2module(model, module_a, module_b, verbose: bool = True) -> None:
+def convert_module2module(
+    model, module_a, module_b, verbose: bool = True
+) -> None:
     r"""From: https://discuss.pytorch.org/t/how-to-replace-all-relu-activations-in-a-pretrained-network/31591/5
     Example:
     >>> convert_module2module(model, HardSwish, nn.Hardswish())

@@ -1,19 +1,20 @@
 clean:
 	@echo "Remove build, dist, pytest_cache, pycache, mypy_cache, and experiment results."
-	@-rm -rf build/
-	@-rm -rf dist/
-	@-rm -rf *.egg-info
-	@-find . -iname "__pycache__" | xargs rm -rf
-	@-find . -iname ".pytest_cache" | xargs rm -rf
-	@-find . -iname ".mypy_cache" | xargs rm -rf
-	@-find . -iname "2021:*" | xargs rm -rf
-	@-find ./templates/*  -iname "dataset" | xargs rm -rf
+	-rm -rf build/
+	-rm -rf dist/
+	-rm -rf *.egg-info
+	-find . -iname "__pycache__" | xargs rm -rf
+	-find . -iname ".pytest_cache" | xargs rm -rf
+	-find . -iname ".mypy_cache" | xargs rm -rf
+	-find . -iname "2021:*" | xargs rm -rf
+	-find ./templates/*  -iname "dataset" | xargs rm -rf
 
 format:
 	# TODO: consider autopep8, yapf and others.
 	@-echo "Formatting Python files with black and isort."
-	@-find . -iname "*.py" | xargs isort
+	# Disable isort for now. This may break order of loading modules.
 	# isort might change format of black. Recommend to isort first then black.
+	# @-find . -iname "*.py" | xargs isort
 	@-find . -iname "*.py" | xargs black --line-length 80
 
 lint:
@@ -42,7 +43,7 @@ mypy:
 	@find . -iname "*.py" | xargs -n 1 mypy --ignore-missing-imports
 	@cd -
 
-publish:
+pip:
 	@echo "Start publish to pip."
 	@python setup.py sdist
 	@twine upload dist/*
@@ -50,5 +51,5 @@ publish:
 install:
 	@python setup.py develop
 
-.PHONY: clean format lint test publish mypy doctest
+.PHONY: clean format lint pytest pip mypy doctest
 

@@ -7,7 +7,7 @@ import numpy as np
 from albumentations.pytorch.transforms import ToTensorV2
 from torch.utils.data.dataset import Dataset
 
-from ninpy.datasets.augment import IMAGENET_MEAN, IMAGENET_STD
+from ninpy.torch2.datasets.augment import IMAGENET_MEAN, IMAGENET_STD
 
 
 # TODO: VOCAugSegmentationDataset BASE_AUG = 'benchmark_RELEASE/dataset'
@@ -69,7 +69,9 @@ class VOCSegmentationDataset(Dataset):
         [0, 64, 128],
     ]
 
-    def __init__(self, root: str, train: bool, transform: Optional[Callable]) -> None:
+    def __init__(
+        self, root: str, train: bool, transform: Optional[Callable]
+    ) -> None:
         assert isinstance(root, str)
         assert isinstance(train, bool)
 
@@ -149,7 +151,9 @@ class VOCSegmentationDataset(Dataset):
         """Convert a mask to class array."""
         height, width = mask.shape[:2]
         colormap = self.VOC_COLORMAP
-        segmentation_mask = np.zeros((height, width, len(colormap)), dtype=np.float32)
+        segmentation_mask = np.zeros(
+            (height, width, len(colormap)), dtype=np.float32
+        )
 
         for label_index, label in enumerate(colormap):
             segmentation_mask[:, :, label_index] = np.all(

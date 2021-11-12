@@ -1,4 +1,4 @@
-from ninpy.datasets import BurstDataset
+from ninpy.torch2.datasets import BurstDataset
 
 __all__ = ["PascalDetect"]
 

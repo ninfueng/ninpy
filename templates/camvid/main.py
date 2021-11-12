@@ -14,9 +14,8 @@ from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, warmup
 
-from ninpy.datasets.camvid import Camvid
+from ninpy.torch2.datasets.camvid import Camvid
 from ninpy.losses import class_weights
-from ninpy.notify import basic_notify
 from ninpy.torch2 import (
     load_model,
     ninpy_setting,
@@ -110,7 +109,6 @@ if __name__ == "__main__":
         writer, hparam_dict=hparams.to_dict(), metric_dict=metric_dict
     )
     metric_dict.update(hparams.to_dict())
-    basic_notify(metric_dict)
 
 
 def show_output(model, dataloader):

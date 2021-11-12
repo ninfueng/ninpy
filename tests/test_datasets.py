@@ -3,8 +3,8 @@ import os
 import numpy as np
 from albumentations.pytorch import ToTensorV2
 
-from ninpy.datasets import BurstImageFolder
-from ninpy.datasets.augment import ClassifyCompose
+from ninpy.torch2.datasets import BurstImageFolder
+from ninpy.torch2.datasets.augment import ClassifyCompose
 
 
 def test_wrapped_compose():

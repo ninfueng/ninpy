@@ -1,6 +1,6 @@
 from torchvision.models import alexnet, resnet18
 
-from ninpy.debug import get_imagenet_image
+from ninpy.torch2.debug import get_imagenet_image
 from ninpy.torch2 import get_num_weight_from_name
 
 

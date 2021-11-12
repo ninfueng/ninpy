@@ -1,5 +1,5 @@
-from .datasets import *
-from . import (
+from ninpy.torch2.datasets.datasets import *
+from ninpy.torch2.datasets import (
     cinic10,
     detect,
     imagenet,

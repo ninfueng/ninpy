@@ -9,7 +9,7 @@ from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, warmup
 
-from ninpy.datasets import get_imagenet_loaders
+from ninpy.torch2.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
 from ninpy.torch2 import (
     load_model,

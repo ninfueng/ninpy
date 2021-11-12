@@ -9,7 +9,7 @@ def read(fname: str) -> str:
 
 setup(
     name="ninpy",
-    version="0.0.2",
+    version="0.0.3",
     author="Ninnart Fuengfusin",
     author_email="ninnart.fuengfusin@yahoo.com",
     description="Collection of reuse modules for Ninnart Fuengfusin.",
@@ -17,11 +17,11 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     packages=find_packages(),
-    # Using f-string, it supports from Python 3.6.
     python_requires=">=3.6",
     classifier=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering",

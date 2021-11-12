@@ -18,28 +18,58 @@ try:
 except ModuleNotFoundError:
     from tensorboardX import SummaryWriter
 
-from ninpy.common import multilv_getattr
+from ninpy.common import multi_getattr
 from ninpy.data import AttrDict
 from ninpy.experiment import set_experiment
 from ninpy.log import set_logger
 from ninpy.yaml2 import load_yaml, name_experiment
 
 
+def plant_random_seed(seed: int) -> torch.Generator:
+    """Set a random seed to increase the reductiblity of the experiment.
+    Example:
+    >>> rand_gen = plant_random_seed(2021)
+    >>> DataLoader(generator=rand_gen)
+    """
+    assert isinstance(seed, int)
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    os.environ["PL_GLOBAL_SEED"] = str(seed)
+    np.random.seed(seed)
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    rand_gen = torch.Generator()
+    rand_gen.manual_seed(seed)
+    return rand_gen
+
+
+def plant_worker_seed(seed: int) -> None:
+    """
+    >>> DataLoader(worker_init_fn=plant_worker_seed)
+    """
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+    return
+
+
 def torch2np(x: torch.Tensor) -> np.ndarray:
     """Convert PyTorch tensor format (NCHW) to Numpy or TensorFlow format (NHWC)."""
     assert isinstance(x, torch.Tensor)
     x = x.detach().cpu()
-    shape = x.shape
-    if len(shape) == 2:
+    if len(x.shape) == 2:
         x = torch.movedim(x, 1, 0)
-    elif len(shape) == 3:
+    elif len(x.shape) == 3:
         x = torch.movedim(x, 0, 2)
-    elif len(shape) == 4:
+    elif len(x.shape) == 4:
         x = x.permute(0, 2, 3, 1)
     else:
-        raise ValueError(f"Not supporting with shape of {len(shape)}.")
-    x = x.numpy()
-    return x
+        raise ValueError(f"Not supporting with shape of {len(x.shape)}.")
+    return x.numpy()
 
 
 def np2torch(x: np.ndarray) -> torch.Tensor:
@@ -86,7 +116,7 @@ def get_mean_std(dataset, burst: bool = True) -> Tuple[float, float]:
     return mean, std
 
 
-def set_fastmode():
+def set_fastmode() -> None:
     """
     Refer:
         https://betterprogramming.pub/how-to-make-your-pytorch-code-run-faster-93079f3c1f7b
@@ -148,35 +178,6 @@ def topk_accuracy(
     return corrects, batch_size
 
 
-def seed_torch(seed: int = 2021, benchmark: bool = False, verbose: bool = True) -> None:
-    """Seed the random seed to all possible modules.
-
-    From: https://github.com/pytorch/pytorch/issues/11278
-        https://pytorch.org/docs/stable/notes/randomness.html
-    Example:
-    >>> seed_torch(2021)
-    """
-    assert isinstance(seed, int)
-    assert isinstance(benchmark, bool)
-    assert isinstance(verbose, bool)
-
-    random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    np.random.seed(seed)
-    torch.backends.cudnn.enabled = True
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-
-    if benchmark:
-        # There is some optimized algorithm in case fixed size data.
-        torch.backends.cudnn.benchmark = True
-    else:
-        torch.backends.cudnn.deterministic = True
-
-    if verbose:
-        logging.info(f"Plant a random seed: {seed} with benchmark mode: {benchmark}.")
-
-
 def ninpy_setting(
     name_parser: str,
     yaml_file: Optional[str] = None,
@@ -195,7 +196,9 @@ def ninpy_setting(
     args = parser.parse_args()
 
     hparams = AttrDict(load_yaml(args.yaml))
-    assert hasattr(hparams, "seed"), "yaml file should contain a seed attribute."
+    assert hasattr(
+        hparams, "seed"
+    ), "yaml file should contain a seed attribute."
     if args.exp_pth == None:
         exp_pth = name_experiment(hparams)
     else:
@@ -360,7 +363,9 @@ def load_model(
             for _ in range(epoch):
                 scheduler.step()
         except TypeError:
-            raise TypeError("{scheduler.__class__.__name__()}: requires input metrics.")
+            raise TypeError(
+                "{scheduler.__class__.__name__()}: requires input metrics."
+            )
 
     if verbose:
         logging.info(
@@ -407,7 +412,9 @@ def init_weights(model: nn.Module) -> None:
     for m in model.modules():
         if isinstance(m, _ConvNd):
             # a = 0, in case of leaky relu consider change this.
-            nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            nn.init.kaiming_normal_(
+                m.weight, mode="fan_out", nonlinearity="relu"
+            )
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0.0)
         elif isinstance(m, _NormBase):
@@ -483,7 +490,9 @@ def freeze_batchnorm(m: nn.Module) -> None:
             param.requires_grad = False
 
 
-def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None:
+def freeze_param_given_name(
+    m, freeze_names: list, verbose: bool = True
+) -> None:
     for name, param in m.named_parameters():
         if name in freeze_names:
             param.requires_grad = False
@@ -492,13 +501,15 @@ def freeze_param_given_name(m, freeze_names: list, verbose: bool = True) -> None
                 logging.info(f"Layer: {name} was freeze.")
 
 
-def get_num_weight_from_name(model: nn.Module, name: str, verbose: bool = True) -> list:
+def get_num_weight_from_name(
+    model: nn.Module, name: str, verbose: bool = True
+) -> list:
     """Get a number of weight from a name of module.
     >>> model = resnet18(pretrained=False)
     >>> num_weight = get_num_weight_from_name(model, 'fc')
     """
     assert isinstance(name, str)
-    module = multilv_getattr(model, name)
+    module = multi_getattr(model, name)
     num_weights = module.weight.numel()
     if verbose:
         logging.info(f"Module: {name} contains {num_weights} parameters.")
@@ -517,7 +528,9 @@ class CheckPointer(object):
         elif task.lower() == "min":
             self.var = np.finfo(float).max
         else:
-            raise NotImplementedError(f"var can be only `max` or `min`. Your {verbose}")
+            raise NotImplementedError(
+                f"var can be only `max` or `min`. Your {verbose}"
+            )
         self.task = task.lower()
         self.verbose = verbose
         self.patience = patience
@@ -597,7 +610,9 @@ class BatchWarmupScheduler(_LRScheduler):
         last_epoch: int = -1,
         verbose: bool = False,
     ) -> None:
-        self.warmup_batchs = self._get_warmup_batchs(train_loader, warmup_epochs)
+        self.warmup_batchs = self._get_warmup_batchs(
+            train_loader, warmup_epochs
+        )
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self) -> None:
@@ -610,10 +625,13 @@ class BatchWarmupScheduler(_LRScheduler):
         elif self.last_epoch == 1:
             # Make sure that initial learning rate is correct with other schedulers.
             # This if cause can protect only a scheduler only!
-            return [0.0 + 1 / self.warmup_steps for _ in self.optimizer.param_groups]
+            return [
+                0.0 + 1 / self.warmup_steps for _ in self.optimizer.param_groups
+            ]
         # After each step adding 1/self.warmup_steps.
         return [
-            1 / self.warmup_steps + group["lr"] for group in self.optimizer.param_groups
+            1 / self.warmup_steps + group["lr"]
+            for group in self.optimizer.param_groups
         ]
 
     def _get_warmup_batchs(
