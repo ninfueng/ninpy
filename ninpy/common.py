@@ -4,7 +4,7 @@
 import argparse
 import pickle
 import datetime
-from typing import Any, Callable
+from typing import Any
 
 __all__ = [
     "str2bool",
@@ -40,7 +40,7 @@ def str2bool(v: str) -> bool:
         )
 
 
-def multi_getattr(obj, multi_attr: str):
+def multi_getattr(obj: object, multi_attr: str):
     """Get multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
@@ -54,7 +54,7 @@ def multi_getattr(obj, multi_attr: str):
     return obj
 
 
-def multi_setattr(obj, multi_attr: str, set_with: object) -> None:
+def multi_setattr(obj: object, multi_attr: str, value: Any) -> None:
     """Set multi-levels attribute.
     Example:
     >>> from fastseg import MobileV3Large
@@ -65,7 +65,7 @@ def multi_setattr(obj, multi_attr: str, set_with: object) -> None:
     attrs = multi_attr.split(".")
     for a in attrs[:-1]:
         obj = getattr(obj, a)
-    setattr(obj, attrs[-1], set_with)
+    setattr(obj, attrs[-1], value)
 
 
 def pickle_dump(name: str, obj: Any) -> None:

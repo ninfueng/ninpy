@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """@author: Ninnart Fuengfusin."""
 import logging
+from typing import Callable, Optional
 
 import torch.nn as nn
 
@@ -15,11 +16,11 @@ class LayerConverter(object):
 
     @staticmethod
     def cvt_batchnorm(
-        model,
-        old_layer_type,
-        new_layer_type,
-        convert_weights=False,
-        num_groups=None,
+        model: nn.Module,
+        old_layer_type: Callable,
+        new_layer_type: Callable,
+        convert_weights: bool = False,
+        num_groups=Optional[int],
     ) -> nn.Module:
         """If `num_groups` is 1, GroupNorm turns into LayerNorm.
         If `num_groups` is None, GroupNorm turns into InstanceNorm.
@@ -52,18 +53,22 @@ class LayerConverter(object):
         return model
 
     @staticmethod
-    def cvt_conv(
-        model, old_layer_type, new_layer_type, convert_weights=False, **kwargs
+    def cvt_conv2d(
+        model: nn.Module,
+        old_layer_type: Callable,
+        new_layer_type: Callable,
+        convert_weights: bool = False,
+        **kwargs,
     ) -> nn.Module:
         """Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
-        >>> LayerConverter.convert_convolution(m, nn.Conv2d, nn.Conv1d)
+        >>> LayerConverter.convert_conv2d(m, nn.Conv2d, nn.Conv1d)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.cvt_conv(
+                model._modules[name] = LayerConverter.cvt_conv2d(
                     module,
                     old_layer_type,
                     new_layer_type,
@@ -73,10 +78,6 @@ class LayerConverter(object):
             # single module
             if type(module) == old_layer_type:
                 old_layer = module
-                if module.bias is None:
-                    bias = False
-                else:
-                    bias = True
                 new_layer = new_layer_type(
                     in_channels=module.in_channels,
                     out_channels=module.out_channels,
@@ -85,7 +86,7 @@ class LayerConverter(object):
                     padding=module.padding,
                     dilation=module.dilation,
                     groups=module.groups,
-                    bias=bias,
+                    bias=not module.bias is None,
                     **kwargs,
                 )
                 if convert_weights:
@@ -96,7 +97,11 @@ class LayerConverter(object):
 
     @staticmethod
     def cvt_linear(
-        model, old_layer_type, new_layer_type, convert_weights=False, **kwargs
+        model,
+        old_layer_type: Callable,
+        new_layer_type: Callable,
+        convert_weights: bool = False,
+        **kwargs,
     ) -> nn.Module:
         """Example:
         >>> from torchvision.models import vgg16
@@ -116,15 +121,10 @@ class LayerConverter(object):
             # single module
             if type(module) == old_layer_type:
                 old_layer = module
-                if module.bias is None:
-                    bias = False
-                else:
-                    bias = True
-
                 new_layer = new_layer_type(
                     in_features=module.in_features,
                     out_features=module.out_features,
-                    bias=bias,
+                    bias=not module.bias is None,
                     **kwargs,
                 )
                 if convert_weights:
@@ -134,31 +134,32 @@ class LayerConverter(object):
         return model
 
     @staticmethod
-    def cvt_acti(model, old_layer_type, new_layer_type, **kwargs) -> nn.Module:
+    def cvt_activation(
+        model: nn.Module,
+        old_layer_type: Callable,
+        new_layer_type: Callable,
+        **kwargs,
+    ) -> nn.Module:
         """Example:
         >>> from torchvision.models import vgg16
         >>> m = vgg16(pretrained=False)
-        >>> LayerConverter.cvt_acti(m, nn.ReLU, nn.ReLU6)
+        >>> LayerConverter.cvt_activation(m, nn.ReLU, nn.ReLU6)
         """
         for name, module in reversed(model._modules.items()):
             if len(list(module.children())) > 0:
                 # Recurives.
-                model._modules[name] = LayerConverter.cvt_acti(
+                model._modules[name] = LayerConverter.cvt_activation(
                     module, old_layer_type, new_layer_type, **kwargs
                 )
             # single module
             if type(module) == old_layer_type:
                 try:
-                    new_layer = new_layer_type(inplace=module.inplace)
+                    new_layer = new_layer_type(inplace=module.inplace, **kwargs)
                 except TypeError:
-                    # Activation without inplace attribute.
-                    # Problem with thrid party built activation
-                    # without the inplace as the input.
-                    new_layer = new_layer_type()
-                    # Dealing with inplace  attribute again.
-                    # Problem with nn.Tanh?
-                    # TypeError: __init__() got an unexpected keyword argument 'inplace'
-                    new_layer = new_layer_type()
+                    # A problem with third party built activation.
+                    # Some activation may not contains the inplace attribute.
+                    # If exception raised, recreates module without an inplace argument.
+                    new_layer = new_layer_type(**kwargs)
                 model._modules[name] = new_layer
         return model
 
