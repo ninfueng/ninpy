@@ -5,7 +5,7 @@ MIT License.
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ["VGG"]
+__all__ = ["VGG", "vgg11", "vgg13", "vgg16", "vgg19"]
 cfg = {
     "VGG11": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
     "VGG13": [
