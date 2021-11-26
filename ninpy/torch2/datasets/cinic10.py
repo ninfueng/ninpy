@@ -2,10 +2,9 @@ import glob
 import os
 from typing import Callable, List, Optional, Tuple
 
-from torchvision.datasets import ImageFolder
-
 from ninpy.torch2.datasets import BurstDataset
 from ninpy.torch2.datasets.augment import get_cinic10_transforms
+from torchvision.datasets import ImageFolder
 
 __all__ = [
     "get_cinic10_basic",
@@ -95,11 +94,11 @@ class CINIC10(BurstDataset):
 
 
 if __name__ == "__main__":
+    from ninpy.torch2 import torch2np
     from ninpy.torch2.datasets.augment import (
         get_cinic10_albumentations_transforms,
     )
     from ninpy.torch2.datasets.utils import cv2_load_images, cv2_loader
-    from ninpy.torch2 import torch2np
 
     # train_dataset, val_dataset, test_dataset = get_cinic10_basic()
     # print("Load using a default ImageFolder.")

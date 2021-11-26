@@ -8,7 +8,7 @@ __all__ = ["DataParallel"]
 
 class DataParallel(nn.DataParallel):
     """This `DataParallel` allows an access to any attributes from the module.
-    This `DataParallel` is not necessary in a newer version of PyTorch.
+    From: https://github.com/pytorch/pytorch/issues/16885
     """
 
     def __getattr__(self, name: str) -> Callable:

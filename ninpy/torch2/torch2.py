@@ -20,9 +20,9 @@ except ModuleNotFoundError:
 
 from ninpy.common import multi_getattr
 from ninpy.data import AttrDict
-from ninpy.experiment import set_experiment
+from ninpy.experiment import name_experiment, set_experiment
 from ninpy.log import set_logger
-from ninpy.yaml2 import load_yaml, name_experiment
+from ninpy.yaml2 import load_yaml
 
 
 def plant_random_seed(seed: int) -> torch.Generator:

@@ -8,11 +8,14 @@ from collections import Counter
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.utils.data import Dataset
 from tqdm import tqdm
 
+__all__ = ["get_class_weights", "LabelSmoothLoss"]
 
-def class_weights(dataset):
-    r"""Get masks from a Dataset, finding occurrences for each class.
+
+def get_class_weights(dataset: Dataset) -> np.ndarray:
+    """Get masks from a Dataset, finding occurrences for each class.
     Make in 1/occurrences and to convert into range [0, 1].
     May return more classes than
     """
@@ -30,20 +33,22 @@ def class_weights(dataset):
     return weights
 
 
-class LabelSmoothingLoss(nn.Module):
-    r"""Label Smoothing loss. Cross entropy loss.
+class LabelSmoothLoss(nn.Module):
+    """Label Smoothing loss. Cross entropy loss.
     From:
         https://github.com/pytorch/pytorch/issues/7455#issuecomment-513062631
     """
 
-    def __init__(self, num_classes, smooth: float = 0.0, dim=-1):
+    def __init__(
+        self, num_classes: int, smooth: float = 0.0, dim: int = -1
+    ) -> None:
         super().__init__()
         self.confidence = 1.0 - smooth
         self.smooth = smooth
         self.num_classes = num_classes
         self.dim = dim
 
-    def forward(self, pred, target):
+    def forward(self, pred, target) -> torch.Tensor:
         pred = pred.log_softmax(dim=self.dim)
         with torch.no_grad():
             true_dist = torch.zeros_like(pred)

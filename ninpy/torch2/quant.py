@@ -1,9 +1,9 @@
 """Quantization tools.
 @author: Ninnart Fuengfusin
 """
+import logging
 import math
 
-import logging
 import numpy as np
 import torch
 import torch.nn as nn

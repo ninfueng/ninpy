@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 """@author: Ninnart Fuengfusin"""
 import argparse
-import pickle
 import datetime
 from typing import Any
 
 __all__ = [
+    "get_datetime",
     "str2bool",
     "multi_getattr",
     "multi_setattr",
-    "pickle_dump",
-    "pickle_load",
 ]
 
 
@@ -66,13 +64,3 @@ def multi_setattr(obj: object, multi_attr: str, value: Any) -> None:
     for a in attrs[:-1]:
         obj = getattr(obj, a)
     setattr(obj, attrs[-1], value)
-
-
-def pickle_dump(name: str, obj: Any) -> None:
-    with open(name, "wb") as p:
-        pickle.dump(obj, p, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def pickle_load(name: str) -> Any:
-    with open(name, "rb") as f:
-        return pickle.load(f)

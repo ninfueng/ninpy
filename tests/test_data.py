@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import numpy as np
 
 from ninpy.data import AttrDict, AttrDictList
 
@@ -10,7 +11,6 @@ def test_attrdictlist():
     dictlist = AttrDictList("book0", "book1")
     dictlist.book0.append(5)
     dictlist.book0.append(10)
-
     dictlist.to_csv("book.csv", 0)
     df = pd.read_csv("book.csv")
     os.remove("book.csv")

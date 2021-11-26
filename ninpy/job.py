@@ -3,26 +3,26 @@
 """
 @author: Ninnart Fuengfusin
 """
-import logging
 import os
+import logging
 import sys
 from subprocess import check_call
 
-from .yaml2 import dump_yaml, load_yaml
+from ninpy.yaml2 import dump_yaml, load_yaml
 
 
 def launch_job(
     job_name: str,
     script_name: str,
     hyper_params: dict,
-    exp_pth: str,
+    exp_path: str,
     verbose: bool = True,
 ) -> None:
 
     r"""Modified from: https://github.com/cs230-stanford/cs230-code-examples
     Execute Python scripts on demand.
     Designed to use with hyper parameter tuner such as hyperopt and optuna.
-    Required scripts with with `yaml` and `exp_pth` option.
+    Required scripts with with `yaml` and `exp_path` option.
     Example:
     ```
     >>> launch_job('hparams', 'test_net.py', {'epochs': 1})
@@ -30,7 +30,7 @@ def launch_job(
     """
     # Launch training with this config
     assert isinstance(hyper_params, dict)
-    assert isinstance(exp_pth, str)
+    assert isinstance(exp_path, str)
 
     PYTHON = sys.executable
     # For saving yaml.
@@ -39,7 +39,7 @@ def launch_job(
     if os.path.exists(hyper_yaml):
         os.remove(hyper_yaml)
     dump_yaml(hyper_params, hyper_yaml)
-    cmd = f"{PYTHON} {script_name} --yaml={hyper_yaml} --exp_pth={exp_pth}"
+    cmd = f"{PYTHON} {script_name} --yaml={hyper_yaml} --exp_path={exp_path}"
 
     if verbose:
         logging.info(f"Using launch job with: {cmd}")

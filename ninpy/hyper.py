@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 
 from ninpy.job import launch_job
-from ninpy.yaml2 import dict2str, load_yaml
+from ninpy.yaml2 import load_yaml
+from ninpy.experiment import dict2str
 
 
 def suggest_hparams(input):

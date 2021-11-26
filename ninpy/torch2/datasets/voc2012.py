@@ -5,9 +5,8 @@ import albumentations as A
 import cv2
 import numpy as np
 from albumentations.pytorch.transforms import ToTensorV2
-from torch.utils.data.dataset import Dataset
-
 from ninpy.torch2.datasets.augment import IMAGENET_MEAN, IMAGENET_STD
+from torch.utils.data.dataset import Dataset
 
 
 # TODO: VOCAugSegmentationDataset BASE_AUG = 'benchmark_RELEASE/dataset'

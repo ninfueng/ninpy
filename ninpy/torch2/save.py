@@ -1,24 +1,21 @@
-from typing import Union
 import logging
 from pathlib import Path
+from typing import Union
 
 import numpy as np
-import torch
+from torch import Tensor
 
 
-def save_bin(
-    name: str, tensor: Union[torch.Tensor, np.ndarray, float, int]
-) -> None:
-    """Save bin file with a tensor."""
+def save_bin(name: str, array: Union[Tensor, np.ndarray, float, int]) -> None:
+    """Save a binary file with float32 type."""
     assert isinstance(name, str)
-    if isinstance(tensor, torch.Tensor):
-        tensor = tensor.detach().cpu().numpy()
-
-    if isinstance(tensor, float):
-        tensor = np.asarray(tensor, dtype=np.float32)
-    elif isinstance(tensor, int):
-        tensor = np.asarray(tensor, dtype=np.int32)
-    tensor.tofile(name, format="float32")
+    if isinstance(array, Tensor):
+        array = array.detach().cpu().numpy().astype(np.float32)
+    elif isinstance(array, np.ndarray):
+        array = array.astype(np.float32)
+    else:
+        array = np.asarray(array, dtype=np.float32)
+    array.tofile(name, format="float32")
 
 
 def np2cpp(
@@ -28,10 +25,8 @@ def np2cpp(
     name_file: str,
     mode: str,
     header_guard: bool = True,
-    verbose: bool = True,
 ) -> None:
-
-    r"""Convert Python 1-4 dimensional array into cpp array.
+    """Convert Python 1-4 dimensional array into cpp array.
     TODO: Adding comments sections (adding string) at header file.
     Args:
         array: A Python numpy 1-4D array.
@@ -43,7 +38,7 @@ def np2cpp(
     Raise:
         NotImplementedError: For array more dimension than 4.
     """
-    if isinstance(array, torch.Tensor):
+    if isinstance(array, Tensor):
         array = array.detach().cpu().numpy()
 
     array = np.array(array)
@@ -142,9 +137,3 @@ def np2cpp(
             # Generate guard band for cpp header file.
             file.write("\n")
             file.write("#endif")
-
-        if verbose:
-            logging.info(
-                f"Generate header file: {name_file}"
-                f"with guard band {header_guard}."
-            )

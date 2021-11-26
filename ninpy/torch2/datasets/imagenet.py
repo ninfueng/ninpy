@@ -3,11 +3,10 @@ import os
 from multiprocessing import cpu_count
 from typing import Callable, Optional, Tuple, Union
 
+from ninpy.torch2.datasets.augment import get_imagenet_transforms
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import ImageFolder
-
-from ninpy.torch2.datasets.augment import get_imagenet_transforms
 
 
 def get_imagenet_loaders(
@@ -81,10 +80,10 @@ if __name__ == "__main__":
     #     pass
     # print(x, y)
 
+    from ninpy.debug import get_imagenet_img
     from ninpy.torch2.datasets.augment import (
         get_imagenet_albumentations_transforms,
     )
-    from ninpy.debug import get_imagenet_img
 
     img = get_imagenet_img(preprocess=False)
     print(img)

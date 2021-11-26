@@ -3,6 +3,7 @@ clean:
 	-rm -rf build/
 	-rm -rf dist/
 	-rm -rf *.egg-info
+	-rm -rf .vscode
 	-find . -iname "__pycache__" | xargs rm -rf
 	-find . -iname ".pytest_cache" | xargs rm -rf
 	-find . -iname ".mypy_cache" | xargs rm -rf
@@ -27,7 +28,7 @@ lint:
 pytest:
 	@echo "Test with pytest."
 	@cd tests/
-	@pytest
+	@pytest -vls
 	@cd -
 
 doctest:

@@ -1,4 +1,3 @@
-from .im2col import *
-from .layer_converter import *
-from .batchnorm import *
-from .save import *
+from ninpy.torch2.batchnorm import *
+from ninpy.torch2.im2col import *
+from ninpy.torch2.save import *

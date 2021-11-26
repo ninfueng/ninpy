@@ -2,23 +2,21 @@
 """Base datasets"""
 import glob
 import os
-import warnings
-import requests
-import tarfile
 import shutil
-
+import tarfile
+import warnings
 from functools import reduce
 from multiprocessing import cpu_count
 from typing import Any, Callable, List, Optional, Tuple
 
-import psutil
 import numpy as np
+import psutil
+import requests
 import torch
+from ninpy.torch2.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
-
-from ninpy.torch2.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 
 __all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
 

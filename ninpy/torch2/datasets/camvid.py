@@ -5,11 +5,10 @@ import cv2
 import numpy as np
 import requests
 import torchvision.transforms as transforms
+from ninpy.torch2.datasets.utils import cv2_loader
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
-
-from ninpy.torch2.datasets.utils import cv2_loader
 
 # class Camvid(Dataset):
 #     """CamVid dataset. Support only burst mode. Using `color_map` same as SegNet.
