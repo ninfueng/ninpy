@@ -2,9 +2,10 @@ import glob
 import os
 from typing import Callable, List, Optional, Tuple
 
+from torchvision.datasets import ImageFolder
+
 from ninpy.torch2.datasets import BurstDataset
 from ninpy.torch2.datasets.augment import get_cinic10_transforms
-from torchvision.datasets import ImageFolder
 
 __all__ = [
     "get_cinic10_basic",

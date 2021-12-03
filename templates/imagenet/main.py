@@ -9,7 +9,6 @@ from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, warmup
 
-from ninpy.torch2.datasets import get_imagenet_loaders
 from ninpy.notify import basic_notify
 from ninpy.torch2 import (
     load_model,
@@ -18,6 +17,7 @@ from ninpy.torch2 import (
     tensorboard_hparams,
     tensorboard_models,
 )
+from ninpy.torch2.datasets import get_imagenet_loaders
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting(

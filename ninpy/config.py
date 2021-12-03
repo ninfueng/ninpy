@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""YAML or json related .
+"""Config file for `yaml` or `json` related .
 @author: Ninnart Fuengfusin"""
-import os
+import argparse
 import json
+import logging
+import os
 import pickle
 from typing import Any, Dict
 
@@ -15,7 +17,9 @@ __all__ = [
     "dump_yaml",
     "load_json",
     "dump_json",
+    "json2argparse",
 ]
+logger = logging.getLogger("ninpy")
 
 
 def load_pickle(pickle_path: str) -> Any:
@@ -61,6 +65,7 @@ def dump_yaml(input: Dict[str, Any], save_path: str) -> None:
 
 
 def load_json(json_path: str) -> Dict[str, Any]:
+    """"""
     assert isinstance(json_path, str)
     json_path = os.path.expanduser(json_path)
     with open(json_path, "r") as f:
@@ -69,8 +74,53 @@ def load_json(json_path: str) -> Dict[str, Any]:
 
 
 def dump_json(input: Dict[str, Any], save_path: str, indent: int = 4) -> None:
+    """Save a dict to the json file.
+    Example:
+    >>> dump_json(input)
+    """
     assert isinstance(save_path, str)
     assert isinstance(indent, int)
     assert isinstance(input, dict)
+    save_path = os.path.expanduser(save_path)
     with open(save_path, "w") as f:
         json.dump(input, f, indent=indent)
+
+
+def dict2argparse(
+    input: Dict[str, Any], args: argparse.Namespace
+) -> argparse.Namespace:
+    for k in input.keys():
+        if hasattr(args, k):
+            setattr(args, k, input[k])
+        else:
+            logger.debug(
+                f"Cannot load the value in {k} key into argparse."
+                f"argparse does not contain {k} key."
+            )
+    return args
+
+
+def json2argparse(
+    json_file: str, args: argparse.Namespace
+) -> argparse.Namespace:
+    """Load parameters from json to `argparse`.
+    Paramters from json must have same key as `argparse` to load.
+    Example:
+    >>> json2argparse("test.json")
+    """
+    assert isinstance(json_file, str)
+    json_file = os.path.expanduser(json_file)
+    data = load_json(json_file)
+    args = dict2argparse(data, args)
+    return args
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Testing argparse to json.")
+    parser.add_argument("--a", type=int, default=123)
+    parser.add_argument("--b", type=int, default=456)
+    args = parser.parse_args()
+
+    dict_ = {"a": 1, "b": 4}
+    dump_json(dict_, "./test.json")
+    args = json2argparse(args, "./test.json")

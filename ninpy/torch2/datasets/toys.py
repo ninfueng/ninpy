@@ -9,6 +9,7 @@ from typing import Callable, Optional, Tuple
 
 import torchvision
 import torchvision.transforms as transforms
+
 from ninpy.torch2.datasets.utils import get_basic_loader
 
 __all__ = ["load_toy_dataset"]

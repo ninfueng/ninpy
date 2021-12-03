@@ -14,8 +14,10 @@ __all__ = [
 
 
 def get_datetime() -> str:
-    """Return a string of year-month-day hour-minute-second."""
-    return str(datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"))
+    """Return a string of year-month-day-hour-minute-second."""
+    date = str(datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"))
+    date = date.replace(":", "-").replace(".", "-").replace(" ", "-")
+    return date
 
 
 def str2bool(v: str) -> bool:

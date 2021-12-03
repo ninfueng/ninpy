@@ -1,8 +1,8 @@
 # /usr/bin/env python3
 """
 """
-import re
 import importlib
+import re
 from typing import Tuple, Union
 
 __all__ = ["extract_version", "get_version", "is_older_version"]
@@ -51,7 +51,7 @@ def is_older_version(
     module: str,
     version: Union[int, str, Tuple[int], Tuple[int, int], Tuple[int, int, int]],
 ) -> bool:
-    """Check local machine has a older version than a given `version` or not.
+    """Check local machine has a older version of `module` than a given `version` or not.
     Support formats of version in r`[0-9].[0-9].[0-9]`
     Example:
     >>> is_older_version("torch", "1.8.1")

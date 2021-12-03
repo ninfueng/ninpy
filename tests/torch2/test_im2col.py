@@ -1,11 +1,13 @@
+import logging
+
 import torch
 import torch.nn as nn
+
 from ninpy.torch2.hw import (
     reshape_im2col_activation,
     reshape_im2col_weight,
     set_unfold,
 )
-import logging
 
 logger = logging.getLogger("ninpy")
 

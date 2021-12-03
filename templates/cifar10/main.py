@@ -8,10 +8,6 @@ import torch.optim as optim
 from tqdm import tqdm
 from utils import test, train, trainv2, warmup
 
-from ninpy.torch2.models import resnet20
-from ninpy.torch2.datasets.augment import get_cifar10_transforms
-from ninpy.torch2.datasets.toys import load_toy_dataset
-
 from ninpy.torch2 import (
     load_model,
     ninpy_setting,
@@ -19,6 +15,9 @@ from ninpy.torch2 import (
     tensorboard_hparams,
     tensorboard_models,
 )
+from ninpy.torch2.datasets.augment import get_cifar10_transforms
+from ninpy.torch2.datasets.toys import load_toy_dataset
+from ninpy.torch2.models import resnet20
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting(

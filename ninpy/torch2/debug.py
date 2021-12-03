@@ -5,9 +5,10 @@ import urllib
 
 import matplotlib.pyplot as plt
 import torch
-from ninpy.torch2.datasets.augment import get_imagenet_transforms
 from PIL import Image
 from torchvision import transforms
+
+from ninpy.torch2.datasets.augment import get_imagenet_transforms
 
 
 def get_imagenet_image(preprocess: bool = False) -> torch.Tensor:

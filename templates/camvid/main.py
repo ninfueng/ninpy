@@ -14,7 +14,6 @@ from torchvision.models import resnet18
 from tqdm import tqdm
 from utils import test, train, warmup
 
-from ninpy.torch2.datasets.camvid import Camvid
 from ninpy.losses import class_weights
 from ninpy.torch2 import (
     load_model,
@@ -23,6 +22,7 @@ from ninpy.torch2 import (
     tensorboard_hparams,
     tensorboard_models,
 )
+from ninpy.torch2.datasets.camvid import Camvid
 
 if __name__ == "__main__":
     hparams, exp_pth, writer = ninpy_setting(

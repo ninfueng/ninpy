@@ -9,9 +9,9 @@ import os
 import shutil
 import sys
 from functools import reduce
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from ninpy.yaml2 import dump_yaml
+from ninpy.config import dump_json, dump_yaml
 
 
 def dict2str(input: Dict[str, Any], sort: bool = True) -> str:
@@ -49,10 +49,16 @@ def args2str(args: argparse.Namespace) -> str:
     return string
 
 
-def args2yaml(args, yaml_name: str) -> None:
-    """Convert argparse to a yaml file."""
+def args2yaml(args: argparse.Namespace, yaml_name: str) -> None:
+    """Convert argparse to a dict and save as a yaml file."""
     args = vars(args)
     dump_yaml(args, yaml_name)
+
+
+def args2json(args: argparse.Namespace, json_name: str) -> None:
+    """Convert argparse to a dict and save as a json file."""
+    args = vars(args)
+    dump_json(args, json_name)
 
 
 def name_experiment(hparams: Dict[str, Any]) -> str:

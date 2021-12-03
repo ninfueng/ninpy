@@ -2,8 +2,8 @@
 """A collection of data structure functions.
 @author: ninfueng
 """
-import sys
 import json
+import sys
 import warnings
 from collections import OrderedDict
 from typing import Any
@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ninpy.yaml2 import dump_yaml
+from ninpy.config import dump_yaml
 
 __all__ = ["AttrDict", "AttrDictList"]
 

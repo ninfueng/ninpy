@@ -13,10 +13,11 @@ import numpy as np
 import psutil
 import requests
 import torch
-from ninpy.torch2.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import pil_loader
+
+from ninpy.torch2.datasets.utils import IMG_EXTENSIONS, multithread_load_images
 
 __all__ = ["BaseDataset", "BurstDataset", "BurstImageFolder"]
 
