@@ -10,10 +10,10 @@ def read(fname: str) -> str:
 
 setup(
     name="ninpy",
-    version="0.0.3",
+    version="0.0.4",
     author="Ninnart Fuengfusin",
     author_email="ninnart.fuengfusin@yahoo.com",
-    description="Collection of reuse modules for Ninnart Fuengfusin.",
+    description="Collection of reuse-able modules designed by Ninnart Fuengfusin.",
     license="MIT",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",

@@ -5,9 +5,10 @@
 """
 import subprocess
 import sys
+from typing import Optional
 
 
-def run_python(cmd: str, getline: int = -2) -> float:
+def run_python(cmd: str, getline: int = -2) -> Optional[float]:
     """Run command and receive a stdout `getline` line.
     Example:
     >>> run_python("python main.py")
@@ -23,4 +24,10 @@ def run_python(cmd: str, getline: int = -2) -> float:
         raise NotImplementedError()
     cmd = cmd.split(" ")
     stdout = subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode()
-    return float(stdout.split("\n")[getline])
+    try:
+        result = float(stdout.split("\n")[getline])
+    except (IndexError, ValueError):
+        # Catche errors when the float converting is not possible or
+        # Number of line from stdout contains lower number of lines than `getline`.
+        result = None
+    return result
