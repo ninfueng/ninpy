@@ -13,8 +13,8 @@ clean:
 format:
 	# TODO: consider autopep8, yapf and others.
 	@-echo "Formatting Python files with black and isort."
-	# Disable isort for now. This may break order of loading modules.
-	# isort might change format of black. Recommend to isort first then black.
+	# Disable `isort` for now. This may break order of loading modules.
+	# `isort` might change format of `black`. Recommend to `isort` first then `black`.
 	# @-find . -iname "*.py" | xargs isort
 	@-find . -iname "*.py" | xargs black --line-length 80
 
@@ -25,7 +25,7 @@ lint:
 	@-flake8
 	@-pydocstyle .
 
-pytest:
+test:
 	@echo "Test with pytest."
 	@cd tests/
 	@pytest -vls
@@ -52,5 +52,5 @@ pip:
 install:
 	@python setup.py develop
 
-.PHONY: clean format lint pytest pip mypy doctest
+.PHONY: clean format lint test pip mypy doctest
 

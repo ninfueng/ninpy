@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Config file for `yaml` or `json` related .
+"""Config file for `yaml`, `json`, and `config` related .
 @author: Ninnart Fuengfusin"""
 import argparse
+import ast
+import inspect
 import json
 import logging
 import os
@@ -18,8 +20,49 @@ __all__ = [
     "load_json",
     "dump_json",
     "json2argparse",
+    "autocast",
+    "triplequote2file",
 ]
 logger = logging.getLogger("ninpy")
+
+
+def autocast(data: str) -> Any:
+    """Using safe `eval` to convert str to other type.
+    Designed for autocast values after configparser.
+    Example:
+    >>> parser = configparser.ConfigParser()
+    >>> parser.read("config.txt")
+    >>> option = autocast(parser.get("config", "option"))
+    """
+    try:
+        return ast.literal_eval(data)
+    except ValueError:
+        return data
+
+
+def triplequote2file(triplequote: str, filepath: str) -> None:
+    """Save triple string to a file. This created with a purpose to
+    generate a small script for testing.
+    Example:
+    >>> data = '''
+    [config]
+    one=one
+    two=5
+    three=1.2345
+    four=1/3
+    '''
+    >>> triplequote2file(data, 'config.txt')
+    >>> parser = configparser.ConfigParser()
+    >>> parser.read('config.txt')
+    """
+    assert isinstance(triplequote, str)
+    assert isinstance(filepath, str)
+    filepath = os.path.expanduser(filepath)
+    # Remove indents in triple quote string.
+    data = inspect.cleandoc(triplequote)
+    with open(filepath, "w") as f:
+        for i in data.splitlines():
+            f.write(i + "\n")
 
 
 def load_pickle(pickle_path: str) -> Any:
