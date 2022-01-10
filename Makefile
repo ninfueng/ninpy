@@ -11,11 +11,11 @@ clean:
 	-find ./templates/*  -iname "dataset" | xargs rm -rf
 
 format:
-	# TODO: consider autopep8, yapf and others.
 	@-echo "Formatting Python files with black and isort."
 	# Disable `isort` for now. This may break order of loading modules.
 	# `isort` might change format of `black`. Recommend to `isort` first then `black`.
 	# @-find . -iname "*.py" | xargs isort
+	# @-find . -iname "*.py" | xargs yapf -i --style='{based_on_style: pep8, indent_width=4}'
 	@-find . -iname "*.py" | xargs black --line-length 80
 
 lint:
