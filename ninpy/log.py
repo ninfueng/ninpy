@@ -36,19 +36,16 @@ def set_logger(
     log_level: int = logging.INFO,
     to_stdout: bool = True,
     rm_exist: bool = True,
-) -> None:
-    """Set the logger to log info in terminal and file `log_path`.
-    In general, it is useful to have a logger so that every output to the terminal
-    is saved in a permanent file. Here we save it to `model_dir/train.log`.
+) -> logging.Logger:
+    """Generate a roof logger to log info into a terminal and file `log_path`.
     Example:
-    >>> set_logger('info.log')
-    >>> logging.info("Starting training...")
+    >>> logger = set_logger('info.log')
+    >>> logger.info("Starting training...")
     Args:
         log_path: (string) location of log file.
         log_level: (string) set log level.
         to_stdout: (bool) whether to print log to stdio.
         rm_exist: (bool) remove the old log file before start log or not.
-        verbose: (bool) if True, verbose some information.
     """
     assert isinstance(to_stdout, bool)
     assert log_level in [0, 10, 20, 30, 40, 50]
@@ -65,7 +62,6 @@ def set_logger(
     logger = logging.getLogger()
     logger.setLevel(log_level)
     if not logger.handlers:
-        # Logging to a file
         file_handler = logging.FileHandler(log_path)
         file_handler.setFormatter(
             logging.Formatter(
@@ -75,7 +71,6 @@ def set_logger(
         logger.addHandler(file_handler)
 
         if to_stdout:
-            # If True, display logging to a console.
             stream_handler = logging.StreamHandler()
             stream_handler.setFormatter(
                 logging.Formatter(
@@ -83,3 +78,4 @@ def set_logger(
                 )
             )
             logger.addHandler(stream_handler)
+    return logger

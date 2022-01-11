@@ -1,5 +1,6 @@
 import logging
 
+# Adding a package's logger. Can be accessed using logging.getLogger('ninpy')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 stream_handler = logging.StreamHandler()
@@ -13,3 +14,4 @@ from ninpy.common import *
 from ninpy.data import *
 from ninpy.log import *
 from ninpy.version import *
+from ninpy import rmme
