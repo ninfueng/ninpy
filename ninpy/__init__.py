@@ -14,4 +14,3 @@ from ninpy.common import *
 from ninpy.data import *
 from ninpy.log import *
 from ninpy.version import *
-from ninpy import rmme

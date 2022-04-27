@@ -9,7 +9,13 @@ from typing import Callable, Dict, List, Optional, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.modules.batchnorm import _NormBase
+
+try:
+    from torch.nn.modules.batchnorm import _NormBase
+except ImportError:
+    # Old version 1.2.0 import.
+    from torch.nn.modules.batchnorm import _BatchNorm
+    _NormBase = _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 from torch.optim.lr_scheduler import _LRScheduler
 
